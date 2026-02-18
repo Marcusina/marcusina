@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export function HealthProfileScreen({ onBackHome, onEditProfile }) {
   return (
@@ -103,24 +104,39 @@ export function HealthProfileScreen({ onBackHome, onEditProfile }) {
       </ScrollView>
       <View style={styles.publicBottomBar}>
         <TouchableOpacity style={styles.publicBottomItem} onPress={onBackHome}>
-          <Text style={styles.publicBottomIcon}>🏠</Text>
+          <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.publicBottomIcon} />
           <Text style={styles.publicBottomLabel}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.publicBottomItem}>
-          <Text style={styles.publicBottomIcon}>🥝</Text>
+          <MaterialIcons
+            name="explore"
+            size={22}
+            color="#9CA3AF"
+            style={styles.publicBottomIcon}
+          />
           <Text style={styles.publicBottomLabel}>Explore</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.publicBottomCenter}>
           <View style={styles.publicPlusCircle}>
-            <Text style={styles.publicPlusIcon}>＋</Text>
+            <MaterialIcons name="add" size={26} color="#FFFFFF" style={styles.publicPlusIcon} />
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.publicBottomItem}>
-          <Text style={styles.publicBottomIcon}>💬</Text>
+          <MaterialIcons
+            name="chat-bubble-outline"
+            size={22}
+            color="#9CA3AF"
+            style={styles.publicBottomIcon}
+          />
           <Text style={styles.publicBottomLabel}>Chats</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.publicBottomItem}>
-          <Text style={[styles.publicBottomIcon, styles.publicBottomIconActive]}>👤</Text>
+          <MaterialIcons
+            name="person"
+            size={22}
+            color="#7C3AED"
+            style={[styles.publicBottomIcon, styles.publicBottomIconActive]}
+          />
           <Text style={[styles.publicBottomLabel, styles.publicBottomLabelActive]}>Profile</Text>
         </TouchableOpacity>
       </View>
@@ -220,24 +236,39 @@ export function PublicProfileScreen({ onBackHome, onEditProfile }) {
       </ScrollView>
       <View style={styles.publicBottomBar}>
         <TouchableOpacity style={styles.publicBottomItem} onPress={onBackHome}>
-          <Text style={styles.publicBottomIcon}>🏠</Text>
+          <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.publicBottomIcon} />
           <Text style={styles.publicBottomLabel}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.publicBottomItem}>
-          <Text style={styles.publicBottomIcon}>🥝</Text>
+          <MaterialIcons
+            name="explore"
+            size={22}
+            color="#9CA3AF"
+            style={styles.publicBottomIcon}
+          />
           <Text style={styles.publicBottomLabel}>Explore</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.publicBottomCenter}>
           <View style={styles.publicPlusCircle}>
-            <Text style={styles.publicPlusIcon}>＋</Text>
+            <MaterialIcons name="add" size={26} color="#FFFFFF" style={styles.publicPlusIcon} />
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.publicBottomItem}>
-          <Text style={styles.publicBottomIcon}>💬</Text>
+          <MaterialIcons
+            name="chat-bubble-outline"
+            size={22}
+            color="#9CA3AF"
+            style={styles.publicBottomIcon}
+          />
           <Text style={styles.publicBottomLabel}>Chats</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.publicBottomItem} onPress={onEditProfile}>
-          <Text style={[styles.publicBottomIcon, styles.publicBottomIconActive]}>👤</Text>
+          <MaterialIcons
+            name="person"
+            size={22}
+            color="#7C3AED"
+            style={[styles.publicBottomIcon, styles.publicBottomIconActive]}
+          />
           <Text style={[styles.publicBottomLabel, styles.publicBottomLabelActive]}>Profile</Text>
         </TouchableOpacity>
       </View>
@@ -532,17 +563,23 @@ const styles = StyleSheet.create({
   },
   publicBottomBar: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 16,
+    right: 16,
+    bottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   publicBottomItem: {
     alignItems: 'center',

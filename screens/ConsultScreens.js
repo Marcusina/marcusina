@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
   const [selectedDoctor, setSelectedDoctor] = useState('Dr. Sarah');
@@ -234,17 +235,20 @@ export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
         </View>
         <View style={styles.bottomNavRow}>
           <TouchableOpacity style={styles.bottomNavItem} onPress={onGoHome}>
-            <Text style={styles.bottomNavIcon}>🏠</Text>
+            <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.bottomNavIcon} />
             <Text style={styles.bottomNavLabel}>Home</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomNavItem}>
-            <Text style={styles.bottomNavIcon}>💬</Text>
+            <MaterialIcons name="groups" size={22} color="#9CA3AF" style={styles.bottomNavIcon} />
             <Text style={styles.bottomNavLabel}>Social</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomNavItem}>
-            <Text style={[styles.bottomNavIcon, styles.bottomNavIconActive]}>
-              💊
-            </Text>
+            <MaterialIcons
+              name="medical-services"
+              size={22}
+              color="#7C3AED"
+              style={[styles.bottomNavIcon, styles.bottomNavIconActive]}
+            />
             <Text
               style={[styles.bottomNavLabel, styles.bottomNavLabelActive]}
             >
@@ -378,19 +382,29 @@ export function ConsultConfirmScreen({ onBack, onDone }) {
         </TouchableOpacity>
         <View style={styles.bottomNavRow}>
           <TouchableOpacity style={styles.bottomNavItem} onPress={onBack}>
-            <Text style={styles.bottomNavIcon}>🏠</Text>
+            <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.bottomNavIcon} />
             <Text style={styles.bottomNavLabel}>Home</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomNavItem}>
-            <Text style={styles.bottomNavIcon}>📖</Text>
+            <MaterialIcons
+              name="event-note"
+              size={22}
+              color="#7C3AED"
+              style={styles.bottomNavIcon}
+            />
             <Text style={styles.bottomNavLabel}>Bookings</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomNavItem}>
-            <Text style={styles.bottomNavIcon}>💬</Text>
+            <MaterialIcons
+              name="chat-bubble-outline"
+              size={22}
+              color="#9CA3AF"
+              style={styles.bottomNavIcon}
+            />
             <Text style={styles.bottomNavLabel}>Chats</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomNavItem}>
-            <Text style={styles.bottomNavIcon}>👤</Text>
+            <MaterialIcons name="person" size={22} color="#9CA3AF" style={styles.bottomNavIcon} />
             <Text style={styles.bottomNavLabel}>Profile</Text>
           </TouchableOpacity>
         </View>
@@ -620,15 +634,21 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 16,
+    right: 16,
+    bottom: 16,
     paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 10,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   bottomTopRow: {
     flexDirection: 'row',
@@ -824,15 +844,21 @@ const styles = StyleSheet.create({
   },
   confirmBottomBar: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 16,
+    right: 16,
+    bottom: 16,
     paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 10,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   confirmButton: {
     borderRadius: 999,
@@ -847,4 +873,3 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 });
-

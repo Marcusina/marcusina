@@ -1,4 +1,5 @@
 import React from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   SafeAreaView,
   View,
@@ -116,19 +117,19 @@ export function HomeScreen({ onOpenProfile, onConsult, onOpenGroups, onOpenPlace
         </ScrollView>
         <View style={styles.tabBar}>
           <TouchableOpacity style={styles.tabItem}>
-            <Text style={styles.tabIcon}>🏠</Text>
+            <MaterialIcons name="home" size={22} color="#7C3AED" style={styles.tabIcon} />
             <Text style={[styles.tabLabel, styles.tabLabelActive]}>Home</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.tabItem} onPress={onOpenPlace}>
-            <Text style={styles.tabIcon}>📍</Text>
+            <MaterialIcons name="place" size={22} color="#9CA3AF" style={styles.tabIcon} />
             <Text style={styles.tabLabel}>Place</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.tabItem} onPress={onOpenGroups}>
-            <Text style={styles.tabIcon}>💬</Text>
+            <MaterialIcons name="groups" size={22} color="#9CA3AF" style={styles.tabIcon} />
             <Text style={styles.tabLabel}>Social</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.tabItem} onPress={onOpenProfile}>
-            <Text style={styles.tabIcon}>👤</Text>
+            <MaterialIcons name="person" size={22} color="#9CA3AF" style={styles.tabIcon} />
             <Text style={styles.tabLabel}>Profile</Text>
           </TouchableOpacity>
         </View>
@@ -353,15 +354,21 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 16,
+    right: 16,
+    bottom: 16,
     flexDirection: 'row',
     paddingHorizontal: 24,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   tabItem: {
     flex: 1,

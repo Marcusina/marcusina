@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export function PlaceScreen({
   onBackHome,
@@ -90,11 +91,16 @@ export function PlaceScreen({
       </ScrollView>
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.bottomItem} onPress={onBackHome}>
-          <Text style={styles.bottomIcon}>🏠</Text>
+          <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.bottomIcon} />
           <Text style={styles.bottomLabel}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bottomItem}>
-          <Text style={[styles.bottomIcon, styles.bottomIconActive]}>📍</Text>
+          <MaterialIcons
+            name="place"
+            size={22}
+            color="#7C3AED"
+            style={[styles.bottomIcon, styles.bottomIconActive]}
+          />
           <Text style={[styles.bottomLabel, styles.bottomLabelActive]}>
             Place
           </Text>
@@ -105,11 +111,11 @@ export function PlaceScreen({
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bottomItem} onPress={onOpenGroups}>
-          <Text style={styles.bottomIcon}>👥</Text>
+          <MaterialIcons name="groups" size={22} color="#9CA3AF" style={styles.bottomIcon} />
           <Text style={styles.bottomLabel}>Social</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bottomItem} onPress={onOpenProfile}>
-          <Text style={styles.bottomIcon}>📄</Text>
+          <MaterialIcons name="assignment" size={22} color="#9CA3AF" style={styles.bottomIcon} />
           <Text style={styles.bottomLabel}>Records</Text>
         </TouchableOpacity>
       </View>
@@ -319,17 +325,23 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 16,
+    right: 16,
+    bottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   bottomItem: {
     alignItems: 'center',
@@ -366,4 +378,3 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
 });
-

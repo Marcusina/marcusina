@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export function GroupsScreen({ onBackHome, onOpenConsult, onOpenProfile }) {
   return (
@@ -89,21 +90,31 @@ export function GroupsScreen({ onBackHome, onOpenConsult, onOpenProfile }) {
       </TouchableOpacity>
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.bottomItem} onPress={onBackHome}>
-          <Text style={styles.bottomIcon}>🏠</Text>
+          <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.bottomIcon} />
           <Text style={styles.bottomLabel}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bottomItem}>
-          <Text style={[styles.bottomIcon, styles.bottomIconActive]}>👥</Text>
+          <MaterialIcons
+            name="groups"
+            size={22}
+            color="#7C3AED"
+            style={[styles.bottomIcon, styles.bottomIconActive]}
+          />
           <Text style={[styles.bottomLabel, styles.bottomLabelActive]}>
             Groups
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bottomItem} onPress={onOpenConsult}>
-          <Text style={styles.bottomIcon}>💊</Text>
+          <MaterialIcons
+            name="medical-services"
+            size={22}
+            color="#9CA3AF"
+            style={styles.bottomIcon}
+          />
           <Text style={styles.bottomLabel}>Consult</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bottomItem} onPress={onOpenProfile}>
-          <Text style={styles.bottomIcon}>👤</Text>
+          <MaterialIcons name="person" size={22} color="#9CA3AF" style={styles.bottomIcon} />
           <Text style={styles.bottomLabel}>Profile</Text>
         </TouchableOpacity>
       </View>
@@ -347,15 +358,21 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 16,
+    right: 16,
+    bottom: 16,
     flexDirection: 'row',
     paddingHorizontal: 24,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   bottomItem: {
     flex: 1,
@@ -377,4 +394,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
