@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  TextInput,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export function HealthProfileScreen({ onBackHome, onEditProfile }) {
+export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
   return (
     <SafeAreaView style={styles.publicSafeArea}>
       <View style={styles.publicHeaderRow}>
@@ -31,7 +32,7 @@ export function HealthProfileScreen({ onBackHome, onEditProfile }) {
               <Text style={styles.healthPremiumText}>PREMIUM</Text>
             </View>
           </View>
-          <Text style={styles.publicName}>Marcus Chen</Text>
+          <Text style={styles.publicName}>{profile.name}</Text>
           <Text style={styles.healthAccountLabel}>Personal Account</Text>
           <TouchableOpacity style={styles.healthEditButton} onPress={onEditProfile}>
             <Text style={styles.healthEditButtonLabel}>Edit Profile</Text>
@@ -39,17 +40,17 @@ export function HealthProfileScreen({ onBackHome, onEditProfile }) {
           <View style={styles.healthStatsRow}>
             <View style={styles.healthStatCard}>
               <Text style={styles.healthStatIcon}>🩸</Text>
-              <Text style={styles.healthStatValue}>O+</Text>
+              <Text style={styles.healthStatValue}>{profile.bloodType}</Text>
               <Text style={styles.healthStatLabel}>Blood Type</Text>
             </View>
             <View style={styles.healthStatCard}>
               <Text style={styles.healthStatIcon}>📏</Text>
-              <Text style={styles.healthStatValue}>182 cm</Text>
+              <Text style={styles.healthStatValue}>{profile.height}</Text>
               <Text style={styles.healthStatLabel}>Height</Text>
             </View>
             <View style={styles.healthStatCard}>
               <Text style={styles.healthStatIcon}>⚖️</Text>
-              <Text style={styles.healthStatValue}>75 kg</Text>
+              <Text style={styles.healthStatValue}>{profile.weight}</Text>
               <Text style={styles.healthStatLabel}>Weight</Text>
             </View>
           </View>
@@ -146,7 +147,7 @@ export function HealthProfileScreen({ onBackHome, onEditProfile }) {
   );
 }
 
-export function PublicProfileScreen({ onBackHome, onEditProfile }) {
+export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
   return (
     <SafeAreaView style={styles.publicSafeArea}>
       <View style={styles.publicHeaderRow}>
@@ -168,12 +169,9 @@ export function PublicProfileScreen({ onBackHome, onEditProfile }) {
               <Text style={styles.publicBadgeIcon}>★</Text>
             </View>
           </View>
-          <Text style={styles.publicName}>Marcus Chen</Text>
-          <Text style={styles.publicHandle}>@marcus_wellness</Text>
-          <Text style={styles.publicBio}>
-            Health enthusiast & Tele-med advocate. Sharing my journey towards a balanced lifestyle
-            and clinical insights. 🌿✨
-          </Text>
+          <Text style={styles.publicName}>{profile.name}</Text>
+          <Text style={styles.publicHandle}>{profile.handle}</Text>
+          <Text style={styles.publicBio}>{profile.bio}</Text>
           <View style={styles.publicActionsRow}>
             <TouchableOpacity style={styles.publicFollowButton}>
               <Text style={styles.publicFollowLabel}>Follow</Text>
@@ -280,7 +278,32 @@ export function PublicProfileScreen({ onBackHome, onEditProfile }) {
   );
 }
 
-export function ProfileScreen({ onCancel, onSave }) {
+export function ProfileScreen({ onCancel, onSave, profile }) {
+  const [name, setName] = useState(profile.name);
+  const [email, setEmail] = useState(profile.email);
+  const [phone, setPhone] = useState(profile.phone);
+  const [location, setLocation] = useState(profile.location);
+  const [bio, setBio] = useState(profile.bio);
+  const [handle, setHandle] = useState(profile.handle);
+  const [bloodType, setBloodType] = useState(profile.bloodType);
+  const [height, setHeight] = useState(profile.height);
+  const [weight, setWeight] = useState(profile.weight);
+
+  const handleSave = () => {
+    onSave({
+      ...profile,
+      name,
+      email,
+      phone,
+      location,
+      bio,
+      handle,
+      bloodType,
+      height,
+      weight,
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerRow}>
@@ -305,33 +328,113 @@ export function ProfileScreen({ onCancel, onSave }) {
         <View style={styles.infoCard}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>FULL NAME</Text>
-            <Text style={styles.infoValue}>Marcus Chen</Text>
+            <TextInput
+              style={styles.infoInput}
+              value={name}
+              onChangeText={setName}
+              placeholder="Full name"
+              placeholderTextColor="#9CA3AF"
+            />
           </View>
           <View style={styles.infoDivider} />
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>EMAIL ADDRESS</Text>
-            <Text style={styles.infoValue}>marcus.chen@healthmail.com</Text>
+            <TextInput
+              style={styles.infoInput}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email address"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
           </View>
           <View style={styles.infoDivider} />
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>PHONE NUMBER</Text>
-            <Text style={styles.infoValue}>+1 (555) 123-4567</Text>
+            <TextInput
+              style={styles.infoInput}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="Phone number"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="phone-pad"
+            />
           </View>
           <View style={styles.infoDivider} />
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>LOCATION</Text>
-            <Text style={styles.infoValue}>San Francisco, CA</Text>
+            <TextInput
+              style={styles.infoInput}
+              value={location}
+              onChangeText={setLocation}
+              placeholder="City, Country"
+              placeholderTextColor="#9CA3AF"
+            />
           </View>
         </View>
         <View style={styles.sectionCard}>
-          <ProfileItem label="Bio & Professional Info" iconLabel="📄" />
-          <ProfileItem label="Social Links" iconLabel="🔗" />
-          <ProfileItem label="Account Security" iconLabel="🔒" />
-          <ProfileItem label="Notification Preferences" iconLabel="🔔" isLast />
+          <Text style={styles.infoLabel}>BIO</Text>
+          <TextInput
+            style={styles.bioInputEdit}
+            value={bio}
+            onChangeText={setBio}
+            placeholder="Tell others about your health journey..."
+            placeholderTextColor="#9CA3AF"
+            multiline
+            maxLength={200}
+          />
+        </View>
+        <View style={styles.sectionCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>SOCIAL HANDLE</Text>
+            <TextInput
+              style={styles.infoInput}
+              value={handle}
+              onChangeText={setHandle}
+              placeholder="@handle"
+              placeholderTextColor="#9CA3AF"
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.infoDivider} />
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>BLOOD TYPE</Text>
+            <TextInput
+              style={styles.infoInput}
+              value={bloodType}
+              onChangeText={setBloodType}
+              placeholder="e.g. O+"
+              placeholderTextColor="#9CA3AF"
+              autoCapitalize="characters"
+            />
+          </View>
+          <View style={styles.infoDivider} />
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>HEIGHT</Text>
+            <TextInput
+              style={styles.infoInput}
+              value={height}
+              onChangeText={setHeight}
+              placeholder="e.g. 182 cm"
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+          <View style={styles.infoDivider} />
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>WEIGHT</Text>
+            <TextInput
+              style={styles.infoInput}
+              value={weight}
+              onChangeText={setWeight}
+              placeholder="e.g. 75 kg"
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
         </View>
       </ScrollView>
       <View style={styles.bottomActions}>
-        <TouchableOpacity style={styles.saveButton} onPress={onSave}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>Save Changes</Text>
         </TouchableOpacity>
         <TouchableOpacity>
@@ -870,6 +973,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#111827',
   },
+  infoInput: {
+    fontSize: 14,
+    color: '#111827',
+    paddingVertical: 0,
+  },
   infoDivider: {
     height: 1,
     backgroundColor: '#E5E7EB',
@@ -878,8 +986,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 4,
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+  bioInputEdit: {
+    marginTop: 4,
+    fontSize: 14,
+    color: '#111827',
   },
   itemRow: {
     flexDirection: 'row',

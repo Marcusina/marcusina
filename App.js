@@ -26,6 +26,17 @@ import {
 
 export default function App() {
   const [screen, setScreen] = useState('login');
+  const [profile, setProfile] = useState({
+    name: 'Marcus Chen',
+    email: 'marcus.chen@healthmail.com',
+    phone: '+1 (555) 123-4567',
+    location: 'San Francisco, CA',
+    handle: '@marcus_wellness',
+    bio: 'Health enthusiast & Tele-med advocate. Sharing my journey towards a balanced lifestyle and clinical insights. 🌿✨',
+    bloodType: 'O+',
+    height: '182 cm',
+    weight: '75 kg',
+  });
 
   let content = null;
 
@@ -104,6 +115,7 @@ export default function App() {
       <HealthProfileScreen
         onBackHome={() => setScreen('home')}
         onEditProfile={() => setScreen('profileEdit')}
+        profile={profile}
       />
     );
   } else if (screen === 'profilePublic') {
@@ -111,13 +123,18 @@ export default function App() {
       <PublicProfileScreen
         onBackHome={() => setScreen('home')}
         onEditProfile={() => setScreen('profileEdit')}
+        profile={profile}
       />
     );
   } else if (screen === 'profileEdit') {
     content = (
       <ProfileScreen
+        profile={profile}
         onCancel={() => setScreen('profilePublic')}
-        onSave={() => setScreen('profilePublic')}
+        onSave={(updated) => {
+          setProfile(updated);
+          setScreen('profilePublic');
+        }}
       />
     );
   } else if (screen === 'consultBook') {
