@@ -1,6 +1,6 @@
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
@@ -20,85 +20,87 @@ export function HealthProfileScreen({ onBackHome, onEditProfile }) {
         </View>
       </View>
       <ScrollView contentContainerStyle={styles.publicScrollContent}>
-        <View style={styles.publicAvatarWrapper}>
-          <View style={styles.publicAvatarRing}>
-            <View style={styles.publicAvatarCircle}>
-              <Text style={styles.publicAvatarInitial}>M</Text>
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.publicAvatarWrapper}>
+            <View style={styles.publicAvatarRing}>
+              <View style={styles.publicAvatarCircle}>
+                <Text style={styles.publicAvatarInitial}>M</Text>
+              </View>
+            </View>
+            <View style={styles.healthPremiumPill}>
+              <Text style={styles.healthPremiumText}>PREMIUM</Text>
             </View>
           </View>
-          <View style={styles.healthPremiumPill}>
-            <Text style={styles.healthPremiumText}>PREMIUM</Text>
-          </View>
-        </View>
-        <Text style={styles.publicName}>Marcus Chen</Text>
-        <Text style={styles.healthAccountLabel}>Personal Account</Text>
-        <TouchableOpacity style={styles.healthEditButton} onPress={onEditProfile}>
-          <Text style={styles.healthEditButtonLabel}>Edit Profile</Text>
-        </TouchableOpacity>
-        <View style={styles.healthStatsRow}>
-          <View style={styles.healthStatCard}>
-            <Text style={styles.healthStatIcon}>🩸</Text>
-            <Text style={styles.healthStatValue}>O+</Text>
-            <Text style={styles.healthStatLabel}>Blood Type</Text>
-          </View>
-          <View style={styles.healthStatCard}>
-            <Text style={styles.healthStatIcon}>📏</Text>
-            <Text style={styles.healthStatValue}>182 cm</Text>
-            <Text style={styles.healthStatLabel}>Height</Text>
-          </View>
-          <View style={styles.healthStatCard}>
-            <Text style={styles.healthStatIcon}>⚖️</Text>
-            <Text style={styles.healthStatValue}>75 kg</Text>
-            <Text style={styles.healthStatLabel}>Weight</Text>
-          </View>
-        </View>
-        <View style={styles.healthSectionHeaderRow}>
-          <Text style={styles.healthSectionTitle}>Health Records</Text>
-          <Text style={styles.healthViewAll}>View All</Text>
-        </View>
-        <View style={styles.healthRecordsGrid}>
-          <View style={styles.healthRecordCard}>
-            <Text style={styles.healthRecordIcon}>📄</Text>
-            <Text style={styles.healthRecordTitle}>Medical History</Text>
-            <Text style={styles.healthRecordSubtitle}>24 entries found</Text>
-          </View>
-          <View style={styles.healthRecordCard}>
-            <Text style={styles.healthRecordIcon}>💊</Text>
-            <Text style={styles.healthRecordTitle}>Prescriptions</Text>
-            <Text style={styles.healthRecordSubtitle}>3 active scripts</Text>
-          </View>
-          <View style={styles.healthRecordCard}>
-            <Text style={styles.healthRecordIcon}>🧪</Text>
-            <Text style={styles.healthRecordTitle}>Lab Results</Text>
-            <Text style={styles.healthRecordSubtitle}>Last updated: Oct 12</Text>
-          </View>
-          <View style={styles.healthRecordCard}>
-            <Text style={styles.healthRecordIcon}>💉</Text>
-            <Text style={styles.healthRecordTitle}>Vaccinations</Text>
-            <Text style={styles.healthRecordSubtitle}>Up to date</Text>
-          </View>
-        </View>
-        <Text style={styles.healthSectionTitle}>Recent Activity</Text>
-        <View style={styles.healthActivityList}>
-          <View style={styles.healthActivityItem}>
-            <View style={styles.healthActivityIconCircle}>
-              <Text style={styles.healthActivityIcon}>➕</Text>
+          <Text style={styles.publicName}>Marcus Chen</Text>
+          <Text style={styles.healthAccountLabel}>Personal Account</Text>
+          <TouchableOpacity style={styles.healthEditButton} onPress={onEditProfile}>
+            <Text style={styles.healthEditButtonLabel}>Edit Profile</Text>
+          </TouchableOpacity>
+          <View style={styles.healthStatsRow}>
+            <View style={styles.healthStatCard}>
+              <Text style={styles.healthStatIcon}>🩸</Text>
+              <Text style={styles.healthStatValue}>O+</Text>
+              <Text style={styles.healthStatLabel}>Blood Type</Text>
             </View>
-            <View style={styles.healthActivityText}>
-              <Text style={styles.healthActivityTitle}>Consultation with Dr. Smith</Text>
-              <Text style={styles.healthActivitySubtitle}>Yesterday at 2:30 PM</Text>
+            <View style={styles.healthStatCard}>
+              <Text style={styles.healthStatIcon}>📏</Text>
+              <Text style={styles.healthStatValue}>182 cm</Text>
+              <Text style={styles.healthStatLabel}>Height</Text>
             </View>
-            <Text style={styles.healthActivityChevron}>›</Text>
+            <View style={styles.healthStatCard}>
+              <Text style={styles.healthStatIcon}>⚖️</Text>
+              <Text style={styles.healthStatValue}>75 kg</Text>
+              <Text style={styles.healthStatLabel}>Weight</Text>
+            </View>
           </View>
-          <View style={styles.healthActivityItem}>
-            <View style={styles.healthActivityIconCircleGreen}>
-              <Text style={styles.healthActivityIcon}>🛒</Text>
+          <View style={styles.healthSectionHeaderRow}>
+            <Text style={styles.healthSectionTitle}>Health Records</Text>
+            <Text style={styles.healthViewAll}>View All</Text>
+          </View>
+          <View style={styles.healthRecordsGrid}>
+            <View style={styles.healthRecordCard}>
+              <Text style={styles.healthRecordIcon}>📄</Text>
+              <Text style={styles.healthRecordTitle}>Medical History</Text>
+              <Text style={styles.healthRecordSubtitle}>24 entries found</Text>
             </View>
-            <View style={styles.healthActivityText}>
-              <Text style={styles.healthActivityTitle}>Pharmacy Order #4421</Text>
-              <Text style={styles.healthActivitySubtitle}>Delivered · 2 days ago</Text>
+            <View style={styles.healthRecordCard}>
+              <Text style={styles.healthRecordIcon}>💊</Text>
+              <Text style={styles.healthRecordTitle}>Prescriptions</Text>
+              <Text style={styles.healthRecordSubtitle}>3 active scripts</Text>
             </View>
-            <Text style={styles.healthActivityChevron}>›</Text>
+            <View style={styles.healthRecordCard}>
+              <Text style={styles.healthRecordIcon}>🧪</Text>
+              <Text style={styles.healthRecordTitle}>Lab Results</Text>
+              <Text style={styles.healthRecordSubtitle}>Last updated: Oct 12</Text>
+            </View>
+            <View style={styles.healthRecordCard}>
+              <Text style={styles.healthRecordIcon}>💉</Text>
+              <Text style={styles.healthRecordTitle}>Vaccinations</Text>
+              <Text style={styles.healthRecordSubtitle}>Up to date</Text>
+            </View>
+          </View>
+          <Text style={styles.healthSectionTitle}>Recent Activity</Text>
+          <View style={styles.healthActivityList}>
+            <View style={styles.healthActivityItem}>
+              <View style={styles.healthActivityIconCircle}>
+                <Text style={styles.healthActivityIcon}>➕</Text>
+              </View>
+              <View style={styles.healthActivityText}>
+                <Text style={styles.healthActivityTitle}>Consultation with Dr. Smith</Text>
+                <Text style={styles.healthActivitySubtitle}>Yesterday at 2:30 PM</Text>
+              </View>
+              <Text style={styles.healthActivityChevron}>›</Text>
+            </View>
+            <View style={styles.healthActivityItem}>
+              <View style={styles.healthActivityIconCircleGreen}>
+                <Text style={styles.healthActivityIcon}>🛒</Text>
+              </View>
+              <View style={styles.healthActivityText}>
+                <Text style={styles.healthActivityTitle}>Pharmacy Order #4421</Text>
+                <Text style={styles.healthActivitySubtitle}>Delivered · 2 days ago</Text>
+              </View>
+              <Text style={styles.healthActivityChevron}>›</Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -155,83 +157,85 @@ export function PublicProfileScreen({ onBackHome, onEditProfile }) {
         </View>
       </View>
       <ScrollView contentContainerStyle={styles.publicScrollContent}>
-        <View style={styles.publicAvatarWrapper}>
-          <View style={styles.publicAvatarRing}>
-            <View style={styles.publicAvatarCircle}>
-              <Text style={styles.publicAvatarInitial}>M</Text>
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.publicAvatarWrapper}>
+            <View style={styles.publicAvatarRing}>
+              <View style={styles.publicAvatarCircle}>
+                <Text style={styles.publicAvatarInitial}>M</Text>
+              </View>
+            </View>
+            <View style={styles.publicBadgeCircle}>
+              <Text style={styles.publicBadgeIcon}>★</Text>
             </View>
           </View>
-          <View style={styles.publicBadgeCircle}>
-            <Text style={styles.publicBadgeIcon}>★</Text>
+          <Text style={styles.publicName}>Marcus Chen</Text>
+          <Text style={styles.publicHandle}>@marcus_wellness</Text>
+          <Text style={styles.publicBio}>
+            Health enthusiast & Tele-med advocate. Sharing my journey towards a balanced lifestyle
+            and clinical insights. 🌿✨
+          </Text>
+          <View style={styles.publicActionsRow}>
+            <TouchableOpacity style={styles.publicFollowButton}>
+              <Text style={styles.publicFollowLabel}>Follow</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.publicMessageButton}>
+              <Text style={styles.publicMessageLabel}>Message</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-        <Text style={styles.publicName}>Marcus Chen</Text>
-        <Text style={styles.publicHandle}>@marcus_wellness</Text>
-        <Text style={styles.publicBio}>
-          Health enthusiast & Tele-med advocate. Sharing my journey towards a balanced lifestyle
-          and clinical insights. 🌿✨
-        </Text>
-        <View style={styles.publicActionsRow}>
-          <TouchableOpacity style={styles.publicFollowButton}>
-            <Text style={styles.publicFollowLabel}>Follow</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.publicMessageButton}>
-            <Text style={styles.publicMessageLabel}>Message</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.publicStatsRow}>
-          <View style={styles.publicStatItem}>
-            <Text style={styles.publicStatValue}>12.5K</Text>
-            <Text style={styles.publicStatLabel}>FOLLOWERS</Text>
-          </View>
-          <View style={styles.publicStatItem}>
-            <Text style={styles.publicStatValue}>842</Text>
-            <Text style={styles.publicStatLabel}>FOLLOWING</Text>
-          </View>
-          <View style={styles.publicStatItem}>
-            <Text style={styles.publicStatValue}>128</Text>
-            <Text style={styles.publicStatLabel}>POSTS</Text>
-          </View>
-        </View>
-        <Text style={styles.publicSectionLabel}>COMMUNITIES</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.publicCommunitiesRow}
-        >
-          {[
-            { label: 'Fitness', color: '#FEE2E2' },
-            { label: 'Dietary', color: '#FCE7F3' },
-            { label: 'Mind', color: '#EDE9FE' },
-            { label: 'Heart', color: '#FEF3C7' },
-          ].map((item) => (
-            <View key={item.label} style={styles.publicCommunityItem}>
-              <View style={[styles.publicCommunityCircle, { backgroundColor: item.color }]} />
-              <Text style={styles.publicCommunityLabel}>{item.label}</Text>
+          <View style={styles.publicStatsRow}>
+            <View style={styles.publicStatItem}>
+              <Text style={styles.publicStatValue}>12.5K</Text>
+              <Text style={styles.publicStatLabel}>FOLLOWERS</Text>
             </View>
-          ))}
-          <View style={styles.publicCommunityItem}>
-            <View style={[styles.publicCommunityCircle, styles.publicCommunityJoinCircle]}>
-              <Text style={styles.publicCommunityJoinPlus}>＋</Text>
+            <View style={styles.publicStatItem}>
+              <Text style={styles.publicStatValue}>842</Text>
+              <Text style={styles.publicStatLabel}>FOLLOWING</Text>
             </View>
-            <Text style={styles.publicCommunityLabel}>Join</Text>
+            <View style={styles.publicStatItem}>
+              <Text style={styles.publicStatValue}>128</Text>
+              <Text style={styles.publicStatLabel}>POSTS</Text>
+            </View>
           </View>
-        </ScrollView>
-        <View style={styles.publicTabsRow}>
-          <TouchableOpacity style={styles.publicTabItem}>
-            <Text style={[styles.publicTabLabel, styles.publicTabLabelActive]}>
-              Content Posted
-            </Text>
-            <View style={styles.publicTabUnderline} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.publicTabItem}>
-            <Text style={styles.publicTabLabel}>Recent Developments</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.publicGrid}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <View key={index} style={styles.publicGridItem} />
-          ))}
+          <Text style={styles.publicSectionLabel}>COMMUNITIES</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.publicCommunitiesRow}
+          >
+            {[
+              { label: 'Fitness', color: '#FEE2E2' },
+              { label: 'Dietary', color: '#FCE7F3' },
+              { label: 'Mind', color: '#EDE9FE' },
+              { label: 'Heart', color: '#FEF3C7' },
+            ].map((item) => (
+              <View key={item.label} style={styles.publicCommunityItem}>
+                <View style={[styles.publicCommunityCircle, { backgroundColor: item.color }]} />
+                <Text style={styles.publicCommunityLabel}>{item.label}</Text>
+              </View>
+            ))}
+            <View style={styles.publicCommunityItem}>
+              <View style={[styles.publicCommunityCircle, styles.publicCommunityJoinCircle]}>
+                <Text style={styles.publicCommunityJoinPlus}>＋</Text>
+              </View>
+              <Text style={styles.publicCommunityLabel}>Join</Text>
+            </View>
+          </ScrollView>
+          <View style={styles.publicTabsRow}>
+            <TouchableOpacity style={styles.publicTabItem}>
+              <Text style={[styles.publicTabLabel, styles.publicTabLabelActive]}>
+                Content Posted
+              </Text>
+              <View style={styles.publicTabUnderline} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.publicTabItem}>
+              <Text style={styles.publicTabLabel}>Recent Developments</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.publicGrid}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <View key={index} style={styles.publicGridItem} />
+            ))}
+          </View>
         </View>
       </ScrollView>
       <View style={styles.publicBottomBar}>
@@ -381,7 +385,12 @@ const styles = StyleSheet.create({
   },
   publicScrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 96,
+    paddingBottom: 160,
+  },
+  contentMaxWidth: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   publicAvatarWrapper: {
     alignItems: 'center',

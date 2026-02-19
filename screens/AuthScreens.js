@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  SafeAreaView,
   View,
   Text,
   TextInput,
@@ -101,45 +101,49 @@ export function LoginScreen({ onSignUp, onLogin }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <AppHeaderTitle />
-        <View style={styles.loginCard}>
-          <Text style={styles.screenTitle}>Log In</Text>
-          <Text style={styles.screenSubtitle}>Welcome back. Your health journey continues here.</Text>
-          <TextField
-            label="Email"
-            placeholder="hello@example.com"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextField
-            label="Password"
-            placeholder="●●●●●●●●"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <View style={styles.forgotPasswordRow}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </View>
-          <PrimaryButton label="Log In" onPress={onLogin} />
-          <View style={styles.orRow}>
-            <View style={styles.orDivider} />
-            <Text style={styles.orText}>OR CONTINUE WITH</Text>
-            <View style={styles.orDivider} />
-          </View>
-          <View style={styles.socialRow}>
-            <View style={styles.socialButton}>
-              <Text style={styles.socialButtonLabel}>G</Text>
+        <View style={styles.contentMaxWidth}>
+          <AppHeaderTitle />
+          <View style={styles.loginCard}>
+            <Text style={styles.screenTitle}>Log In</Text>
+            <Text style={styles.screenSubtitle}>
+              Welcome back. Your health journey continues here.
+            </Text>
+            <TextField
+              label="Email"
+              placeholder="hello@example.com"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextField
+              label="Password"
+              placeholder="●●●●●●●●"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+            <View style={styles.forgotPasswordRow}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </View>
-            <View style={styles.socialButton}>
-              <Text style={styles.socialButtonLabel}></Text>
+            <PrimaryButton label="Log In" onPress={onLogin} />
+            <View style={styles.orRow}>
+              <View style={styles.orDivider} />
+              <Text style={styles.orText}>OR CONTINUE WITH</Text>
+              <View style={styles.orDivider} />
             </View>
-          </View>
-          <View style={styles.footerRow}>
-            <Text style={styles.footerText}>Don't have an account?</Text>
-            <TouchableOpacity onPress={onSignUp}>
-              <Text style={styles.footerLink}>Sign Up</Text>
-            </TouchableOpacity>
+            <View style={styles.socialRow}>
+              <View style={styles.socialButton}>
+                <Text style={styles.socialButtonLabel}>G</Text>
+              </View>
+              <View style={styles.socialButton}>
+                <Text style={styles.socialButtonLabel}></Text>
+              </View>
+            </View>
+            <View style={styles.footerRow}>
+              <Text style={styles.footerText}>Don't have an account?</Text>
+              <TouchableOpacity onPress={onSignUp}>
+                <Text style={styles.footerLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -153,32 +157,35 @@ export function EmailVerifyScreen({ onBack, onVerified }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.stepHeaderContainer}>
-          <View style={styles.stepHeaderTopRow}>
-            <TouchableOpacity onPress={onBack} hitSlop={16}>
-              <Text style={styles.backArrow}>←</Text>
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.stepHeaderContainer}>
+            <View style={styles.stepHeaderTopRow}>
+              <TouchableOpacity onPress={onBack} hitSlop={16}>
+                <Text style={styles.backArrow}>←</Text>
+              </TouchableOpacity>
+              <Text style={styles.stepHeaderStepText}>Step 2 of 3</Text>
+              <View style={{ width: 40 }} />
+            </View>
+          </View>
+          <View style={styles.verificationIconWrapper}>
+            <View style={styles.verificationIconCircle}>
+              <Text style={styles.verificationIconEmoji}>✉️</Text>
+            </View>
+          </View>
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Verify your email</Text>
+            <Text style={styles.screenSubtitle}>
+              We sent a 4-digit code to user@email.com.
+              Enter it below to verify your identity.
+            </Text>
+            <CodeInputRow length={4} values={code} onChange={setCode} />
+            <Text style={styles.didntReceiveText}>I didn't receive a code</Text>
+            <TouchableOpacity>
+              <Text style={styles.resendLink}>Resend Code</Text>
             </TouchableOpacity>
-            <Text style={styles.stepHeaderStepText}>Step 2 of 3</Text>
-            <View style={{ width: 40 }} />
           </View>
+          <PrimaryButton label="Verify Email ✓" onPress={onVerified} />
         </View>
-        <View style={styles.verificationIconWrapper}>
-          <View style={styles.verificationIconCircle}>
-            <Text style={styles.verificationIconEmoji}>✉️</Text>
-          </View>
-        </View>
-        <View style={styles.onboardingBody}>
-          <Text style={styles.screenTitle}>Verify your email</Text>
-          <Text style={styles.screenSubtitle}>
-            We sent a 4-digit code to user@email.com. Enter it below to verify your identity.
-          </Text>
-          <CodeInputRow length={4} values={code} onChange={setCode} />
-          <Text style={styles.didntReceiveText}>I didn't receive a code</Text>
-          <TouchableOpacity>
-            <Text style={styles.resendLink}>Resend Code</Text>
-          </TouchableOpacity>
-        </View>
-        <PrimaryButton label="Verify Email ✓" onPress={onVerified} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -190,35 +197,37 @@ export function PhoneVerifyScreen({ onBack, onVerified }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.stepHeaderContainer}>
-          <View style={styles.stepHeaderTopRow}>
-            <TouchableOpacity onPress={onBack} hitSlop={16}>
-              <Text style={styles.backArrow}>←</Text>
-            </TouchableOpacity>
-            <Text style={styles.stepHeaderStepText}>Step 2 of 3</Text>
-            <View style={{ width: 40 }} />
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.stepHeaderContainer}>
+            <View style={styles.stepHeaderTopRow}>
+              <TouchableOpacity onPress={onBack} hitSlop={16}>
+                <Text style={styles.backArrow}>←</Text>
+              </TouchableOpacity>
+              <Text style={styles.stepHeaderStepText}>Step 2 of 3</Text>
+              <View style={{ width: 40 }} />
+            </View>
           </View>
-        </View>
-        <View style={styles.verificationIconWrapper}>
-          <View style={[styles.verificationIconCircle, styles.phoneIconCircle]}>
-            <Text style={styles.verificationIconEmoji}>📱</Text>
+          <View style={styles.verificationIconWrapper}>
+            <View style={[styles.verificationIconCircle, styles.phoneIconCircle]}>
+              <Text style={styles.verificationIconEmoji}>📱</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.onboardingBody}>
-          <Text style={styles.screenTitle}>Check your phone</Text>
-          <Text style={styles.screenSubtitle}>
-            Enter the 6-digit code sent via SMS to +1 (555) 123-4567.
-          </Text>
-          <CodeInputRow length={6} values={code} onChange={setCode} />
-          <View style={styles.resendRow}>
-            <Text style={styles.didntReceivePrefix}>Didn't receive code?</Text>
-            <TouchableOpacity>
-              <Text style={styles.resendLinkInline}>Resend SMS</Text>
-            </TouchableOpacity>
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Check your phone</Text>
+            <Text style={styles.screenSubtitle}>
+              Enter the 6-digit code sent via SMS to +1 (555) 123-4567.
+            </Text>
+            <CodeInputRow length={6} values={code} onChange={setCode} />
+            <View style={styles.resendRow}>
+              <Text style={styles.didntReceivePrefix}>Didn't receive code?</Text>
+              <TouchableOpacity>
+                <Text style={styles.resendLinkInline}>Resend SMS</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.resendTimerText}>Resend available in 00:24</Text>
           </View>
-          <Text style={styles.resendTimerText}>Resend available in 00:24</Text>
+          <PrimaryButton label="Confirm & Continue" onPress={onVerified} />
         </View>
-        <PrimaryButton label="Confirm & Continue" onPress={onVerified} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -232,43 +241,45 @@ export function NameStepScreen({ onBack, onNext, onSkip }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <StepHeader
-          stepIndex={1}
-          totalSteps={3}
-          title="Step 1 of 3"
-          showSkip
-          onBack={onBack}
-          onSkip={onSkip}
-        />
-        <View style={styles.onboardingBody}>
-          <Text style={styles.screenTitle}>Tell us about yourself</Text>
-          <Text style={styles.screenSubtitle}>
-            Let's start with your legal name for medical records. This ensures your data is
-            accurate and secure.
+        <View style={styles.contentMaxWidth}>
+          <StepHeader
+            stepIndex={1}
+            totalSteps={3}
+            title="Step 1 of 3"
+            showSkip
+            onBack={onBack}
+            onSkip={onSkip}
+          />
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Tell us about yourself</Text>
+            <Text style={styles.screenSubtitle}>
+              Let's start with your legal name for medical records.
+              This ensures your data is accurate and secure.
+            </Text>
+            <TextField
+              label="First Name"
+              placeholder="First Name"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+            <TextField
+              label="Middle Name"
+              placeholder="Middle Name (Optional)"
+              value={middleName}
+              onChangeText={setMiddleName}
+            />
+            <TextField
+              label="Last Name"
+              placeholder="Last Name"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
+          <PrimaryButton label="Next Step" onPress={onNext} />
+          <Text style={styles.termsText}>
+            By continuing, you agree to our Terms of Service.
           </Text>
-          <TextField
-            label="First Name"
-            placeholder="First Name"
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-          <TextField
-            label="Middle Name"
-            placeholder="Middle Name (Optional)"
-            value={middleName}
-            onChangeText={setMiddleName}
-          />
-          <TextField
-            label="Last Name"
-            placeholder="Last Name"
-            value={lastName}
-            onChangeText={setLastName}
-          />
         </View>
-        <PrimaryButton label="Next Step" onPress={onNext} />
-        <Text style={styles.termsText}>
-          By continuing, you agree to our Terms of Service.
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -281,37 +292,39 @@ export function ContactStepScreen({ onBack, onNext, onSkip }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <StepHeader
-          stepIndex={2}
-          totalSteps={3}
-          title="Step 2 of 3"
-          showSkip
-          onBack={onBack}
-          onSkip={onSkip}
-        />
-        <View style={styles.onboardingBody}>
-          <Text style={styles.screenTitle}>Let's stay in touch</Text>
-          <Text style={styles.screenSubtitle}>
-            Please provide your contact details. We'll use these to verify your identity and keep
-            your health data secure.
+        <View style={styles.contentMaxWidth}>
+          <StepHeader
+            stepIndex={2}
+            totalSteps={3}
+            title="Step 2 of 3"
+            showSkip
+            onBack={onBack}
+            onSkip={onSkip}
+          />
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Let's stay in touch</Text>
+            <Text style={styles.screenSubtitle}>
+              Please provide your contact details. We'll use these to verify your identity
+              and keep your health data secure.
+            </Text>
+            <TextField
+              label="Email Address"
+              placeholder="name@example.com"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextField
+              label="Phone Number"
+              placeholder="(555) 000-0000"
+              value={phone}
+              onChangeText={setPhone}
+            />
+          </View>
+          <PrimaryButton label="Next Step" onPress={onNext} />
+          <Text style={styles.termsText}>
+            By continuing, you agree to our Terms of Service and Privacy Policy.
           </Text>
-          <TextField
-            label="Email Address"
-            placeholder="name@example.com"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextField
-            label="Phone Number"
-            placeholder="(555) 000-0000"
-            value={phone}
-            onChangeText={setPhone}
-          />
         </View>
-        <PrimaryButton label="Next Step" onPress={onNext} />
-        <Text style={styles.termsText}>
-          By continuing, you agree to our Terms of Service and Privacy Policy.
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -321,40 +334,42 @@ export function LocationStepScreen({ onBack, onComplete }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <StepHeader
-          stepIndex={3}
-          totalSteps={3}
-          title="Final Step"
-          showSkip={false}
-          onBack={onBack}
-        />
-        <View style={styles.onboardingBody}>
-          <Text style={styles.screenTitle}>Where are you located?</Text>
-          <Text style={styles.screenSubtitle}>
-            We use this to find the best health providers near you.
-          </Text>
-          <View style={styles.locationCard}>
-            <View style={styles.locationPlaceholder}>
-              <Text style={styles.locationPin}>📍</Text>
-            </View>
-            <PrimaryButton label="Auto-detect location" onPress={() => {}} />
-          </View>
-          <Text style={styles.orManualText}>OR ENTER MANUALLY</Text>
-          <TextField
-            label="Street Address"
-            placeholder="Search for your address..."
-            value=""
-            onChangeText={() => {}}
+        <View style={styles.contentMaxWidth}>
+          <StepHeader
+            stepIndex={3}
+            totalSteps={3}
+            title="Final Step"
+            showSkip={false}
+            onBack={onBack}
           />
-          <View style={styles.privacyCard}>
-            <Text style={styles.privacyTitle}>Privacy First</Text>
-            <Text style={styles.privacyText}>
-              Your location is only used to match you with nearby providers. We never share your
-              precise location.
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Where are you located?</Text>
+            <Text style={styles.screenSubtitle}>
+              We use this to find the best health providers near you.
             </Text>
+            <View style={styles.locationCard}>
+              <View style={styles.locationPlaceholder}>
+                <Text style={styles.locationPin}>📍</Text>
+              </View>
+              <PrimaryButton label="Auto-detect location" onPress={() => {}} />
+            </View>
+            <Text style={styles.orManualText}>OR ENTER MANUALLY</Text>
+            <TextField
+              label="Street Address"
+              placeholder="Search for your address..."
+              value=""
+              onChangeText={() => {}}
+            />
+            <View style={styles.privacyCard}>
+              <Text style={styles.privacyTitle}>Privacy First</Text>
+              <Text style={styles.privacyText}>
+                Your location is only used to match you with nearby providers.
+                We never share your precise location.
+              </Text>
+            </View>
           </View>
+          <PrimaryButton label="Complete Registration" onPress={onComplete} />
         </View>
-        <PrimaryButton label="Complete Registration" onPress={onComplete} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -378,85 +393,87 @@ export function ProfileBasicsScreen({ onBack, onNext }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.stepHeaderContainer}>
-          <View style={styles.stepHeaderTopRow}>
-            <TouchableOpacity onPress={onBack} hitSlop={16}>
-              <Text style={styles.backArrow}>←</Text>
-            </TouchableOpacity>
-            <Text style={styles.stepHeaderStepText}>Sign Up</Text>
-            <View style={{ width: 40 }} />
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.stepHeaderContainer}>
+            <View style={styles.stepHeaderTopRow}>
+              <TouchableOpacity onPress={onBack} hitSlop={16}>
+                <Text style={styles.backArrow}>←</Text>
+              </TouchableOpacity>
+              <Text style={styles.stepHeaderStepText}>Sign Up</Text>
+              <View style={{ width: 40 }} />
+            </View>
           </View>
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Profile Basics</Text>
+            <Text style={styles.screenSubtitle}>
+              This helps us personalize your health plan.
+            </Text>
+            <Text style={styles.fieldLabel}>Gender Identity</Text>
+            <View style={styles.genderRow}>
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  gender === 'male' && styles.genderOptionSelected,
+                ]}
+                onPress={() => setGender('male')}
+              >
+                <Text style={styles.genderOptionLabel}>Male</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  gender === 'female' && styles.genderOptionSelected,
+                ]}
+                onPress={() => setGender('female')}
+              >
+                <Text style={styles.genderOptionLabel}>Female</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  gender === 'other' && styles.genderOptionSelected,
+                ]}
+                onPress={() => setGender('other')}
+              >
+                <Text style={styles.genderOptionLabel}>Other</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Date of Birth</Text>
+              <TextInput
+                value={dob}
+                onChangeText={setDob}
+                placeholder="mm/dd/yyyy"
+                placeholderTextColor="#9CA3AF"
+                style={styles.textInput}
+              />
+            </View>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Create Password</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="●●●●●●●●"
+                placeholderTextColor="#9CA3AF"
+                secureTextEntry
+                style={styles.textInput}
+              />
+            </View>
+            <View style={styles.passwordStrengthRow}>
+              <Text style={styles.passwordStrengthLabel}>{strengthLabel} strength</Text>
+              <Text style={styles.passwordStrengthCount}>{strengthScore}/4 requirements met</Text>
+            </View>
+            <View style={styles.passwordStrengthTrack}>
+              <View
+                style={[
+                  styles.passwordStrengthFill,
+                  { width: `${(strengthScore / 4) * 100}%` },
+                ]}
+              />
+            </View>
+          </View>
+          <PrimaryButton label="Continue" onPress={onNext} />
         </View>
-        <View style={styles.onboardingBody}>
-          <Text style={styles.screenTitle}>Profile Basics</Text>
-          <Text style={styles.screenSubtitle}>
-            This helps us personalize your health plan.
-          </Text>
-          <Text style={styles.fieldLabel}>Gender Identity</Text>
-          <View style={styles.genderRow}>
-            <TouchableOpacity
-              style={[
-                styles.genderOption,
-                gender === 'male' && styles.genderOptionSelected,
-              ]}
-              onPress={() => setGender('male')}
-            >
-              <Text style={styles.genderOptionLabel}>Male</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.genderOption,
-                gender === 'female' && styles.genderOptionSelected,
-              ]}
-              onPress={() => setGender('female')}
-            >
-              <Text style={styles.genderOptionLabel}>Female</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.genderOption,
-                gender === 'other' && styles.genderOptionSelected,
-              ]}
-              onPress={() => setGender('other')}
-            >
-              <Text style={styles.genderOptionLabel}>Other</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Date of Birth</Text>
-            <TextInput
-              value={dob}
-              onChangeText={setDob}
-              placeholder="mm/dd/yyyy"
-              placeholderTextColor="#9CA3AF"
-              style={styles.textInput}
-            />
-          </View>
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Create Password</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="●●●●●●●●"
-              placeholderTextColor="#9CA3AF"
-              secureTextEntry
-              style={styles.textInput}
-            />
-          </View>
-          <View style={styles.passwordStrengthRow}>
-            <Text style={styles.passwordStrengthLabel}>{strengthLabel} strength</Text>
-            <Text style={styles.passwordStrengthCount}>{strengthScore}/4 requirements met</Text>
-          </View>
-          <View style={styles.passwordStrengthTrack}>
-            <View
-              style={[
-                styles.passwordStrengthFill,
-                { width: `${(strengthScore / 4) * 100}%` },
-              ]}
-            />
-          </View>
-        </View>
-        <PrimaryButton label="Continue" onPress={onNext} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -468,42 +485,44 @@ export function ProfileCustomizeScreen({ onBack, onNext, onSkip }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <StepHeader
-          stepIndex={4}
-          totalSteps={4}
-          title="Step 4"
-          showSkip={false}
-          onBack={onBack}
-        />
-        <View style={styles.onboardingBody}>
-          <Text style={styles.screenTitle}>Customize Your Profile</Text>
-          <Text style={styles.screenSubtitle}>
-            Add a face to your journey. You can always change this later.
-          </Text>
-          <View style={styles.profileAvatarWrapper}>
-            <View style={styles.profileAvatarCircle}>
-              <Text style={styles.profileAvatarPlaceholder}>👤</Text>
-            </View>
-            <View style={styles.profileAvatarPlus}>
-              <Text style={styles.profileAvatarPlusText}>＋</Text>
-            </View>
-          </View>
-          <Text style={styles.fieldLabel}>Bio</Text>
-          <TextInput
-            value={bio}
-            onChangeText={setBio}
-            placeholder="I'm here to improve my cardio and eat better..."
-            placeholderTextColor="#9CA3AF"
-            multiline
-            maxLength={150}
-            style={styles.bioInput}
+        <View style={styles.contentMaxWidth}>
+          <StepHeader
+            stepIndex={4}
+            totalSteps={4}
+            title="Step 4"
+            showSkip={false}
+            onBack={onBack}
           />
-          <Text style={styles.bioCounter}>{bio.length}/150</Text>
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Customize Your Profile</Text>
+            <Text style={styles.screenSubtitle}>
+              Add a face to your journey. You can always change this later.
+            </Text>
+            <View style={styles.profileAvatarWrapper}>
+              <View style={styles.profileAvatarCircle}>
+                <Text style={styles.profileAvatarPlaceholder}>👤</Text>
+              </View>
+              <View style={styles.profileAvatarPlus}>
+                <Text style={styles.profileAvatarPlusText}>＋</Text>
+              </View>
+            </View>
+            <Text style={styles.fieldLabel}>Bio</Text>
+            <TextInput
+              value={bio}
+              onChangeText={setBio}
+              placeholder="I'm here to improve my cardio and eat better..."
+              placeholderTextColor="#9CA3AF"
+              multiline
+              maxLength={150}
+              style={styles.bioInput}
+            />
+            <Text style={styles.bioCounter}>{bio.length}/150</Text>
+          </View>
+          <PrimaryButton label="Next" onPress={onNext} />
+          <TouchableOpacity onPress={onSkip}>
+            <Text style={styles.skipForNowText}>Skip for now</Text>
+          </TouchableOpacity>
         </View>
-        <PrimaryButton label="Next" onPress={onNext} />
-        <TouchableOpacity onPress={onSkip}>
-          <Text style={styles.skipForNowText}>Skip for now</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -540,6 +559,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 32,
+  },
+  contentMaxWidth: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
   },
   appHeaderContainer: {
     alignItems: 'center',
@@ -957,4 +981,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-

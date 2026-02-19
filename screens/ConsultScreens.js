@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
@@ -57,167 +57,169 @@ export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Quick Match</Text>
-          <Text style={styles.sectionAction}>View All</Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.quickRow}
-        >
-          {doctors.map((doctor) => {
-            const isSelected = selectedDoctor === doctor.name;
-            return (
-              <TouchableOpacity
-                key={doctor.name}
-                style={styles.quickDoctorItem}
-                onPress={() => setSelectedDoctor(doctor.name)}
-              >
-                <View
-                  style={[
-                    styles.quickAvatarRing,
-                    isSelected && styles.quickAvatarRingSelected,
-                  ]}
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Quick Match</Text>
+            <Text style={styles.sectionAction}>View All</Text>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.quickRow}
+          >
+            {doctors.map((doctor) => {
+              const isSelected = selectedDoctor === doctor.name;
+              return (
+                <TouchableOpacity
+                  key={doctor.name}
+                  style={styles.quickDoctorItem}
+                  onPress={() => setSelectedDoctor(doctor.name)}
                 >
-                  <View style={styles.quickAvatarCircle}>
-                    <Text style={styles.quickAvatarInitial}>
-                      {doctor.name.split(' ')[1]?.[0] || 'M'}
-                    </Text>
+                  <View
+                    style={[
+                      styles.quickAvatarRing,
+                      isSelected && styles.quickAvatarRingSelected,
+                    ]}
+                  >
+                    <View style={styles.quickAvatarCircle}>
+                      <Text style={styles.quickAvatarInitial}>
+                        {doctor.name.split(' ')[1]?.[0] || 'M'}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-                <View style={styles.quickRatingBadge}>
-                  <Text style={styles.quickRatingText}>★ {doctor.rating}</Text>
-                </View>
-                <Text style={styles.quickDoctorName}>{doctor.name}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-        <Text style={styles.sectionTitle}>Select Service Type</Text>
-        <View style={styles.serviceRow}>
-          {[
-            { label: 'Video Call', icon: '🎥' },
-            { label: 'Voice Call', icon: '📞' },
-            { label: 'Chat', icon: '💬' },
-          ].map((item) => {
-            const isSelected = selectedService === item.label;
-            return (
-              <TouchableOpacity
-                key={item.label}
-                style={[
-                  styles.serviceCard,
-                  isSelected && styles.serviceCardSelected,
-                ]}
-                onPress={() => setSelectedService(item.label)}
-              >
-                <Text style={styles.serviceIcon}>{item.icon}</Text>
-                <Text
+                  <View style={styles.quickRatingBadge}>
+                    <Text style={styles.quickRatingText}>★ {doctor.rating}</Text>
+                  </View>
+                  <Text style={styles.quickDoctorName}>{doctor.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+          <Text style={styles.sectionTitle}>Select Service Type</Text>
+          <View style={styles.serviceRow}>
+            {[
+              { label: 'Video Call', icon: '🎥' },
+              { label: 'Voice Call', icon: '📞' },
+              { label: 'Chat', icon: '💬' },
+            ].map((item) => {
+              const isSelected = selectedService === item.label;
+              return (
+                <TouchableOpacity
+                  key={item.label}
                   style={[
-                    styles.serviceLabel,
-                    isSelected && styles.serviceLabelSelected,
+                    styles.serviceCard,
+                    isSelected && styles.serviceCardSelected,
                   ]}
+                  onPress={() => setSelectedService(item.label)}
                 >
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-        <View style={styles.scheduleHeaderRow}>
-          <Text style={styles.sectionTitle}>Available Schedule</Text>
-          <Text style={styles.scheduleMonth}>June 2024 📅</Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.dateRow}
-        >
-          {dates.map((date) => {
-            const key = `${date.label} ${date.day}`;
-            const isSelected = selectedDate === key;
-            return (
-              <TouchableOpacity
-                key={key}
-                style={[
-                  styles.dateItem,
-                  isSelected && styles.dateItemSelected,
-                ]}
-                onPress={() => setSelectedDate(key)}
-              >
-                <Text
+                  <Text style={styles.serviceIcon}>{item.icon}</Text>
+                  <Text
+                    style={[
+                      styles.serviceLabel,
+                      isSelected && styles.serviceLabelSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <View style={styles.scheduleHeaderRow}>
+            <Text style={styles.sectionTitle}>Available Schedule</Text>
+            <Text style={styles.scheduleMonth}>June 2024 📅</Text>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dateRow}
+          >
+            {dates.map((date) => {
+              const key = `${date.label} ${date.day}`;
+              const isSelected = selectedDate === key;
+              return (
+                <TouchableOpacity
+                  key={key}
                   style={[
-                    styles.dateLabel,
-                    isSelected && styles.dateLabelSelected,
+                    styles.dateItem,
+                    isSelected && styles.dateItemSelected,
                   ]}
+                  onPress={() => setSelectedDate(key)}
                 >
-                  {date.label}
-                </Text>
-                <Text
+                  <Text
+                    style={[
+                      styles.dateLabel,
+                      isSelected && styles.dateLabelSelected,
+                    ]}
+                  >
+                    {date.label}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.dateDay,
+                      isSelected && styles.dateDaySelected,
+                    ]}
+                  >
+                    {date.day}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+          <Text style={styles.subSectionTitle}>MORNING SLOTS</Text>
+          <View style={styles.slotRow}>
+            {morningSlots.map((slot) => {
+              const isDisabled = slot === '11:00 AM';
+              const isSelected = selectedSlot === slot;
+              return (
+                <TouchableOpacity
+                  key={slot}
+                  disabled={isDisabled}
                   style={[
-                    styles.dateDay,
-                    isSelected && styles.dateDaySelected,
+                    styles.slotPill,
+                    isSelected && styles.slotPillSelected,
+                    isDisabled && styles.slotPillDisabled,
                   ]}
+                  onPress={() => setSelectedSlot(slot)}
                 >
-                  {date.day}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-        <Text style={styles.subSectionTitle}>MORNING SLOTS</Text>
-        <View style={styles.slotRow}>
-          {morningSlots.map((slot) => {
-            const isDisabled = slot === '11:00 AM';
-            const isSelected = selectedSlot === slot;
-            return (
-              <TouchableOpacity
-                key={slot}
-                disabled={isDisabled}
-                style={[
-                  styles.slotPill,
-                  isSelected && styles.slotPillSelected,
-                  isDisabled && styles.slotPillDisabled,
-                ]}
-                onPress={() => setSelectedSlot(slot)}
-              >
-                <Text
+                  <Text
+                    style={[
+                      styles.slotLabel,
+                      isSelected && styles.slotLabelSelected,
+                      isDisabled && styles.slotLabelDisabled,
+                    ]}
+                  >
+                    {slot}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text style={styles.subSectionTitle}>AFTERNOON SLOTS</Text>
+          <View style={styles.slotRow}>
+            {afternoonSlots.map((slot) => {
+              const isSelected = selectedSlot === slot;
+              return (
+                <TouchableOpacity
+                  key={slot}
                   style={[
-                    styles.slotLabel,
-                    isSelected && styles.slotLabelSelected,
-                    isDisabled && styles.slotLabelDisabled,
+                    styles.slotPill,
+                    isSelected && styles.slotPillSelected,
                   ]}
+                  onPress={() => setSelectedSlot(slot)}
                 >
-                  {slot}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-        <Text style={styles.subSectionTitle}>AFTERNOON SLOTS</Text>
-        <View style={styles.slotRow}>
-          {afternoonSlots.map((slot) => {
-            const isSelected = selectedSlot === slot;
-            return (
-              <TouchableOpacity
-                key={slot}
-                style={[
-                  styles.slotPill,
-                  isSelected && styles.slotPillSelected,
-                ]}
-                onPress={() => setSelectedSlot(slot)}
-              >
-                <Text
-                  style={[
-                    styles.slotLabel,
-                    isSelected && styles.slotLabelSelected,
-                  ]}
-                >
-                  {slot}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.slotLabel,
+                      isSelected && styles.slotLabelSelected,
+                    ]}
+                  >
+                    {slot}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </ScrollView>
       <View style={styles.bottomBar}>
@@ -455,6 +457,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 140,
     paddingTop: 16,
+  },
+  contentMaxWidth: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   sectionHeaderRow: {
     flexDirection: 'row',

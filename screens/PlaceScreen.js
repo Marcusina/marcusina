@@ -1,6 +1,6 @@
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
@@ -32,61 +32,63 @@ export function PlaceScreen({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Nearby Facilities</Text>
-          <Text style={styles.sectionAction}>See All</Text>
-        </View>
-        <View style={styles.mapCard}>
-          <View style={styles.mapSearchBar}>
-            <Text style={styles.mapSearchPlaceholder}>
-              Search clinics, pharmacies...
-            </Text>
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Nearby Facilities</Text>
+            <Text style={styles.sectionAction}>See All</Text>
           </View>
-          <View style={styles.mapBody}>
-            <Text style={styles.mapText}>Map Placeholder</Text>
-          </View>
-        </View>
-        <View style={styles.virtualCard}>
-          <View style={styles.virtualPillRow}>
-            <View style={styles.virtualUrgentPill}>
-              <Text style={styles.virtualUrgentText}>URGENT</Text>
+          <View style={styles.mapCard}>
+            <View style={styles.mapSearchBar}>
+              <Text style={styles.mapSearchPlaceholder}>
+                Search clinics, pharmacies...
+              </Text>
             </View>
-            <Text style={styles.virtualPillLabel}>TELE-MEDICINE</Text>
+            <View style={styles.mapBody}>
+              <Text style={styles.mapText}>Map Placeholder</Text>
+            </View>
           </View>
-          <Text style={styles.virtualTitle}>Virtual Care</Text>
-          <Text style={styles.virtualSubtitle}>
-            Connect with a doctor in less than 5 minutes
-          </Text>
-          <TouchableOpacity
-            style={styles.virtualButton}
-            onPress={onOpenConsult}
-          >
-            <Text style={styles.virtualButtonText}>Consult Now</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.servicesTitle}>Our Services</Text>
-        <View style={styles.servicesGrid}>
-          <ServiceCard
-            icon="👨‍⚕️"
-            title="Find a Doctor"
-            subtitle="In-person visits"
-          />
-          <ServiceCard
-            icon="📹"
-            title="Virtual Consult"
-            subtitle="Video & Audio calls"
-            onPress={onOpenConsult}
-          />
-          <ServiceCard
-            icon="💊"
-            title="Pharmacy"
-            subtitle="Order medications"
-          />
-          <ServiceCard
-            icon="🧪"
-            title="Lab Tests"
-            subtitle="Home sample pickup"
-          />
+          <View style={styles.virtualCard}>
+            <View style={styles.virtualPillRow}>
+              <View style={styles.virtualUrgentPill}>
+                <Text style={styles.virtualUrgentText}>URGENT</Text>
+              </View>
+              <Text style={styles.virtualPillLabel}>TELE-MEDICINE</Text>
+            </View>
+            <Text style={styles.virtualTitle}>Virtual Care</Text>
+            <Text style={styles.virtualSubtitle}>
+              Connect with a doctor in less than 5 minutes
+            </Text>
+            <TouchableOpacity
+              style={styles.virtualButton}
+              onPress={onOpenConsult}
+            >
+              <Text style={styles.virtualButtonText}>Consult Now</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.servicesTitle}>Our Services</Text>
+          <View style={styles.servicesGrid}>
+            <ServiceCard
+              icon="👨‍⚕️"
+              title="Find a Doctor"
+              subtitle="In-person visits"
+            />
+            <ServiceCard
+              icon="📹"
+              title="Virtual Consult"
+              subtitle="Video & Audio calls"
+              onPress={onOpenConsult}
+            />
+            <ServiceCard
+              icon="💊"
+              title="Pharmacy"
+              subtitle="Order medications"
+            />
+            <ServiceCard
+              icon="🧪"
+              title="Lab Tests"
+              subtitle="Home sample pickup"
+            />
+          </View>
         </View>
       </ScrollView>
       <View style={styles.bottomBar}>
@@ -182,8 +184,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 120,
+    paddingBottom: 160,
     paddingTop: 8,
+  },
+  contentMaxWidth: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   sectionHeaderRow: {
     flexDirection: 'row',

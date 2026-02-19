@@ -1,6 +1,6 @@
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
@@ -27,62 +27,64 @@ export function GroupsScreen({ onBackHome, onOpenConsult, onOpenProfile }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Suggested Groups</Text>
-          <Text style={styles.sectionAction}>View All</Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.suggestedRow}
-        >
-          {[
-            { label: 'Diabetes Support', color: '#FED7AA' },
-            { label: 'Yoga Lovers', color: '#FDE68A' },
-            { label: 'Post-Partum', color: '#FBCFE8' },
-            { label: 'Nutrition', color: '#BBF7D0' },
-          ].map((item) => (
-            <View key={item.label} style={styles.suggestedItem}>
-              <View
-                style={[styles.suggestedCircle, { backgroundColor: item.color }]}
-              />
-              <Text style={styles.suggestedLabel}>{item.label}</Text>
-            </View>
-          ))}
-        </ScrollView>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>My Communities</Text>
-          <View style={styles.activePill}>
-            <Text style={styles.activePillText}>8 Active</Text>
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Suggested Groups</Text>
+            <Text style={styles.sectionAction}>View All</Text>
           </View>
-        </View>
-        <View style={styles.communityList}>
-          <CommunityCard
-            badgeCount={12}
-            title="Heart Health Heroes"
-            members="1.2k members"
-            meta="12 new posts"
-            chipLabel="Hot Topic"
-            chipText="Low sodium recipes for..."
-            chipColor="#FDE68A"
-          />
-          <CommunityCard
-            badgeCount={5}
-            title="Daily Walkers"
-            members="800 members"
-            meta="5 new posts"
-            chipLabel="Hot Topic"
-            chipText="Who's out today for the..."
-            chipColor="#FECACA"
-          />
-          <CommunityCard
-            title="Mindful Living"
-            members="2.4k members"
-            meta="Up to date"
-            chipLabel="Latest"
-            chipText="Morning meditation..."
-            chipColor="#E0E7FF"
-          />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.suggestedRow}
+          >
+            {[
+              { label: 'Diabetes Support', color: '#FED7AA' },
+              { label: 'Yoga Lovers', color: '#FDE68A' },
+              { label: 'Post-Partum', color: '#FBCFE8' },
+              { label: 'Nutrition', color: '#BBF7D0' },
+            ].map((item) => (
+              <View key={item.label} style={styles.suggestedItem}>
+                <View
+                  style={[styles.suggestedCircle, { backgroundColor: item.color }]}
+                />
+                <Text style={styles.suggestedLabel}>{item.label}</Text>
+              </View>
+            ))}
+          </ScrollView>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>My Communities</Text>
+            <View style={styles.activePill}>
+              <Text style={styles.activePillText}>8 Active</Text>
+            </View>
+          </View>
+          <View style={styles.communityList}>
+            <CommunityCard
+              badgeCount={12}
+              title="Heart Health Heroes"
+              members="1.2k members"
+              meta="12 new posts"
+              chipLabel="Hot Topic"
+              chipText="Low sodium recipes for..."
+              chipColor="#FDE68A"
+            />
+            <CommunityCard
+              badgeCount={5}
+              title="Daily Walkers"
+              members="800 members"
+              meta="5 new posts"
+              chipLabel="Hot Topic"
+              chipText="Who's out today for the..."
+              chipColor="#FECACA"
+            />
+            <CommunityCard
+              title="Mindful Living"
+              members="2.4k members"
+              meta="Up to date"
+              chipLabel="Latest"
+              chipText="Morning meditation..."
+              chipColor="#E0E7FF"
+            />
+          </View>
         </View>
       </ScrollView>
       <TouchableOpacity style={styles.fab}>
@@ -201,8 +203,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 96,
+    paddingBottom: 160,
     paddingTop: 12,
+  },
+  contentMaxWidth: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   sectionHeaderRow: {
     flexDirection: 'row',

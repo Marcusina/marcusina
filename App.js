@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   LoginScreen,
   ProfileBasicsScreen,
@@ -26,87 +27,71 @@ import {
 export default function App() {
   const [screen, setScreen] = useState('login');
 
+  let content = null;
+
   if (screen === 'login') {
-    return (
+    content = (
       <LoginScreen
         onSignUp={() => setScreen('profileBasics')}
         onLogin={() => setScreen('home')}
       />
     );
-  }
-
-  if (screen === 'profileBasics') {
-    return (
+  } else if (screen === 'profileBasics') {
+    content = (
       <ProfileBasicsScreen
         onBack={() => setScreen('login')}
         onNext={() => setScreen('emailVerify')}
       />
     );
-  }
-
-  if (screen === 'emailVerify') {
-    return (
+  } else if (screen === 'emailVerify') {
+    content = (
       <EmailVerifyScreen
         onBack={() => setScreen('profileBasics')}
         onVerified={() => setScreen('phoneVerify')}
       />
     );
-  }
-
-  if (screen === 'phoneVerify') {
-    return (
+  } else if (screen === 'phoneVerify') {
+    content = (
       <PhoneVerifyScreen
         onBack={() => setScreen('emailVerify')}
         onVerified={() => setScreen('profileCustomize')}
       />
     );
-  }
-
-  if (screen === 'profileCustomize') {
-    return (
+  } else if (screen === 'profileCustomize') {
+    content = (
       <ProfileCustomizeScreen
         onBack={() => setScreen('phoneVerify')}
         onNext={() => setScreen('name')}
         onSkip={() => setScreen('name')}
       />
     );
-  }
-
-  if (screen === 'name') {
-    return (
+  } else if (screen === 'name') {
+    content = (
       <NameStepScreen
         onBack={() => setScreen('profileCustomize')}
         onNext={() => setScreen('contact')}
         onSkip={() => setScreen('success')}
       />
     );
-  }
-
-  if (screen === 'contact') {
-    return (
+  } else if (screen === 'contact') {
+    content = (
       <ContactStepScreen
         onBack={() => setScreen('name')}
         onNext={() => setScreen('location')}
         onSkip={() => setScreen('success')}
       />
     );
-  }
-
-  if (screen === 'location') {
-    return (
+  } else if (screen === 'location') {
+    content = (
       <LocationStepScreen
         onBack={() => setScreen('contact')}
         onComplete={() => setScreen('success')}
       />
     );
-  }
-
-  if (screen === 'success') {
-    return <SuccessScreen onGetStarted={() => setScreen('home')} />;
-  }
-
-  if (screen === 'home') {
-    return (
+  } else if (screen === 'success') {
+    content = <SuccessScreen onGetStarted={() => setScreen('home')} />;
+  } else if (screen === 'home') {
+    content = (
       <HomeScreen
         onOpenProfile={() => setScreen('profileHealth')}
         onOpenGroups={() => setScreen('groups')}
@@ -114,66 +99,52 @@ export default function App() {
         onOpenPlace={() => setScreen('place')}
       />
     );
-  }
-
-  if (screen === 'profileHealth') {
-    return (
+  } else if (screen === 'profileHealth') {
+    content = (
       <HealthProfileScreen
         onBackHome={() => setScreen('home')}
         onEditProfile={() => setScreen('profileEdit')}
       />
     );
-  }
-
-  if (screen === 'profilePublic') {
-    return (
+  } else if (screen === 'profilePublic') {
+    content = (
       <PublicProfileScreen
         onBackHome={() => setScreen('home')}
         onEditProfile={() => setScreen('profileEdit')}
       />
     );
-  }
-
-  if (screen === 'profileEdit') {
-    return (
+  } else if (screen === 'profileEdit') {
+    content = (
       <ProfileScreen
         onCancel={() => setScreen('profilePublic')}
         onSave={() => setScreen('profilePublic')}
       />
     );
-  }
-
-  if (screen === 'consultBook') {
-    return (
+  } else if (screen === 'consultBook') {
+    content = (
       <ConsultBookingScreen
         onBack={() => setScreen('home')}
         onProceed={() => setScreen('consultConfirm')}
         onGoHome={() => setScreen('home')}
       />
     );
-  }
-
-  if (screen === 'consultConfirm') {
-    return (
+  } else if (screen === 'consultConfirm') {
+    content = (
       <ConsultConfirmScreen
         onBack={() => setScreen('consultBook')}
         onDone={() => setScreen('home')}
       />
     );
-  }
-
-  if (screen === 'groups') {
-    return (
+  } else if (screen === 'groups') {
+    content = (
       <GroupsScreen
         onBackHome={() => setScreen('home')}
         onOpenConsult={() => setScreen('consultBook')}
         onOpenProfile={() => setScreen('profileHealth')}
       />
     );
-  }
-
-  if (screen === 'place') {
-    return (
+  } else if (screen === 'place') {
+    content = (
       <PlaceScreen
         onBackHome={() => setScreen('home')}
         onOpenConsult={() => setScreen('consultBook')}
@@ -183,6 +154,6 @@ export default function App() {
     );
   }
 
-  return null;
+  return <SafeAreaProvider>{content}</SafeAreaProvider>;
 }
 

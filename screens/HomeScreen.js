@@ -1,7 +1,7 @@
 import React from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
@@ -33,86 +33,88 @@ export function HomeScreen({ onOpenProfile, onConsult, onOpenGroups, onOpenPlace
           contentContainerStyle={styles.homeScroll}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.searchBar}>
-            <Text style={styles.searchPlaceholder}>Search medications, vitamins...</Text>
-          </View>
-          <View style={styles.promoCard}>
-            <View style={styles.promoChip}>
-              <Text style={styles.promoChipText}>QuickProcess</Text>
+          <View style={styles.contentMaxWidth}>
+            <View style={styles.searchBar}>
+              <Text style={styles.searchPlaceholder}>Search medications, vitamins...</Text>
             </View>
-            <Text style={styles.promoTitle}>Upload Prescription</Text>
-            <Text style={styles.promoSubtitle}>
-              Quick processing & home delivery within 2 hours.
-            </Text>
-            <TouchableOpacity style={styles.uploadButton}>
-              <Text style={styles.uploadButtonText}>Upload Now</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Shop by Category</Text>
-            <TouchableOpacity>
-              <Text style={styles.sectionSeeAll}>See all</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryRow}
-          >
-            {[
-              { label: 'Pain Relief' },
-              { label: 'Vitamins' },
-              { label: 'SkinCare' },
-              { label: 'First Aid' },
-              { label: 'Baby' },
-            ].map((item) => (
-              <View key={item.label} style={styles.categoryItem}>
-                <View style={styles.categoryCircle} />
-                <Text style={styles.categoryLabel}>{item.label}</Text>
+            <View style={styles.promoCard}>
+              <View style={styles.promoChip}>
+                <Text style={styles.promoChipText}>QuickProcess</Text>
               </View>
-            ))}
-          </ScrollView>
-          <Text style={styles.sectionTitle}>Popular Products</Text>
-          <View style={styles.productsGrid}>
-            {[
-              {
-                badge: 'Best Seller',
-                name: 'Vitality Vitamin C 1000mg',
-                meta: '60 Tablets',
-                price: '$12.99',
-              },
-              {
-                badge: 'Pain Relief',
-                name: 'Rapid Relief Paracetamol',
-                meta: '24 Caplets',
-                price: '$5.49',
-              },
-              {
-                badge: '-20%',
-                name: 'Hyaluronic Acid Serum',
-                meta: '30ml Bottle',
-                price: '$24.00',
-              },
-              {
-                badge: 'Devices',
-                name: 'Digital Thermometer',
-                meta: 'Instant Read',
-                price: '$15.50',
-              },
-            ].map((item) => (
-              <View key={item.name} style={styles.productCard}>
-                <View style={styles.productImagePlaceholder} />
-                <Text style={styles.productBadge}>{item.badge}</Text>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productMeta}>{item.meta}</Text>
-                <View style={styles.productBottomRow}>
-                  <Text style={styles.productPrice}>{item.price}</Text>
-                  <View style={styles.addButton}>
-                    <Text style={styles.addButtonText}>＋</Text>
+              <Text style={styles.promoTitle}>Upload Prescription</Text>
+              <Text style={styles.promoSubtitle}>
+                Quick processing & home delivery within 2 hours.
+              </Text>
+              <TouchableOpacity style={styles.uploadButton}>
+                <Text style={styles.uploadButtonText}>Upload Now</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Shop by Category</Text>
+              <TouchableOpacity>
+                <Text style={styles.sectionSeeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryRow}
+            >
+              {[
+                { label: 'Pain Relief' },
+                { label: 'Vitamins' },
+                { label: 'SkinCare' },
+                { label: 'First Aid' },
+                { label: 'Baby' },
+              ].map((item) => (
+                <View key={item.label} style={styles.categoryItem}>
+                  <View style={styles.categoryCircle} />
+                  <Text style={styles.categoryLabel}>{item.label}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            <Text style={styles.sectionTitle}>Popular Products</Text>
+            <View style={styles.productsGrid}>
+              {[
+                {
+                  badge: 'Best Seller',
+                  name: 'Vitality Vitamin C 1000mg',
+                  meta: '60 Tablets',
+                  price: '$12.99',
+                },
+                {
+                  badge: 'Pain Relief',
+                  name: 'Rapid Relief Paracetamol',
+                  meta: '24 Caplets',
+                  price: '$5.49',
+                },
+                {
+                  badge: '-20%',
+                  name: 'Hyaluronic Acid Serum',
+                  meta: '30ml Bottle',
+                  price: '$24.00',
+                },
+                {
+                  badge: 'Devices',
+                  name: 'Digital Thermometer',
+                  meta: 'Instant Read',
+                  price: '$15.50',
+                },
+              ].map((item) => (
+                <View key={item.name} style={styles.productCard}>
+                  <View style={styles.productImagePlaceholder} />
+                  <Text style={styles.productBadge}>{item.badge}</Text>
+                  <Text style={styles.productName}>{item.name}</Text>
+                  <Text style={styles.productMeta}>{item.meta}</Text>
+                  <View style={styles.productBottomRow}>
+                    <Text style={styles.productPrice}>{item.price}</Text>
+                    <View style={styles.addButton}>
+                      <Text style={styles.addButtonText}>＋</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
         </ScrollView>
         <View style={styles.tabBar}>
@@ -203,8 +205,13 @@ const styles = StyleSheet.create({
   },
   homeScroll: {
     paddingHorizontal: 24,
-    paddingBottom: 96,
+    paddingBottom: 160,
     paddingTop: 16,
+  },
+  contentMaxWidth: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   searchBar: {
     height: 44,
