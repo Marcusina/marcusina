@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
+  Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -14,7 +15,11 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
   return (
     <SafeAreaView style={styles.publicSafeArea}>
       <View style={styles.publicHeaderRow}>
-        <Text style={styles.publicBrand}>Marcusina</Text>
+        <Image 
+          source={require('../assets/marcusina.jpeg')} 
+          style={styles.publicLogo}
+          resizeMode="contain"
+        />
         <View style={styles.publicHeaderIcons}>
           <Text style={styles.publicHeaderIcon}>🔍</Text>
           <Text style={styles.publicHeaderIcon}>☰</Text>
@@ -151,7 +156,11 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
   return (
     <SafeAreaView style={styles.publicSafeArea}>
       <View style={styles.publicHeaderRow}>
-        <Text style={styles.publicBrand}>Marcusina</Text>
+        <Image 
+          source={require('../assets/marcusina.jpeg')} 
+          style={styles.publicLogo}
+          resizeMode="contain"
+        />
         <View style={styles.publicHeaderIcons}>
           <Text style={styles.publicHeaderIcon}>🔍</Text>
           <Text style={styles.publicHeaderIcon}>☰</Text>
@@ -471,6 +480,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  publicLogo: {
+    width: 100,
+    height: 32,
   },
   publicBrand: {
     fontSize: 22,

@@ -7,27 +7,37 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Image,
 } from 'react-native';
 
-export function HomeScreen({ onOpenProfile, onConsult, onOpenGroups, onOpenPlace }) {
+export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpenPlace }) {
+  const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'M';
+  const userName = user?.email ? user.email.split('@')[0] : 'Marcusina';
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.homeContainer}>
         <View style={styles.homeHeaderRow}>
-          <View style={styles.homeTitleRow}>
-            <View style={styles.homeAvatar}>
-              <Text style={styles.homeAvatarText}>M</Text>
-            </View>
-            <Text style={styles.homeBrandText}>Marcusina</Text>
-          </View>
-          <TouchableOpacity>
-            <View style={styles.cartIconWrapper}>
-              <Text style={styles.cartIcon}>🛒</Text>
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>1</Text>
+          <Image 
+            source={require('../assets/marcusina.jpeg')} 
+            style={styles.homeLogo}
+            resizeMode="contain"
+          />
+          <View style={styles.homeHeaderRight}>
+            <TouchableOpacity onPress={onOpenProfile}>
+              <View style={styles.homeAvatar}>
+                <Text style={styles.homeAvatarText}>{userInitial}</Text>
               </View>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <View style={styles.cartIconWrapper}>
+                <Text style={styles.cartIcon}>🛒</Text>
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>1</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
         <ScrollView
           contentContainerStyle={styles.homeScroll}
@@ -158,28 +168,32 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     backgroundColor: '#FFFFFF',
   },
-  homeTitleRow: {
+  homeHeaderRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  homeAvatar: {
-    width: 36,
+  homeLogo: {
+    width: 120,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3E8FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  homeAvatarText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#7C3AED',
   },
   homeBrandText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#111827',
+  },
+  homeAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3E8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  homeAvatarText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#7C3AED',
   },
   cartIconWrapper: {
     padding: 4,

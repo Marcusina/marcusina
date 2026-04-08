@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -13,7 +14,11 @@ export function GroupsScreen({ onBackHome, onOpenConsult, onOpenProfile }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerRow}>
-        <Text style={styles.brandText}>Marcusina</Text>
+        <Image 
+          source={require('../assets/marcusina.jpeg')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <View style={styles.headerIconsRow}>
           <Text style={styles.headerIcon}>🔍</Text>
           <View style={styles.notificationWrapper}>
@@ -174,6 +179,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  logo: {
+    width: 100,
+    height: 32,
   },
   brandText: {
     fontSize: 22,

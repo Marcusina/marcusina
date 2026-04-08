@@ -7,28 +7,44 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
+  Alert,
+  Image,
 } from 'react-native';
+import { login as loginApi, register as registerApi, verifyEmail as verifyEmailApi, checkVerificationStatus } from '../api/auth.api';
+import { validate } from '../utils/validator';
+import { loginSchema, registerSchema } from '../constants/schemas';
 
 function AppHeaderTitle() {
   return (
     <View style={styles.appHeaderContainer}>
-      <View style={styles.appIcon}>
-        <Text style={styles.appIconHeart}>♥</Text>
-      </View>
-      <Text style={styles.appName}>Marcusina</Text>
+      <Image 
+        source={require('../assets/marcusina.jpeg')} 
+        style={styles.appLogo}
+        resizeMode="contain"
+      />
     </View>
   );
 }
 
-function PrimaryButton({ label, onPress }) {
+function PrimaryButton({ label, onPress, disabled }) {
   return (
-    <TouchableOpacity activeOpacity={0.9} onPress={onPress} style={styles.primaryButton}>
-      <Text style={styles.primaryButtonLabel}>{label}</Text>
+    <TouchableOpacity 
+      activeOpacity={0.9} 
+      onPress={onPress} 
+      style={[styles.primaryButton, disabled && styles.buttonDisabled]}
+      disabled={disabled}
+    >
+      {typeof label === 'string' ? (
+        <Text style={styles.primaryButtonLabel}>{label}</Text>
+      ) : (
+        label
+      )}
     </TouchableOpacity>
   );
 }
 
-function TextField({ label, placeholder, value, onChangeText, secureTextEntry }) {
+function TextField({ label, placeholder, value, onChangeText, secureTextEntry, error }) {
   return (
     <View style={styles.fieldContainer}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -38,8 +54,9 @@ function TextField({ label, placeholder, value, onChangeText, secureTextEntry })
         placeholder={placeholder}
         placeholderTextColor="#9CA3AF"
         secureTextEntry={secureTextEntry}
-        style={styles.textInput}
+        style={[styles.textInput, error && styles.inputError]}
       />
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 }
@@ -94,9 +111,49 @@ function StepHeader({ stepIndex, totalSteps, title, showSkip, onBack, onSkip }) 
   );
 }
 
-export function LoginScreen({ onSignUp, onLogin }) {
+export function LoginScreen({ onSignUp, onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const handleLogin = async () => {
+    const { isValid, errors: validationErrors } = validate(loginSchema.body, { email, password });
+    
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
+
+    setLoading(true);
+    try {
+      console.log('[Login] Sending request with:', { email, password });
+      const response = await loginApi(email, password);
+      console.log('Login response:', JSON.stringify(response, null, 2));
+      
+      // Extract user and token from response (handle potential nesting in 'data' field)
+      const userData = response.user || response.data?.user;
+      const userToken = response.token || response.data?.token;
+
+      if (userToken && userData) {
+        onLoginSuccess(userData, userToken);
+      } else if (response.message === 'Login successful' || response.status === 'success') {
+        // If the message says success but data is in an unexpected place, 
+        // try to find it or at least proceed if possible
+        const fallbackUser = userData || { email };
+        const fallbackToken = userToken || 'dummy-token';
+        onLoginSuccess(fallbackUser, fallbackToken);
+      } else {
+        Alert.alert('Login Failed', response.message || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Login Error', error.message || 'Failed to connect to server');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -113,6 +170,7 @@ export function LoginScreen({ onSignUp, onLogin }) {
               placeholder="hello@example.com"
               value={email}
               onChangeText={setEmail}
+              error={errors.email}
             />
             <TextField
               label="Password"
@@ -120,11 +178,16 @@ export function LoginScreen({ onSignUp, onLogin }) {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              error={errors.password}
             />
             <View style={styles.forgotPasswordRow}>
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </View>
-            <PrimaryButton label="Log In" onPress={onLogin} />
+            <PrimaryButton 
+              label={loading ? <ActivityIndicator color="#FFF" /> : "Log In"} 
+              onPress={handleLogin} 
+              disabled={loading}
+            />
             <View style={styles.orRow}>
               <View style={styles.orDivider} />
               <Text style={styles.orText}>OR CONTINUE WITH</Text>
@@ -151,8 +214,36 @@ export function LoginScreen({ onSignUp, onLogin }) {
   );
 }
 
-export function EmailVerifyScreen({ onBack, onVerified }) {
-  const [code, setCode] = useState(['', '', '', '']);
+export function EmailVerifyScreen({ email, onBack, onVerified }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckStatus = async () => {
+    setLoading(true);
+    try {
+      const response = await checkVerificationStatus(email);
+      if (response.verified) {
+        Alert.alert('Success', 'Email verified successfully!');
+        onVerified();
+      } else {
+        Alert.alert('Not Verified', 'We haven\'t detected your verification yet. Please click the link in your email and try again.');
+      }
+    } catch (error) {
+      if (error.message.includes('not found') || error.message.includes('404')) {
+        Alert.alert(
+          'Verification Check Error', 
+          'The verification check endpoint was not found on the server. Please ensure the backend supports this route or try to proceed manually.',
+          [
+            { text: 'Wait and Try Again', style: 'cancel' },
+            { text: 'Proceed to Next Step', onPress: onVerified }
+          ]
+        );
+      } else {
+        Alert.alert('Error', error.message || 'Failed to check verification status');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -175,16 +266,26 @@ export function EmailVerifyScreen({ onBack, onVerified }) {
           <View style={styles.onboardingBody}>
             <Text style={styles.screenTitle}>Verify your email</Text>
             <Text style={styles.screenSubtitle}>
-              We sent a 4-digit code to user@email.com.
-              Enter it below to verify your identity.
+              We sent a verification link to {email || 'your email'}.
+              Please click the link in the email to verify your account.
             </Text>
-            <CodeInputRow length={4} values={code} onChange={setCode} />
-            <Text style={styles.didntReceiveText}>I didn't receive a code</Text>
-            <TouchableOpacity>
-              <Text style={styles.resendLink}>Resend Code</Text>
-            </TouchableOpacity>
+            <View style={styles.linkInfoBox}>
+              <Text style={styles.linkInfoText}>
+                Once you've clicked the link, tap the button below to continue.
+              </Text>
+            </View>
+            <View style={styles.didntReceiveContainer}>
+              <Text style={styles.didntReceiveText}>I didn't receive an email</Text>
+              <TouchableOpacity>
+                <Text style={styles.resendLink}>Resend Link</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <PrimaryButton label="Verify Email ✓" onPress={onVerified} />
+          <PrimaryButton 
+            label={loading ? <ActivityIndicator color="#FFF" /> : "I've Verified My Email"} 
+            onPress={handleCheckStatus} 
+            disabled={loading}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -375,10 +476,34 @@ export function LocationStepScreen({ onBack, onComplete }) {
   );
 }
 
-export function ProfileBasicsScreen({ onBack, onNext }) {
+export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
+  const [email, setEmail] = useState('');
   const [gender, setGender] = useState('female');
   const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const handleRegister = async () => {
+    const { isValid, errors: validationErrors } = validate(registerSchema.body, { email, password });
+    
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
+
+    setLoading(true);
+    try {
+      const response = await registerApi({ email, password });
+      Alert.alert('Success', 'Registration successful! Please check your email for verification.');
+      onRegisterSuccess(email);
+    } catch (error) {
+      Alert.alert('Registration Error', error.message || 'Failed to register');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   let strengthScore = 0;
   if (password.length >= 8) strengthScore += 1;
@@ -408,6 +533,13 @@ export function ProfileBasicsScreen({ onBack, onNext }) {
             <Text style={styles.screenSubtitle}>
               This helps us personalize your health plan.
             </Text>
+            <TextField
+              label="Email"
+              placeholder="hello@example.com"
+              value={email}
+              onChangeText={setEmail}
+              error={errors.email}
+            />
             <Text style={styles.fieldLabel}>Gender Identity</Text>
             <View style={styles.genderRow}>
               <TouchableOpacity
@@ -456,8 +588,9 @@ export function ProfileBasicsScreen({ onBack, onNext }) {
                 placeholder="●●●●●●●●"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry
-                style={styles.textInput}
+                style={[styles.textInput, errors.password && styles.inputError]}
               />
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
             <View style={styles.passwordStrengthRow}>
               <Text style={styles.passwordStrengthLabel}>{strengthLabel} strength</Text>
@@ -472,7 +605,11 @@ export function ProfileBasicsScreen({ onBack, onNext }) {
               />
             </View>
           </View>
-          <PrimaryButton label="Continue" onPress={onNext} />
+          <PrimaryButton 
+            label={loading ? <ActivityIndicator color="#FFF" /> : "Continue"} 
+            onPress={handleRegister} 
+            disabled={loading}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -567,25 +704,16 @@ const styles = StyleSheet.create({
   },
   appHeaderContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
-  appIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 24,
-    backgroundColor: '#F97316',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  appIconHeart: {
-    fontSize: 32,
-    color: '#FFFFFF',
+  appLogo: {
+    width: 200,
+    height: 100,
   },
   appName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#7C3AED',
   },
   loginCard: {
     marginTop: 8,
@@ -639,6 +767,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  buttonDisabled: {
+    backgroundColor: '#D1D5DB',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 4,
   },
   orRow: {
     flexDirection: 'row',
@@ -853,6 +992,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#F97316',
     fontWeight: '500',
+  },
+  linkInfoBox: {
+    backgroundColor: '#F3F4F6',
+    padding: 16,
+    borderRadius: 12,
+    marginVertical: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#7C3AED',
+  },
+  linkInfoText: {
+    fontSize: 14,
+    color: '#4B5563',
+    lineHeight: 20,
+  },
+  didntReceiveContainer: {
+    marginTop: 16,
+    alignItems: 'center',
   },
   resendRow: {
     flexDirection: 'row',

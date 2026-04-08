@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { View, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { getCurrentUser } from './api/auth.api';
 import {
   LoginScreen,
   ProfileBasicsScreen,
@@ -26,6 +28,9 @@ import {
 
 export default function App() {
   const [screen, setScreen] = useState('login');
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [regEmail, setRegEmail] = useState('');
   const [profile, setProfile] = useState({
     name: 'Marcus Chen',
     email: 'marcus.chen@healthmail.com',
@@ -38,25 +43,57 @@ export default function App() {
     weight: '75 kg',
   });
 
+  const handleLoginSuccess = (userData, userToken) => {
+    setUser(userData);
+    setToken(userToken);
+    setScreen('home');
+  };
+
+  console.log('[App] Rendering screen:', screen);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (token) {
+        try {
+          const userData = await getCurrentUser(token);
+          setUser(userData);
+        } catch (error) {
+          console.error('Failed to fetch current user:', error);
+          // If token is invalid, clear it
+          if (error.message.includes('Unauthorized') || error.message.includes('token')) {
+            setToken(null);
+            setUser(null);
+            setScreen('login');
+          }
+        }
+      }
+    };
+    fetchUser();
+  }, [token]);
+
   let content = null;
 
   if (screen === 'login') {
     content = (
       <LoginScreen
         onSignUp={() => setScreen('profileBasics')}
-        onLogin={() => setScreen('home')}
+        onLoginSuccess={handleLoginSuccess}
       />
     );
   } else if (screen === 'profileBasics') {
     content = (
       <ProfileBasicsScreen
         onBack={() => setScreen('login')}
-        onNext={() => setScreen('emailVerify')}
+        onRegisterSuccess={(email) => {
+          setRegEmail(email);
+          setScreen('emailVerify');
+        }}
       />
     );
   } else if (screen === 'emailVerify') {
     content = (
       <EmailVerifyScreen
+        email={regEmail}
         onBack={() => setScreen('profileBasics')}
         onVerified={() => setScreen('phoneVerify')}
       />
@@ -104,6 +141,7 @@ export default function App() {
   } else if (screen === 'home') {
     content = (
       <HomeScreen
+        user={user}
         onOpenProfile={() => setScreen('profileHealth')}
         onOpenGroups={() => setScreen('groups')}
         onConsult={() => setScreen('consultBook')}
@@ -171,6 +209,14 @@ export default function App() {
     );
   }
 
-  return <SafeAreaProvider>{content}</SafeAreaProvider>;
+  return (
+    <SafeAreaProvider>
+      {content || (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>Loading App...</Text>
+        </View>
+      )}
+    </SafeAreaProvider>
+  );
 }
 

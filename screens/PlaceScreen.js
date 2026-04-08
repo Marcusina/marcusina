@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -18,12 +19,11 @@ export function PlaceScreen({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerRow}>
-        <View style={styles.headerLeft}>
-          <View style={styles.headerAvatarCircle}>
-            <Text style={styles.headerAvatarIcon}>👤</Text>
-          </View>
-          <Text style={styles.headerTitle}>Marcusina Place</Text>
-        </View>
+        <Image 
+          source={require('../assets/marcusina.jpeg')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <TouchableOpacity style={styles.headerBellCircle}>
           <Text style={styles.headerBellIcon}>🔔</Text>
         </TouchableOpacity>
@@ -150,21 +150,9 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerAvatarCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F3E8FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  headerAvatarIcon: {
-    fontSize: 18,
+  logo: {
+    width: 120,
+    height: 36,
   },
   headerTitle: {
     fontSize: 18,
