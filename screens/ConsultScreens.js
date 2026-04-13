@@ -1,26 +1,29 @@
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web' && width >= 768;
   const [selectedDoctor, setSelectedDoctor] = useState('Dr. Sarah');
   const [selectedService, setSelectedService] = useState('Video Call');
   const [selectedDate, setSelectedDate] = useState('WED 19');
   const [selectedSlot, setSelectedSlot] = useState('09:30 AM');
 
   const doctors = [
-    { name: 'Dr. Sarah', rating: '4.9' },
-    { name: 'Dr. Mark', rating: '4.8' },
-    { name: 'Dr. Elena', rating: '5.0' },
-    { name: 'Dr. James', rating: '4.7' },
-    { name: 'Dr. Chen', rating: '4.8' },
+    { name: 'Dr. Sarah', rating: '4.9', specialty: 'General Physician' },
+    { name: 'Dr. Mark', rating: '4.8', specialty: 'Cardiologist' },
+    { name: 'Dr. Elena', rating: '5.0', specialty: 'Dermatologist' },
+    { name: 'Dr. James', rating: '4.7', specialty: 'Pediatrician' },
+    { name: 'Dr. Chen', rating: '4.8', specialty: 'Neurologist' },
   ];
 
   const dates = [
@@ -32,569 +35,462 @@ export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
     { label: 'SAT', day: '22' },
   ];
 
-  const morningSlots = [
-    '09:00 AM',
-    '09:30 AM',
-    '10:00 AM',
-    '11:00 AM',
-    '11:30 AM',
-    '12:00 PM',
-  ];
-
+  const morningSlots = ['09:00 AM', '09:30 AM', '10:00 AM', '11:00 AM', '11:30 AM', '12:00 PM'];
   const afternoonSlots = ['02:00 PM', '03:30 PM', '04:00 PM'];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.backArrow}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Book Consultation</Text>
-        <TouchableOpacity>
-          <View style={styles.profileCircle}>
-            <Text style={styles.profileInitial}>M</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Quick Match</Text>
-            <Text style={styles.sectionAction}>View All</Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.quickRow}
-          >
-            {doctors.map((doctor) => {
-              const isSelected = selectedDoctor === doctor.name;
-              return (
-                <TouchableOpacity
-                  key={doctor.name}
-                  style={styles.quickDoctorItem}
-                  onPress={() => setSelectedDoctor(doctor.name)}
-                >
-                  <View
-                    style={[
-                      styles.quickAvatarRing,
-                      isSelected && styles.quickAvatarRingSelected,
-                    ]}
-                  >
-                    <View style={styles.quickAvatarCircle}>
-                      <Text style={styles.quickAvatarInitial}>
-                        {doctor.name.split(' ')[1]?.[0] || 'M'}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.quickRatingBadge}>
-                    <Text style={styles.quickRatingText}>★ {doctor.rating}</Text>
-                  </View>
-                  <Text style={styles.quickDoctorName}>{doctor.name}</Text>
+    <View style={styles.container}>
+      {!isWeb && (
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={onBack}>
+            <MaterialIcons name="arrow-back" size={24} color="#4B5563" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Book Consultation</Text>
+          <View style={styles.headerRight} />
+        </View>
+      )}
+
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWeb && styles.webScrollContent
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[
+          styles.contentMaxWidth,
+          isWeb && styles.webContentMaxWidth
+        ]}>
+          <View style={[styles.bookingLayout, isWeb && styles.webBookingLayout]}>
+            <View style={[styles.bookingMain, isWeb && styles.webBookingMain]}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Select Specialist</Text>
+                <TouchableOpacity>
+                  <Text style={styles.sectionAction}>View All</Text>
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-          <Text style={styles.sectionTitle}>Select Service Type</Text>
-          <View style={styles.serviceRow}>
-            {[
-              { label: 'Video Call', icon: '🎥' },
-              { label: 'Voice Call', icon: '📞' },
-              { label: 'Chat', icon: '💬' },
-            ].map((item) => {
-              const isSelected = selectedService === item.label;
-              return (
-                <TouchableOpacity
-                  key={item.label}
-                  style={[
-                    styles.serviceCard,
-                    isSelected && styles.serviceCardSelected,
-                  ]}
-                  onPress={() => setSelectedService(item.label)}
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.quickRow}
+              >
+                {doctors.map((doctor) => {
+                  const isSelected = selectedDoctor === doctor.name;
+                  return (
+                    <TouchableOpacity
+                      key={doctor.name}
+                      style={[styles.doctorCard, isSelected && styles.doctorCardSelected]}
+                      onPress={() => setSelectedDoctor(doctor.name)}
+                    >
+                      <View style={styles.doctorAvatar}>
+                        <MaterialIcons name="person" size={32} color={isSelected ? '#7C3AED' : '#9CA3AF'} />
+                        {isSelected && (
+                          <View style={styles.selectedCheck}>
+                            <MaterialIcons name="check" size={12} color="#FFFFFF" />
+                          </View>
+                        )}
+                      </View>
+                      <Text style={[styles.doctorName, isSelected && styles.doctorNameSelected]}>{doctor.name}</Text>
+                      <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
+                      <View style={styles.ratingBox}>
+                        <MaterialIcons name="star" size={14} color="#FBBF24" />
+                        <Text style={styles.ratingText}>{doctor.rating}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              <Text style={styles.sectionTitle}>Service Type</Text>
+              <View style={[styles.serviceRow, isWeb && styles.webServiceRow]}>
+                {[
+                  { label: 'Video Call', icon: 'videocam', price: '$25' },
+                  { label: 'Voice Call', icon: 'call', price: '$15' },
+                  { label: 'Chat', icon: 'chat', price: '$10' },
+                ].map((item) => {
+                  const isSelected = selectedService === item.label;
+                  return (
+                    <TouchableOpacity
+                      key={item.label}
+                      style={[styles.serviceItem, isSelected && styles.serviceItemSelected]}
+                      onPress={() => setSelectedService(item.label)}
+                    >
+                      <View style={[styles.serviceIconBox, isSelected && styles.serviceIconBoxSelected]}>
+                        <MaterialIcons name={item.icon} size={24} color={isSelected ? '#FFFFFF' : '#7C3AED'} />
+                      </View>
+                      <View style={styles.serviceInfo}>
+                        <Text style={[styles.serviceLabel, isSelected && styles.serviceLabelSelected]}>{item.label}</Text>
+                        <Text style={styles.servicePrice}>{item.price}</Text>
+                      </View>
+                      {isSelected && <MaterialIcons name="check-circle" size={20} color="#7C3AED" />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={[styles.bookingSidebar, isWeb && styles.webBookingSidebar]}>
+              <View style={styles.scheduleCard}>
+                <View style={styles.scheduleHeader}>
+                  <Text style={styles.sectionTitle}>Schedule</Text>
+                  <Text style={styles.scheduleMonth}>June 2024</Text>
+                </View>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.dateRow}
                 >
-                  <Text style={styles.serviceIcon}>{item.icon}</Text>
-                  <Text
-                    style={[
-                      styles.serviceLabel,
-                      isSelected && styles.serviceLabelSelected,
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
+                  {dates.map((date) => {
+                    const key = `${date.label} ${date.day}`;
+                    const isSelected = selectedDate === key;
+                    return (
+                      <TouchableOpacity
+                        key={key}
+                        style={[styles.dateItem, isSelected && styles.dateItemSelected]}
+                        onPress={() => setSelectedDate(key)}
+                      >
+                        <Text style={[styles.dateLabel, isSelected && styles.dateLabelSelected]}>{date.label}</Text>
+                        <Text style={[styles.dateDay, isSelected && styles.dateDaySelected]}>{date.day}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+
+                <Text style={styles.subSectionTitle}>MORNING SLOTS</Text>
+                <View style={styles.slotRow}>
+                  {morningSlots.map((slot) => {
+                    const isSelected = selectedSlot === slot;
+                    return (
+                      <TouchableOpacity
+                        key={slot}
+                        style={[styles.slotPill, isSelected && styles.slotPillSelected]}
+                        onPress={() => setSelectedSlot(slot)}
+                      >
+                        <Text style={[styles.slotLabel, isSelected && styles.slotLabelSelected]}>{slot}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <Text style={styles.subSectionTitle}>AFTERNOON SLOTS</Text>
+                <View style={styles.slotRow}>
+                  {afternoonSlots.map((slot) => {
+                    const isSelected = selectedSlot === slot;
+                    return (
+                      <TouchableOpacity
+                        key={slot}
+                        style={[styles.slotPill, isSelected && styles.slotPillSelected]}
+                        onPress={() => setSelectedSlot(slot)}
+                      >
+                        <Text style={[styles.slotLabel, isSelected && styles.slotLabelSelected]}>{slot}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <TouchableOpacity style={styles.proceedButton} onPress={onProceed}>
+                  <Text style={styles.proceedButtonText}>Confirm Booking</Text>
+                  <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
-              );
-            })}
-          </View>
-          <View style={styles.scheduleHeaderRow}>
-            <Text style={styles.sectionTitle}>Available Schedule</Text>
-            <Text style={styles.scheduleMonth}>June 2024 📅</Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.dateRow}
-          >
-            {dates.map((date) => {
-              const key = `${date.label} ${date.day}`;
-              const isSelected = selectedDate === key;
-              return (
-                <TouchableOpacity
-                  key={key}
-                  style={[
-                    styles.dateItem,
-                    isSelected && styles.dateItemSelected,
-                  ]}
-                  onPress={() => setSelectedDate(key)}
-                >
-                  <Text
-                    style={[
-                      styles.dateLabel,
-                      isSelected && styles.dateLabelSelected,
-                    ]}
-                  >
-                    {date.label}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.dateDay,
-                      isSelected && styles.dateDaySelected,
-                    ]}
-                  >
-                    {date.day}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-          <Text style={styles.subSectionTitle}>MORNING SLOTS</Text>
-          <View style={styles.slotRow}>
-            {morningSlots.map((slot) => {
-              const isDisabled = slot === '11:00 AM';
-              const isSelected = selectedSlot === slot;
-              return (
-                <TouchableOpacity
-                  key={slot}
-                  disabled={isDisabled}
-                  style={[
-                    styles.slotPill,
-                    isSelected && styles.slotPillSelected,
-                    isDisabled && styles.slotPillDisabled,
-                  ]}
-                  onPress={() => setSelectedSlot(slot)}
-                >
-                  <Text
-                    style={[
-                      styles.slotLabel,
-                      isSelected && styles.slotLabelSelected,
-                      isDisabled && styles.slotLabelDisabled,
-                    ]}
-                  >
-                    {slot}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <Text style={styles.subSectionTitle}>AFTERNOON SLOTS</Text>
-          <View style={styles.slotRow}>
-            {afternoonSlots.map((slot) => {
-              const isSelected = selectedSlot === slot;
-              return (
-                <TouchableOpacity
-                  key={slot}
-                  style={[
-                    styles.slotPill,
-                    isSelected && styles.slotPillSelected,
-                  ]}
-                  onPress={() => setSelectedSlot(slot)}
-                >
-                  <Text
-                    style={[
-                      styles.slotLabel,
-                      isSelected && styles.slotLabelSelected,
-                    ]}
-                  >
-                    {slot}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+              </View>
+            </View>
           </View>
         </View>
       </ScrollView>
-      <View style={styles.bottomBar}>
-        <View style={styles.bottomTopRow}>
-          <View>
-            <Text style={styles.feeLabel}>Consultation Fee</Text>
-            <Text style={styles.feeValue}>$120.00</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={onProceed}
-          >
-            <Text style={styles.primaryButtonText}>Continue</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.bottomNavRow}>
-          <TouchableOpacity style={styles.bottomNavItem} onPress={onGoHome}>
-            <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.bottomNavIcon} />
-            <Text style={styles.bottomNavLabel}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomNavItem}>
-            <MaterialIcons name="groups" size={22} color="#9CA3AF" style={styles.bottomNavIcon} />
-            <Text style={styles.bottomNavLabel}>Social</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomNavItem}>
-            <MaterialIcons
-              name="medical-services"
-              size={22}
-              color="#7C3AED"
-              style={[styles.bottomNavIcon, styles.bottomNavIconActive]}
-            />
-            <Text
-              style={[styles.bottomNavLabel, styles.bottomNavLabelActive]}
-            >
-              Consult
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomNavItem}>
-            <Text style={styles.bottomNavIcon}>⚙️</Text>
-            <Text style={styles.bottomNavLabel}>Settings</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 export function ConsultConfirmScreen({ onBack, onDone }) {
-  const [method, setMethod] = useState('card');
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web' && width >= 768;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.backArrow}>←</Text>
+    <View style={styles.container}>
+      <View style={styles.confirmContent}>
+        <View style={styles.successIconCircle}>
+          <MaterialIcons name="check" size={60} color="#FFFFFF" />
+        </View>
+        <Text style={styles.successTitle}>Booking Confirmed!</Text>
+        <Text style={styles.successSubtitle}>
+          Your consultation with Dr. Sarah has been scheduled for June 19, 2024 at 09:30 AM.
+        </Text>
+        
+        <View style={[styles.summaryCard, isWeb && styles.webSummaryCard]}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Doctor</Text>
+            <Text style={styles.summaryValue}>Dr. Sarah</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Service</Text>
+            <Text style={styles.summaryValue}>Video Call</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Time</Text>
+            <Text style={styles.summaryValue}>09:30 AM</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Total Payment</Text>
+            <Text style={[styles.summaryValue, styles.totalPrice]}>$25.00</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.doneButton} onPress={onDone}>
+          <Text style={styles.doneButtonText}>Go to Dashboard</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Confirm & Pay</Text>
-        <View style={styles.headerSpacer} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.doctorSummaryCard}>
-          <View style={styles.summaryAvatar}>
-            <Text style={styles.summaryAvatarInitial}>J</Text>
-          </View>
-          <View style={styles.summaryText}>
-            <Text style={styles.summaryName}>Dr. Julian Sterling</Text>
-            <Text style={styles.summaryRole}>Senior Cardiologist</Text>
-            <View style={styles.summaryRatingBadge}>
-              <Text style={styles.summaryRatingText}>★ 4.9</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryIcon}>📅</Text>
-          <Text style={styles.summaryMainText}>Oct 24, 2023</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryIcon}>⏰</Text>
-          <Text style={styles.summaryMainText}>10:30 AM - 11:00 AM</Text>
-        </View>
-        <Text style={styles.paymentSectionTitle}>PAYMENT SUMMARY</Text>
-        <View style={styles.paymentRow}>
-          <Text style={styles.paymentLabel}>Consultation Fee</Text>
-          <Text style={styles.paymentValue}>$120.00</Text>
-        </View>
-        <View style={styles.paymentRow}>
-          <Text style={styles.paymentLabel}>Platform Fee</Text>
-          <Text style={styles.paymentValue}>$5.50</Text>
-        </View>
-        <View style={styles.paymentRowTotal}>
-          <Text style={styles.paymentTotalLabel}>Total Amount</Text>
-          <Text style={styles.paymentTotalValue}>$125.50</Text>
-        </View>
-        <Text style={styles.paymentSectionTitle}>PAYMENT METHOD</Text>
-        <TouchableOpacity
-          style={[
-            styles.methodCard,
-            method === 'card' && styles.methodCardSelected,
-          ]}
-          onPress={() => setMethod('card')}
-        >
-          <Text style={styles.methodIcon}>💳</Text>
-          <View style={styles.methodText}>
-            <Text style={styles.methodTitle}>Credit/Debit Card</Text>
-            <Text style={styles.methodSubtitle}>•••• 4242</Text>
-          </View>
-          <View
-            style={[
-              styles.radioOuter,
-              method === 'card' && styles.radioOuterSelected,
-            ]}
-          >
-            {method === 'card' && <View style={styles.radioInner} />}
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.methodCard,
-            method === 'apple' && styles.methodCardSelected,
-          ]}
-          onPress={() => setMethod('apple')}
-        >
-          <Text style={styles.methodIcon}></Text>
-          <View style={styles.methodText}>
-            <Text style={styles.methodTitle}>Apple Pay</Text>
-            <Text style={styles.methodSubtitle}>Fast and secure</Text>
-          </View>
-          <View
-            style={[
-              styles.radioOuter,
-              method === 'apple' && styles.radioOuterSelected,
-            ]}
-          >
-            {method === 'apple' && <View style={styles.radioInner} />}
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.methodCard,
-            method === 'wallet' && styles.methodCardSelected,
-          ]}
-          onPress={() => setMethod('wallet')}
-        >
-          <Text style={styles.methodIcon}>📱</Text>
-          <View style={styles.methodText}>
-            <Text style={styles.methodTitle}>Mobile Wallet</Text>
-            <Text style={styles.methodSubtitle}>PayPal, Venmo</Text>
-          </View>
-          <View
-            style={[
-              styles.radioOuter,
-              method === 'wallet' && styles.radioOuterSelected,
-            ]}
-          >
-            {method === 'wallet' && <View style={styles.radioInner} />}
-          </View>
-        </TouchableOpacity>
-      </ScrollView>
-      <View style={styles.confirmBottomBar}>
-        <TouchableOpacity style={styles.confirmButton} onPress={onDone}>
-          <Text style={styles.confirmButtonText}>Pay & Confirm $125.50</Text>
-        </TouchableOpacity>
-        <View style={styles.bottomNavRow}>
-          <TouchableOpacity style={styles.bottomNavItem} onPress={onBack}>
-            <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.bottomNavIcon} />
-            <Text style={styles.bottomNavLabel}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomNavItem}>
-            <MaterialIcons
-              name="event-note"
-              size={22}
-              color="#7C3AED"
-              style={styles.bottomNavIcon}
-            />
-            <Text style={styles.bottomNavLabel}>Bookings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomNavItem}>
-            <MaterialIcons
-              name="chat-bubble-outline"
-              size={22}
-              color="#9CA3AF"
-              style={styles.bottomNavIcon}
-            />
-            <Text style={styles.bottomNavLabel}>Chats</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomNavItem}>
-            <MaterialIcons name="person" size={22} color="#9CA3AF" style={styles.bottomNavIcon} />
-            <Text style={styles.bottomNavLabel}>Profile</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  backArrow: {
-    fontSize: 20,
-    color: '#111827',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#111827',
   },
-  headerSpacer: {
-    width: 28,
-  },
-  profileCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F3E8FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileInitial: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#7C3AED',
+  headerRight: {
+    width: 24,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 140,
-    paddingTop: 16,
+    paddingBottom: 40,
+  },
+  webScrollContent: {
+    paddingTop: 0,
   },
   contentMaxWidth: {
-    width: '100%',
-    maxWidth: 520,
-    alignSelf: 'center',
+    paddingHorizontal: 20,
+  },
+  webContentMaxWidth: {
+    paddingHorizontal: 0,
+  },
+  bookingLayout: {
+    marginTop: 20,
+    gap: 24,
+  },
+  webBookingLayout: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  bookingMain: {
+    flex: 1,
+  },
+  webBookingMain: {
+    flex: 1.5,
+  },
+  bookingSidebar: {
+    flex: 1,
+  },
+  webBookingSidebar: {
+    flex: 1,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#111827',
   },
   sectionAction: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#7C3AED',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   quickRow: {
-    paddingVertical: 4,
-    marginBottom: 20,
+    paddingBottom: 20,
   },
-  quickDoctorItem: {
+  doctorCard: {
+    width: 140,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
     marginRight: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  quickAvatarRing: {
+  doctorCardSelected: {
+    borderColor: '#7C3AED',
+    backgroundColor: '#F5F3FF',
+  },
+  doctorAvatar: {
     width: 64,
     height: 64,
     borderRadius: 32,
+    backgroundColor: '#F9FAFB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    position: 'relative',
+  },
+  selectedCheck: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#7C3AED',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#E5E7EB',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: '#FFFFFF',
   },
-  quickAvatarRingSelected: {
-    borderColor: '#7C3AED',
-  },
-  quickAvatarCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E5E7EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickAvatarInitial: {
-    fontSize: 24,
+  doctorName: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#111827',
+    marginBottom: 4,
   },
-  quickRatingBadge: {
+  doctorNameSelected: {
+    color: '#7C3AED',
+  },
+  doctorSpecialty: {
+    fontSize: 11,
+    color: '#6B7280',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    backgroundColor: '#FFFBEB',
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    backgroundColor: '#FBBF24',
+    paddingVertical: 4,
+    borderRadius: 8,
   },
-  quickRatingText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  quickDoctorName: {
-    marginTop: 4,
+  ratingText: {
     fontSize: 12,
-    color: '#111827',
+    fontWeight: '700',
+    color: '#B45309',
+    marginLeft: 4,
   },
   serviceRow: {
+    gap: 12,
+  },
+  webServiceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
+    flexWrap: 'wrap',
   },
-  serviceCard: {
-    flex: 1,
-    borderRadius: 16,
-    backgroundColor: '#F9FAFB',
-    paddingVertical: 16,
+  serviceItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  serviceCardSelected: {
-    backgroundColor: '#FCE7F3',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
-    borderColor: '#EC4899',
+    borderColor: '#F3F4F6',
+    ...Platform.select({
+      web: { flex: 1, minWidth: 200 }
+    })
   },
-  serviceIcon: {
-    fontSize: 22,
-    marginBottom: 8,
+  serviceItemSelected: {
+    borderColor: '#7C3AED',
+    backgroundColor: '#F5F3FF',
+  },
+  serviceIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#F5F3FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  serviceIconBoxSelected: {
+    backgroundColor: '#7C3AED',
+  },
+  serviceInfo: {
+    flex: 1,
   },
   serviceLabel: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
   },
   serviceLabelSelected: {
-    color: '#111827',
-    fontWeight: '600',
+    color: '#7C3AED',
   },
-  scheduleHeaderRow: {
+  servicePrice: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  scheduleCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+      }
+    })
+  },
+  scheduleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  scheduleMonth: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  dateRow: {
     marginBottom: 20,
   },
+  scheduleMonth: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  dateRow: {
+    paddingBottom: 20,
+  },
   dateItem: {
-    width: 56,
+    width: 64,
+    height: 80,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
-    paddingVertical: 10,
+    backgroundColor: '#F9FAFB',
     alignItems: 'center',
-    marginRight: 8,
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   dateItemSelected: {
     backgroundColor: '#7C3AED',
+    borderColor: '#7C3AED',
   },
   dateLabel: {
     fontSize: 11,
+    fontWeight: '600',
     color: '#6B7280',
+    marginBottom: 4,
   },
   dateLabelSelected: {
-    color: '#E5E7EB',
+    color: 'rgba(255,255,255,0.8)',
   },
   dateDay: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#111827',
   },
   dateDaySelected: {
@@ -602,281 +498,132 @@ const styles = StyleSheet.create({
   },
   subSectionTitle: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#9CA3AF',
-    marginBottom: 8,
+    letterSpacing: 1,
+    marginTop: 12,
+    marginBottom: 12,
   },
   slotRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 20,
   },
   slotPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: '#F3F4F6',
-    marginRight: 8,
-    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   slotPillSelected: {
     backgroundColor: '#F5F3FF',
-    borderWidth: 1,
     borderColor: '#7C3AED',
   },
-  slotPillDisabled: {
-    backgroundColor: '#E5E7EB',
-  },
   slotLabel: {
-    fontSize: 12,
-    color: '#111827',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#4B5563',
   },
   slotLabelSelected: {
     color: '#7C3AED',
-    fontWeight: '600',
   },
-  slotLabelDisabled: {
-    color: '#9CA3AF',
-    textDecorationLine: 'line-through',
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 16,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 10,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  bottomTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  feeLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  feeValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  primaryButton: {
-    borderRadius: 999,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
+  proceedButton: {
     backgroundColor: '#7C3AED',
-  },
-  primaryButtonText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  bottomNavRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 4,
-  },
-  bottomNavItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  bottomNavIcon: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
-  bottomNavLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-  },
-  bottomNavIconActive: {
-    color: '#7C3AED',
-  },
-  bottomNavLabelActive: {
-    color: '#7C3AED',
-    fontWeight: '600',
-  },
-  doctorSummaryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 16,
-    backgroundColor: '#F9FAFB',
-    padding: 16,
-    marginBottom: 12,
-  },
-  summaryAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginTop: 12,
   },
-  summaryAvatarInitial: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  summaryText: {
-    flex: 1,
-  },
-  summaryName: {
+  proceedButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  confirmContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  successIconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  successTitle: {
+    fontSize: 28,
+    fontWeight: '800',
     color: '#111827',
+    textAlign: 'center',
+    marginBottom: 12,
   },
-  summaryRole: {
-    fontSize: 13,
+  successSubtitle: {
+    fontSize: 16,
     color: '#6B7280',
-    marginBottom: 4,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 40,
   },
-  summaryRatingBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    backgroundColor: '#FBBF24',
+  summaryCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    marginBottom: 40,
   },
-  summaryRatingText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#1F2937',
+  webSummaryCard: {
+    maxWidth: 500,
   },
   summaryRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    paddingVertical: 8,
   },
-  summaryIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  summaryMainText: {
-    fontSize: 13,
-    color: '#111827',
-  },
-  paymentSectionTitle: {
-    marginTop: 16,
-    marginBottom: 8,
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#9CA3AF',
-  },
-  paymentRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  paymentRowTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  paymentLabel: {
-    fontSize: 13,
+  summaryLabel: {
+    fontSize: 15,
     color: '#6B7280',
   },
-  paymentValue: {
-    fontSize: 13,
-    color: '#111827',
-  },
-  paymentTotalLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  paymentTotalValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#7C3AED',
-  },
-  methodCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 16,
-    backgroundColor: '#F9FAFB',
-    padding: 12,
-    marginBottom: 8,
-  },
-  methodCardSelected: {
-    borderWidth: 1,
-    borderColor: '#7C3AED',
-    backgroundColor: '#F5F3FF',
-  },
-  methodIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  methodText: {
-    flex: 1,
-  },
-  methodTitle: {
-    fontSize: 14,
-    color: '#111827',
-  },
-  methodSubtitle: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioOuterSelected: {
-    borderColor: '#7C3AED',
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#7C3AED',
-  },
-  confirmBottomBar: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 16,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 10,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  confirmButton: {
-    borderRadius: 999,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: '#7C3AED',
-    marginBottom: 8,
-  },
-  confirmButtonText: {
+  summaryValue: {
     fontSize: 15,
     fontWeight: '600',
+    color: '#111827',
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 12,
+  },
+  totalPrice: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#7C3AED',
+  },
+  doneButton: {
+    backgroundColor: '#7C3AED',
+    paddingHorizontal: 48,
+    paddingVertical: 16,
+    borderRadius: 16,
+    ...Platform.select({
+      web: { minWidth: 240 }
+    })
+  },
+  doneButtonText: {
     color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });

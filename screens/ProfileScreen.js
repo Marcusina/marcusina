@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -8,1042 +7,786 @@ import {
   StyleSheet,
   TextInput,
   Image,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web' && width >= 768;
   const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
   
   return (
-    <SafeAreaView style={styles.publicSafeArea}>
-      <View style={styles.publicHeaderRow}>
-        <Image 
-          source={require('../assets/marcusina.jpeg')} 
-          style={styles.publicLogo}
-          resizeMode="contain"
-        />
-        <View style={styles.publicHeaderIcons}>
-          <Text style={styles.publicHeaderIcon}>🔍</Text>
-          <Text style={styles.publicHeaderIcon}>☰</Text>
+    <View style={styles.container}>
+      {!isWeb && (
+        <View style={styles.headerRow}>
+          <Image 
+            source={require('../assets/marcusina.jpeg')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <View style={styles.headerIconsRow}>
+            <TouchableOpacity style={styles.headerIconBtn}>
+              <MaterialIcons name="search" size={24} color="#4B5563" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerIconBtn}>
+              <MaterialIcons name="settings" size={24} color="#4B5563" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-      <ScrollView contentContainerStyle={styles.publicScrollContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.publicAvatarWrapper}>
-            <View style={styles.publicAvatarRing}>
-              <View style={styles.publicAvatarCircle}>
-                <Text style={styles.publicAvatarInitial}>{avatarInitial}</Text>
+      )}
+      
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWeb && styles.webScrollContent
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[
+          styles.contentMaxWidth,
+          isWeb && styles.webContentMaxWidth
+        ]}>
+          <View style={[styles.profileHeader, isWeb && styles.webProfileHeader]}>
+            <View style={styles.avatarWrapper}>
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarInitial}>{avatarInitial}</Text>
+              </View>
+              <View style={styles.premiumBadge}>
+                <Text style={styles.premiumText}>PREMIUM</Text>
               </View>
             </View>
-            <View style={styles.healthPremiumPill}>
-              <Text style={styles.healthPremiumText}>PREMIUM</Text>
+            
+            <View style={[styles.profileInfo, isWeb && styles.webProfileInfo]}>
+              <Text style={styles.profileName}>{profile.name || 'User'}</Text>
+              <Text style={styles.profileType}>Personal Health Account</Text>
+              <TouchableOpacity style={styles.editButton} onPress={onEditProfile}>
+                <MaterialIcons name="edit" size={18} color="#7C3AED" style={{ marginRight: 6 }} />
+                <Text style={styles.editButtonText}>Edit Health Profile</Text>
+              </TouchableOpacity>
             </View>
           </View>
-          <Text style={styles.publicName}>{profile.name || 'User'}</Text>
-          <Text style={styles.healthAccountLabel}>Personal Account</Text>
-          <TouchableOpacity style={styles.healthEditButton} onPress={onEditProfile}>
-            <Text style={styles.healthEditButtonLabel}>Edit Profile</Text>
-          </TouchableOpacity>
-          <View style={styles.healthStatsRow}>
-            <View style={styles.healthStatCard}>
-              <Text style={styles.healthStatIcon}>🩸</Text>
-              <Text style={styles.healthStatValue}>{profile.bloodType || '—'}</Text>
-              <Text style={styles.healthStatLabel}>Blood Type</Text>
-            </View>
-            <View style={styles.healthStatCard}>
-              <Text style={styles.healthStatIcon}>📏</Text>
-              <Text style={styles.healthStatValue}>{profile.height || '—'}</Text>
-              <Text style={styles.healthStatLabel}>Height</Text>
-            </View>
-            <View style={styles.healthStatCard}>
-              <Text style={styles.healthStatIcon}>⚖️</Text>
-              <Text style={styles.healthStatValue}>{profile.weight || '—'}</Text>
-              <Text style={styles.healthStatLabel}>Weight</Text>
-            </View>
+
+          <View style={[styles.statsRow, isWeb && styles.webStatsRow]}>
+            <StatCard icon="water_drop" value={profile.bloodType || '—'} label="Blood Type" isWeb={isWeb} />
+            <StatCard icon="straighten" value={profile.height || '—'} label="Height (cm)" isWeb={isWeb} />
+            <StatCard icon="monitor_weight" value={profile.weight || '—'} label="Weight (kg)" isWeb={isWeb} />
+            {isWeb && <StatCard icon="calendar_today" value="28y" label="Age" isWeb={isWeb} />}
           </View>
-          <View style={styles.healthSectionHeaderRow}>
-            <Text style={styles.healthSectionTitle}>Health Records</Text>
-            <Text style={styles.healthViewAll}>View All</Text>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Medical Records</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.healthRecordsGrid}>
-            <View style={styles.healthRecordCard}>
-              <Text style={styles.healthRecordIcon}>📄</Text>
-              <Text style={styles.healthRecordTitle}>Medical History</Text>
-              <Text style={styles.healthRecordSubtitle}>No entries found</Text>
-            </View>
-            <View style={styles.healthRecordCard}>
-              <Text style={styles.healthRecordIcon}>💊</Text>
-              <Text style={styles.healthRecordTitle}>Prescriptions</Text>
-              <Text style={styles.healthRecordSubtitle}>No active scripts</Text>
-            </View>
-            <View style={styles.healthRecordCard}>
-              <Text style={styles.healthRecordIcon}>🧪</Text>
-              <Text style={styles.healthRecordTitle}>Lab Results</Text>
-              <Text style={styles.healthRecordSubtitle}>No results yet</Text>
-            </View>
-            <View style={styles.healthRecordCard}>
-              <Text style={styles.healthRecordIcon}>💉</Text>
-              <Text style={styles.healthRecordTitle}>Vaccinations</Text>
-              <Text style={styles.healthRecordSubtitle}>No records found</Text>
-            </View>
+
+          <View style={[styles.recordsGrid, isWeb && styles.webRecordsGrid]}>
+            <RecordCard icon="description" title="Medical History" subtitle="No recent entries" isWeb={isWeb} />
+            <RecordCard icon="medication" title="Prescriptions" subtitle="2 active scripts" isWeb={isWeb} />
+            <RecordCard icon="science" title="Lab Results" subtitle="1 new result" isWeb={isWeb} />
+            <RecordCard icon="vaccines" title="Vaccinations" subtitle="Up to date" isWeb={isWeb} />
           </View>
-          <Text style={styles.healthSectionTitle}>Recent Activity</Text>
-          <View style={styles.healthActivityList}>
-            <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 20, marginBottom: 40 }}>
-              No recent activity found.
-            </Text>
+
+          <Text style={styles.sectionTitle}>Recent Health Activity</Text>
+          <View style={styles.activityList}>
+            <View style={styles.emptyActivity}>
+              <MaterialIcons name="history" size={40} color="#E5E7EB" />
+              <Text style={styles.emptyActivityText}>No recent health activity found.</Text>
+            </View>
           </View>
         </View>
       </ScrollView>
-      <View style={styles.publicBottomBar}>
-        <TouchableOpacity style={styles.publicBottomItem} onPress={onBackHome}>
-          <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.publicBottomIcon} />
-          <Text style={styles.publicBottomLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.publicBottomItem}>
-          <MaterialIcons
-            name="explore"
-            size={22}
-            color="#9CA3AF"
-            style={styles.publicBottomIcon}
-          />
-          <Text style={styles.publicBottomLabel}>Explore</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.publicBottomCenter}>
-          <View style={styles.publicPlusCircle}>
-            <MaterialIcons name="add" size={26} color="#FFFFFF" style={styles.publicPlusIcon} />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.publicBottomItem}>
-          <MaterialIcons
-            name="chat-bubble-outline"
-            size={22}
-            color="#9CA3AF"
-            style={styles.publicBottomIcon}
-          />
-          <Text style={styles.publicBottomLabel}>Chats</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.publicBottomItem}>
-          <MaterialIcons
-            name="person"
-            size={22}
-            color="#7C3AED"
-            style={[styles.publicBottomIcon, styles.publicBottomIconActive]}
-          />
-          <Text style={[styles.publicBottomLabel, styles.publicBottomLabelActive]}>Profile</Text>
-        </TouchableOpacity>
+    </View>
+  );
+}
+
+function StatCard({ icon, value, label, isWeb }) {
+  return (
+    <View style={[styles.statCard, isWeb && styles.webStatCard]}>
+      <View style={styles.statIconCircle}>
+        <MaterialIcons name={icon} size={24} color="#7C3AED" />
       </View>
-    </SafeAreaView>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function RecordCard({ icon, title, subtitle, isWeb }) {
+  return (
+    <TouchableOpacity style={[styles.recordCard, isWeb && styles.webRecordCard]}>
+      <View style={styles.recordIconBox}>
+        <MaterialIcons name={icon} size={28} color="#7C3AED" />
+      </View>
+      <View style={styles.recordInfo}>
+        <Text style={styles.recordTitle}>{title}</Text>
+        <Text style={styles.recordSubtitle}>{subtitle}</Text>
+      </View>
+      <MaterialIcons name="chevron-right" size={20} color="#9CA3AF" />
+    </TouchableOpacity>
   );
 }
 
 export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web' && width >= 768;
   const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
 
   return (
-    <SafeAreaView style={styles.publicSafeArea}>
-      <View style={styles.publicHeaderRow}>
-        <Image 
-          source={require('../assets/marcusina.jpeg')} 
-          style={styles.publicLogo}
-          resizeMode="contain"
-        />
-        <View style={styles.publicHeaderIcons}>
-          <Text style={styles.publicHeaderIcon}>🔍</Text>
-          <Text style={styles.publicHeaderIcon}>☰</Text>
+    <View style={styles.container}>
+      {!isWeb && (
+        <View style={styles.headerRow}>
+          <Image 
+            source={require('../assets/marcusina.jpeg')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <MaterialIcons name="more-vert" size={24} color="#4B5563" />
+          </TouchableOpacity>
         </View>
-      </View>
-      <ScrollView contentContainerStyle={styles.publicScrollContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.publicAvatarWrapper}>
-            <View style={styles.publicAvatarRing}>
-              <View style={styles.publicAvatarCircle}>
-                <Text style={styles.publicAvatarInitial}>{avatarInitial}</Text>
+      )}
+      
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWeb && styles.webScrollContent
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[
+          styles.contentMaxWidth,
+          isWeb && styles.webContentMaxWidth
+        ]}>
+          <View style={[styles.profileHeader, isWeb && styles.webProfileHeader]}>
+            <View style={styles.avatarWrapper}>
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarInitial}>{avatarInitial}</Text>
+              </View>
+              <View style={styles.verifiedBadge}>
+                <MaterialIcons name="check" size={12} color="#FFFFFF" />
               </View>
             </View>
-            <View style={styles.publicBadgeCircle}>
-              <Text style={styles.publicBadgeIcon}>★</Text>
+            
+            <View style={[styles.profileInfo, isWeb && styles.webProfileInfo]}>
+              <Text style={styles.profileName}>{profile.name || 'User'}</Text>
+              <Text style={styles.profileHandle}>{profile.handle || '@user_handle'}</Text>
+              <Text style={styles.profileBio}>{profile.bio || 'No bio provided yet.'}</Text>
+              
+              <View style={styles.actionButtonsRow}>
+                <TouchableOpacity style={styles.followButton}>
+                  <Text style={styles.followButtonText}>Follow</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.messageButton}>
+                  <Text style={styles.messageButtonText}>Message</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-          <Text style={styles.publicName}>{profile.name || 'User'}</Text>
-          <Text style={styles.publicHandle}>{profile.handle || '@user'}</Text>
-          <Text style={styles.publicBio}>{profile.bio || 'No bio yet.'}</Text>
-          <View style={styles.publicActionsRow}>
-            <TouchableOpacity style={styles.publicFollowButton}>
-              <Text style={styles.publicFollowLabel}>Follow</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.publicMessageButton}>
-              <Text style={styles.publicMessageLabel}>Message</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.publicStatsRow}>
-            <View style={styles.publicStatItem}>
-              <Text style={styles.publicStatValue}>0</Text>
-              <Text style={styles.publicStatLabel}>FOLLOWERS</Text>
+
+          <View style={styles.socialStatsRow}>
+            <View style={styles.socialStatItem}>
+              <Text style={styles.socialStatValue}>124</Text>
+              <Text style={styles.socialStatLabel}>FOLLOWERS</Text>
             </View>
-            <View style={styles.publicStatItem}>
-              <Text style={styles.publicStatValue}>0</Text>
-              <Text style={styles.publicStatLabel}>FOLLOWING</Text>
+            <View style={styles.socialStatItem}>
+              <Text style={styles.socialStatValue}>89</Text>
+              <Text style={styles.socialStatLabel}>FOLLOWING</Text>
             </View>
-            <View style={styles.publicStatItem}>
-              <Text style={styles.publicStatValue}>0</Text>
-              <Text style={styles.publicStatLabel}>POSTS</Text>
+            <View style={styles.socialStatItem}>
+              <Text style={styles.socialStatValue}>12</Text>
+              <Text style={styles.socialStatLabel}>POSTS</Text>
             </View>
           </View>
-          <Text style={styles.publicSectionLabel}>COMMUNITIES</Text>
+
+          <Text style={styles.sectionTitle}>Communities</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.publicCommunitiesRow}
+            contentContainerStyle={styles.communitiesScroll}
           >
-            <View style={styles.publicCommunityItem}>
-              <View style={[styles.publicCommunityCircle, styles.publicCommunityJoinCircle]}>
-                <Text style={styles.publicCommunityJoinPlus}>＋</Text>
+            {[1, 2, 3].map((i) => (
+              <View key={i} style={styles.communityThumb}>
+                <View style={styles.communityThumbCircle}>
+                  <MaterialIcons name="groups" size={24} color="#7C3AED" />
+                </View>
               </View>
-              <Text style={styles.publicCommunityLabel}>Join</Text>
-            </View>
+            ))}
+            <TouchableOpacity style={styles.joinMoreBtn}>
+              <MaterialIcons name="add" size={24} color="#9CA3AF" />
+            </TouchableOpacity>
           </ScrollView>
-          <View style={styles.publicTabsRow}>
-            <TouchableOpacity style={styles.publicTabItem}>
-              <Text style={[styles.publicTabLabel, styles.publicTabLabelActive]}>
-                Content Posted
-              </Text>
-              <View style={styles.publicTabUnderline} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.publicTabItem}>
-              <Text style={styles.publicTabLabel}>Recent Developments</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.publicGrid}>
-            <Text style={{ textAlign: 'center', color: '#9CA3AF', width: '100%', marginTop: 40 }}>
-              No content posted yet.
-            </Text>
-          </View>
         </View>
       </ScrollView>
-      <View style={styles.publicBottomBar}>
-        <TouchableOpacity style={styles.publicBottomItem} onPress={onBackHome}>
-          <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.publicBottomIcon} />
-          <Text style={styles.publicBottomLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.publicBottomItem}>
-          <MaterialIcons
-            name="explore"
-            size={22}
-            color="#9CA3AF"
-            style={styles.publicBottomIcon}
-          />
-          <Text style={styles.publicBottomLabel}>Explore</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.publicBottomCenter}>
-          <View style={styles.publicPlusCircle}>
-            <MaterialIcons name="add" size={26} color="#FFFFFF" style={styles.publicPlusIcon} />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.publicBottomItem}>
-          <MaterialIcons
-            name="chat-bubble-outline"
-            size={22}
-            color="#9CA3AF"
-            style={styles.publicBottomIcon}
-          />
-          <Text style={styles.publicBottomLabel}>Chats</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.publicBottomItem} onPress={onEditProfile}>
-          <MaterialIcons
-            name="person"
-            size={22}
-            color="#7C3AED"
-            style={[styles.publicBottomIcon, styles.publicBottomIconActive]}
-          />
-          <Text style={[styles.publicBottomLabel, styles.publicBottomLabelActive]}>Profile</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-export function ProfileScreen({ onCancel, onSave, profile }) {
-  const [name, setName] = useState(profile.name);
-  const [email, setEmail] = useState(profile.email);
-  const [phone, setPhone] = useState(profile.phone);
-  const [location, setLocation] = useState(profile.location);
-  const [bio, setBio] = useState(profile.bio);
-  const [handle, setHandle] = useState(profile.handle);
-  const [bloodType, setBloodType] = useState(profile.bloodType);
-  const [height, setHeight] = useState(profile.height);
-  const [weight, setWeight] = useState(profile.weight);
-
-  const avatarInitial = name ? name.charAt(0).toUpperCase() : '?';
-
-  const handleSave = () => {
-    onSave({
-      ...profile,
-      name,
-      email,
-      phone,
-      location,
-      bio,
-      handle,
-      bloodType,
-      height,
-      weight,
-    });
-  };
+export function ProfileScreen({ profile, onCancel, onSave }) {
+  const [edited, setEdited] = useState({ ...profile });
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web' && width >= 768;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={onCancel}>
-          <Text style={styles.backArrow}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-        <TouchableOpacity onPress={onCancel}>
-          <Text style={styles.headerCancel}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitial}>{avatarInitial}</Text>
-          </View>
-          <View style={styles.avatarEditBadge}>
-            <Text style={styles.avatarEditIcon}>✎</Text>
-          </View>
-          <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+    <View style={styles.container}>
+      {!isWeb && (
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={onCancel}>
+            <MaterialIcons name="close" size={24} color="#4B5563" />
+          </TouchableOpacity>
+          <Text style={styles.editHeaderTitle}>Edit Profile</Text>
+          <TouchableOpacity onPress={() => onSave(edited)}>
+            <Text style={styles.saveText}>Save</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>FULL NAME</Text>
-            <TextInput
-              style={styles.infoInput}
-              value={name}
-              onChangeText={setName}
-              placeholder="Full name"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-          <View style={styles.infoDivider} />
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>EMAIL ADDRESS</Text>
-            <TextInput
-              style={styles.infoInput}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email address"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-          <View style={styles.infoDivider} />
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>PHONE NUMBER</Text>
-            <TextInput
-              style={styles.infoInput}
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="Phone number"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="phone-pad"
-            />
-          </View>
-          <View style={styles.infoDivider} />
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>LOCATION</Text>
-            <TextInput
-              style={styles.infoInput}
-              value={location}
-              onChangeText={setLocation}
-              placeholder="City, Country"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <Text style={styles.infoLabel}>BIO</Text>
-          <TextInput
-            style={styles.bioInputEdit}
-            value={bio}
-            onChangeText={setBio}
-            placeholder="Tell others about your health journey..."
-            placeholderTextColor="#9CA3AF"
-            multiline
-            maxLength={200}
-          />
-        </View>
-        <View style={styles.sectionCard}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>SOCIAL HANDLE</Text>
-            <TextInput
-              style={styles.infoInput}
-              value={handle}
-              onChangeText={setHandle}
-              placeholder="@handle"
-              placeholderTextColor="#9CA3AF"
-              autoCapitalize="none"
-            />
-          </View>
-          <View style={styles.infoDivider} />
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>BLOOD TYPE</Text>
-            <TextInput
-              style={styles.infoInput}
-              value={bloodType}
-              onChangeText={setBloodType}
-              placeholder="e.g. O+"
-              placeholderTextColor="#9CA3AF"
-              autoCapitalize="characters"
-            />
-          </View>
-          <View style={styles.infoDivider} />
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>HEIGHT</Text>
-            <TextInput
-              style={styles.infoInput}
-              value={height}
-              onChangeText={setHeight}
-              placeholder="e.g. 182 cm"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-          <View style={styles.infoDivider} />
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>WEIGHT</Text>
-            <TextInput
-              style={styles.infoInput}
-              value={weight}
-              onChangeText={setWeight}
-              placeholder="e.g. 75 kg"
-              placeholderTextColor="#9CA3AF"
-            />
+      )}
+
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWeb && styles.webScrollContent
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[
+          styles.contentMaxWidth,
+          isWeb && styles.webContentMaxWidth
+        ]}>
+          {isWeb && (
+            <View style={styles.webEditHeader}>
+              <Text style={styles.webEditTitle}>Edit Profile Settings</Text>
+              <View style={styles.webEditActions}>
+                <TouchableOpacity style={styles.webCancelBtn} onPress={onCancel}>
+                  <Text style={styles.webCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.webSaveBtn} onPress={() => onSave(edited)}>
+                  <Text style={styles.webSaveText}>Save Changes</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          <View style={[styles.editSection, isWeb && styles.webEditGrid]}>
+            <View style={[styles.inputGroup, isWeb && styles.webInputHalf]}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <TextInput
+                style={styles.textInput}
+                value={edited.name}
+                onChangeText={(t) => setEdited({ ...edited, name: t })}
+                placeholder="Enter your name"
+              />
+            </View>
+            <View style={[styles.inputGroup, isWeb && styles.webInputHalf]}>
+              <Text style={styles.inputLabel}>Username Handle</Text>
+              <TextInput
+                style={styles.textInput}
+                value={edited.handle}
+                onChangeText={(t) => setEdited({ ...edited, handle: t })}
+                placeholder="@username"
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Bio</Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                value={edited.bio}
+                onChangeText={(t) => setEdited({ ...edited, bio: t })}
+                placeholder="Tell us about yourself"
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+            
+            <View style={styles.divider} />
+            <Text style={styles.formSubTitle}>Health Information</Text>
+            
+            <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
+              <Text style={styles.inputLabel}>Blood Type</Text>
+              <TextInput
+                style={styles.textInput}
+                value={edited.bloodType}
+                onChangeText={(t) => setEdited({ ...edited, bloodType: t })}
+                placeholder="e.g. O+"
+              />
+            </View>
+            <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
+              <Text style={styles.inputLabel}>Height (cm)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={edited.height}
+                onChangeText={(t) => setEdited({ ...edited, height: t })}
+                placeholder="e.g. 175"
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
+              <Text style={styles.inputLabel}>Weight (kg)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={edited.weight}
+                onChangeText={(t) => setEdited({ ...edited, weight: t })}
+                placeholder="e.g. 70"
+                keyboardType="numeric"
+              />
+            </View>
           </View>
         </View>
       </ScrollView>
-      <View style={styles.bottomActions}>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Save Changes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.deleteText}>Delete Account</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-function ProfileItem({ label, iconLabel, isLast }) {
-  return (
-    <View style={[styles.itemRow, isLast && styles.itemRowLast]}>
-      <View style={styles.itemLeft}>
-        <View style={styles.itemIconCircle}>
-          <Text style={styles.itemIcon}>{iconLabel}</Text>
-        </View>
-        <Text style={styles.itemLabel}>{label}</Text>
-      </View>
-      <Text style={styles.itemChevron}>›</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  publicSafeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  publicHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  publicLogo: {
-    width: 100,
-    height: 32,
-  },
-  publicBrand: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#7C3AED',
-  },
-  publicHeaderIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  publicHeaderIcon: {
-    fontSize: 20,
-    color: '#4B5563',
-    marginLeft: 16,
-  },
-  publicScrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 160,
-  },
-  contentMaxWidth: {
-    width: '100%',
-    maxWidth: 520,
-    alignSelf: 'center',
-  },
-  publicAvatarWrapper: {
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  publicAvatarRing: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
-    borderColor: '#EC4899',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  publicAvatarCircle: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    backgroundColor: '#E5E7EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  publicAvatarInitial: {
-    fontSize: 40,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  publicBadgeCircle: {
-    position: 'absolute',
-    bottom: 8,
-    right: (120 - 56) / 2,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FBBF24',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  publicBadgeIcon: {
-    fontSize: 16,
-    color: '#92400E',
-  },
-  publicName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  publicHandle: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  publicBio: {
-    fontSize: 13,
-    color: '#4B5563',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  publicActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  publicFollowButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: '#7C3AED',
-    marginRight: 12,
-  },
-  publicFollowLabel: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  publicMessageButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  publicMessageLabel: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: '500',
-  },
-  publicStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  publicStatItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  publicStatValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  publicStatLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginTop: 2,
-  },
-  publicSectionLabel: {
-    fontSize: 12,
-    color: '#7C3AED',
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  publicCommunitiesRow: {
-    paddingVertical: 4,
-    marginBottom: 20,
-  },
-  publicCommunityItem: {
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  publicCommunityCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginBottom: 6,
-  },
-  publicCommunityJoinCircle: {
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
     backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  publicCommunityJoinPlus: {
-    fontSize: 20,
-    color: '#9CA3AF',
-  },
-  publicCommunityLabel: {
-    fontSize: 12,
-    color: '#374151',
-  },
-  publicTabsRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  publicTabItem: {
-    marginRight: 24,
-  },
-  publicTabLabel: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  publicTabLabelActive: {
-    color: '#7C3AED',
-    fontWeight: '600',
-  },
-  publicTabUnderline: {
-    marginTop: 4,
-    height: 3,
-    borderRadius: 999,
-    backgroundColor: '#7C3AED',
-  },
-  publicGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -4,
-    marginBottom: 16,
-  },
-  publicGridItem: {
-    width: '33.33%',
-    aspectRatio: 1,
-    padding: 4,
-  },
-  publicBottomBar: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  publicBottomItem: {
-    alignItems: 'center',
-  },
-  publicBottomIcon: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
-  publicBottomIconActive: {
-    color: '#7C3AED',
-  },
-  publicBottomLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-  },
-  publicBottomLabelActive: {
-    color: '#7C3AED',
-    fontWeight: '600',
-  },
-  publicBottomCenter: {
-    alignItems: 'center',
-  },
-  publicPlusCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#F97316',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  publicPlusIcon: {
-    fontSize: 26,
-    color: '#FFFFFF',
-    marginTop: -2,
-  },
-  healthPremiumPill: {
-    position: 'absolute',
-    bottom: -10,
-    alignSelf: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: '#EC4899',
-  },
-  healthPremiumText: {
-    fontSize: 11,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  healthAccountLabel: {
-    fontSize: 13,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  healthEditButton: {
-    alignSelf: 'center',
-    borderRadius: 999,
-    backgroundColor: '#F472B6',
-    paddingHorizontal: 32,
-    paddingVertical: 10,
-    marginBottom: 16,
-  },
-  healthEditButtonLabel: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: '600',
-  },
-  healthStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  healthStatCard: {
-    flex: 1,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  healthStatIcon: {
-    fontSize: 18,
-    marginBottom: 4,
-  },
-  healthStatValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  healthStatLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginTop: 2,
-  },
-  healthSectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  healthSectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  healthViewAll: {
-    fontSize: 13,
-    color: '#7C3AED',
-    fontWeight: '500',
-  },
-  healthRecordsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  healthRecordCard: {
-    width: '48%',
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    padding: 12,
-    marginBottom: 12,
-  },
-  healthRecordIcon: {
-    fontSize: 20,
-    marginBottom: 6,
-  },
-  healthRecordTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
-  },
-  healthRecordSubtitle: {
-    fontSize: 11,
-    color: '#9CA3AF',
-  },
-  healthActivityList: {
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  healthActivityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
-  healthActivityIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#DBEAFE',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  healthActivityIconCircleGreen: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#DCFCE7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  healthActivityIcon: {
-    fontSize: 16,
-  },
-  healthActivityText: {
-    flex: 1,
-  },
-  healthActivityTitle: {
-    fontSize: 14,
-    color: '#111827',
-    marginBottom: 2,
-  },
-  healthActivitySubtitle: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  healthActivityChevron: {
-    fontSize: 18,
-    color: '#D1D5DB',
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  backArrow: {
-    fontSize: 20,
-    color: '#7C3AED',
+  logo: {
+    width: 110,
+    height: 32,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+  headerIconsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  headerCancel: {
-    fontSize: 14,
-    color: '#EF4444',
-    fontWeight: '500',
+  headerIconBtn: {
+    marginLeft: 16,
+    padding: 4,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 120,
+    paddingBottom: 40,
   },
-  avatarSection: {
+  webScrollContent: {
+    paddingTop: 20,
+  },
+  contentMaxWidth: {
+    paddingHorizontal: 20,
+  },
+  webContentMaxWidth: {
+    paddingHorizontal: 0,
+  },
+  profileHeader: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginTop: 20,
+    marginBottom: 32,
+  },
+  webProfileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginTop: 0,
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginBottom: 16,
   },
   avatarCircle: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    backgroundColor: '#E5E7EB',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#F5F3FF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
+      android: { elevation: 4 },
+      web: { boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }
+    }),
   },
   avatarInitial: {
     fontSize: 40,
-    color: '#6B7280',
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#7C3AED',
   },
-  avatarEditBadge: {
+  premiumBadge: {
     position: 'absolute',
-    right: (104 - 56) / 2,
+    bottom: -4,
+    backgroundColor: '#7C3AED',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'center',
+  },
+  premiumText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  verifiedBadge: {
+    position: 'absolute',
     bottom: 4,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    right: 4,
+    backgroundColor: '#7C3AED',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#7C3AED',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
   },
-  avatarEditIcon: {
-    fontSize: 18,
-    color: '#FFFFFF',
+  profileInfo: {
+    alignItems: 'center',
   },
-  changePhotoText: {
-    marginTop: 12,
-    fontSize: 13,
-    color: '#7C3AED',
-    fontWeight: '500',
+  webProfileInfo: {
+    alignItems: 'flex-start',
+    marginLeft: 32,
+    flex: 1,
   },
-  infoCard: {
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 24,
-  },
-  infoRow: {
-    paddingVertical: 10,
-  },
-  infoLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
+  profileName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 4,
   },
-  infoValue: {
+  profileType: {
     fontSize: 14,
-    color: '#111827',
+    color: '#6B7280',
+    marginBottom: 16,
   },
-  infoInput: {
+  profileHandle: {
+    fontSize: 16,
+    color: '#7C3AED',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  profileBio: {
     fontSize: 14,
-    color: '#111827',
-    paddingVertical: 0,
+    color: '#4B5563',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+    maxWidth: 400,
   },
-  infoDivider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  sectionCard: {
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F3FF',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
   },
-  bioInputEdit: {
-    marginTop: 4,
+  editButtonText: {
+    color: '#7C3AED',
+    fontWeight: '600',
     fontSize: 14,
-    color: '#111827',
   },
-  itemRow: {
+  statsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    gap: 12,
+    marginBottom: 32,
   },
-  itemRowLast: {
-    borderBottomWidth: 0,
+  webStatsRow: {
+    justifyContent: 'flex-start',
+    gap: 20,
   },
-  itemLeft: {
-    flexDirection: 'row',
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  itemIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+  webStatCard: {
+    flex: 0,
+    minWidth: 140,
+  },
+  statIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-  },
-  itemIcon: {
-    fontSize: 16,
-  },
-  itemLabel: {
-    fontSize: 14,
-    color: '#111827',
-  },
-  itemChevron: {
-    fontSize: 20,
-    color: '#D1D5DB',
-  },
-  bottomActions: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: '#F3F4F6',
-  },
-  saveButton: {
-    backgroundColor: '#7C3AED',
-    borderRadius: 999,
-    paddingVertical: 14,
-    alignItems: 'center',
     marginBottom: 12,
   },
-  saveButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  viewAllText: {
+    color: '#7C3AED',
+    fontSize: 14,
     fontWeight: '600',
   },
-  deleteText: {
+  recordsGrid: {
+    gap: 12,
+    marginBottom: 32,
+  },
+  webRecordsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  recordCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  webRecordCard: {
+    width: '48.5%',
+  },
+  recordIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#F5F3FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  recordInfo: {
+    flex: 1,
+  },
+  recordTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  recordSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  activityList: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  emptyActivity: {
+    alignItems: 'center',
+  },
+  emptyActivityText: {
+    marginTop: 12,
+    color: '#9CA3AF',
     fontSize: 14,
-    color: '#EF4444',
-    textAlign: 'center',
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  followButton: {
+    backgroundColor: '#7C3AED',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  followButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  messageButton: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  messageButtonText: {
+    color: '#111827',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  socialStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  socialStatItem: {
+    alignItems: 'center',
+  },
+  socialStatValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  socialStatLabel: {
+    fontSize: 10,
+    color: '#6B7280',
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginTop: 4,
+  },
+  communitiesScroll: {
+    gap: 12,
+    paddingBottom: 8,
+  },
+  communityThumb: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F5F3FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
+  },
+  joinMoreBtn: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F9FAFB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+  },
+  editHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  saveText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#7C3AED',
+  },
+  webEditHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  webEditTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  webEditActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  webCancelBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  webCancelText: {
+    color: '#4B5563',
+    fontWeight: '600',
+  },
+  webSaveBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#7C3AED',
+  },
+  webSaveText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  editSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  webEditGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 20,
+  },
+  inputGroup: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  webInputHalf: {
+    width: '48%',
+  },
+  webInputThird: {
+    width: '31%',
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    fontSize: 15,
+    color: '#111827',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  divider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 12,
+  },
+  formSubTitle: {
+    width: '100%',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
+    marginTop: 8,
   },
 });

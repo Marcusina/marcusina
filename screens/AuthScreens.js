@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
@@ -69,23 +69,54 @@ function TextField({ label, placeholder, value, onChangeText, secureTextEntry, e
 }
 
 function CodeInputRow({ length, values, onChange }) {
+  const inputs = useRef([]);
+  const [focusedIndex, setFocusedIndex] = useState(null);
+
+  const handleTextChange = (text, index) => {
+    // Only allow digits
+    const cleanText = text.replace(/[^0-9]/g, '');
+    if (cleanText.length > 0) {
+      const char = cleanText[cleanText.length - 1];
+      const nextValues = [...values];
+      nextValues[index] = char;
+      onChange(nextValues);
+
+      // Focus next if not at the end
+      if (index < length - 1) {
+        inputs.current[index + 1]?.focus();
+      }
+    } else {
+      // Handle deletion
+      const nextValues = [...values];
+      nextValues[index] = '';
+      onChange(nextValues);
+    }
+  };
+
+  const handleKeyPress = (e, index) => {
+    // On backspace, focus previous if current is empty
+    if (e.nativeEvent.key === 'Backspace' && values[index] === '' && index > 0) {
+      inputs.current[index - 1]?.focus();
+    }
+  };
+
   return (
     <View style={styles.codeRow}>
       {Array.from({ length }).map((_, index) => (
         <TextInput
           key={index}
+          ref={(ref) => (inputs.current[index] = ref)}
           value={values[index]}
-          onChangeText={(text) => {
-            const trimmed = text.slice(-1);
-            const next = [...values];
-            next[index] = trimmed;
-            onChange(next);
-          }}
+          onChangeText={(text) => handleTextChange(text, index)}
+          onKeyPress={(e) => handleKeyPress(e, index)}
+          onFocus={() => setFocusedIndex(index)}
+          onBlur={() => setFocusedIndex(null)}
           keyboardType="number-pad"
           maxLength={1}
           style={[
             styles.codeBox,
             values[index] && styles.codeBoxFilled,
+            focusedIndex === index && styles.codeBoxFocused,
           ]}
         />
       ))}
@@ -802,11 +833,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 48,
     paddingBottom: 32,
+    flexGrow: 1,
+    ...Platform.select({
+      web: {
+        justifyContent: 'center',
+      },
+    }),
   },
   onboardingContent: {
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 32,
+    flexGrow: 1,
+    ...Platform.select({
+      web: {
+        justifyContent: 'center',
+      },
+    }),
   },
   contentMaxWidth: {
     width: '100%',
@@ -1064,7 +1107,8 @@ const styles = StyleSheet.create({
   },
   codeRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: 12,
     marginVertical: 24,
   },
   codeBox: {
@@ -1074,12 +1118,23 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#E5E7EB',
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 24,
+    fontWeight: '600',
     color: '#111827',
     backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      },
+    }),
   },
   codeBoxFilled: {
     borderColor: '#7C3AED',
+  },
+  codeBoxFocused: {
+    borderColor: '#7C3AED',
+    backgroundColor: '#F5F3FF',
+    borderWidth: 2,
   },
   verificationIconWrapper: {
     alignItems: 'center',

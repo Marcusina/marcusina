@@ -26,6 +26,7 @@ import {
   ConsultBookingScreen,
   ConsultConfirmScreen,
 } from './screens/ConsultScreens';
+import { Layout } from './components/Layout';
 
 export default function App() {
   const [screen, setScreen] = useState('login');
@@ -347,6 +348,19 @@ export default function App() {
     );
   }
 
+  const authenticatedScreens = [
+    'home',
+    'profileHealth',
+    'profilePublic',
+    'profileEdit',
+    'consultBook',
+    'consultConfirm',
+    'groups',
+    'place',
+  ];
+
+  const isAuthScreen = authenticatedScreens.includes(screen);
+
   return (
     <SafeAreaProvider>
       {isLoading ? (
@@ -354,6 +368,14 @@ export default function App() {
           <ActivityIndicator size="large" color="#7C3AED" />
           <Text style={{ marginTop: 12, color: '#6B7280' }}>Initializing...</Text>
         </View>
+      ) : isAuthScreen ? (
+        <Layout
+          currentScreen={screen}
+          onNavigate={(target) => setScreen(target)}
+          userProfile={profile}
+        >
+          {content}
+        </Layout>
       ) : (
         content || (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

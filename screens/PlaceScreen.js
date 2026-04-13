@@ -1,5 +1,4 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -7,6 +6,8 @@ import {
   ScrollView,
   StyleSheet,
   Image,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -16,120 +17,115 @@ export function PlaceScreen({
   onOpenGroups,
   onOpenProfile,
 }) {
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web' && width >= 768;
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerRow}>
-        <Image 
-          source={require('../assets/marcusina.jpeg')} 
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <TouchableOpacity style={styles.headerBellCircle}>
-          <Text style={styles.headerBellIcon}>🔔</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      {!isWeb && (
+        <View style={styles.headerRow}>
+          <Image 
+            source={require('../assets/marcusina.jpeg')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <MaterialIcons name="notifications-none" size={24} color="#4B5563" />
+            <View style={styles.notificationDot} />
+          </TouchableOpacity>
+        </View>
+      )}
+      
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWeb && styles.webScrollContent
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Nearby Facilities</Text>
-            <Text style={styles.sectionAction}>See All</Text>
-          </View>
-          <View style={styles.mapCard}>
-            <View style={styles.mapSearchBar}>
-              <Text style={styles.mapSearchPlaceholder}>
-                Search clinics, pharmacies...
-              </Text>
-            </View>
-            <View style={styles.mapBody}>
-              <Text style={styles.mapText}>Map Placeholder</Text>
-            </View>
-          </View>
-          <View style={styles.virtualCard}>
-            <View style={styles.virtualPillRow}>
-              <View style={styles.virtualUrgentPill}>
-                <Text style={styles.virtualUrgentText}>URGENT</Text>
+        <View style={[
+          styles.contentMaxWidth,
+          isWeb && styles.webContentMaxWidth
+        ]}>
+          <View style={[styles.mainFeatured, isWeb && styles.webMainFeatured]}>
+            <View style={[styles.mapCard, isWeb && styles.webMapCard]}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Nearby Facilities</Text>
+                <TouchableOpacity>
+                  <Text style={styles.sectionAction}>See All</Text>
+                </TouchableOpacity>
               </View>
-              <Text style={styles.virtualPillLabel}>TELE-MEDICINE</Text>
+              <View style={styles.mapSearchBar}>
+                <MaterialIcons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+                <Text style={styles.mapSearchPlaceholder}>
+                  Search clinics, pharmacies...
+                </Text>
+              </View>
+              <View style={styles.mapBody}>
+                <MaterialIcons name="map" size={48} color="#E5E7EB" />
+                <Text style={styles.mapText}>Interactive Map View</Text>
+              </View>
             </View>
-            <Text style={styles.virtualTitle}>Virtual Care</Text>
-            <Text style={styles.virtualSubtitle}>
-              Connect with a doctor in less than 5 minutes
-            </Text>
-            <TouchableOpacity
-              style={styles.virtualButton}
-              onPress={onOpenConsult}
-            >
-              <Text style={styles.virtualButtonText}>Consult Now</Text>
-            </TouchableOpacity>
+
+            <View style={[styles.virtualCard, isWeb && styles.webVirtualCard]}>
+              <View style={styles.virtualPillRow}>
+                <View style={styles.virtualUrgentPill}>
+                  <Text style={styles.virtualUrgentText}>URGENT</Text>
+                </View>
+                <Text style={styles.virtualPillLabel}>TELE-MEDICINE</Text>
+              </View>
+              <Text style={styles.virtualTitle}>Virtual Care</Text>
+              <Text style={styles.virtualSubtitle}>
+                Connect with a doctor in less than 5 minutes
+              </Text>
+              <TouchableOpacity
+                style={styles.virtualButton}
+                onPress={onOpenConsult}
+              >
+                <Text style={styles.virtualButtonText}>Consult Now</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
           <Text style={styles.servicesTitle}>Our Services</Text>
-          <View style={styles.servicesGrid}>
+          <View style={[styles.servicesGrid, isWeb && styles.webServicesGrid]}>
             <ServiceCard
-              icon="👨‍⚕️"
+              icon="person-search"
               title="Find a Doctor"
               subtitle="In-person visits"
+              isWeb={isWeb}
             />
             <ServiceCard
-              icon="📹"
+              icon="videocam"
               title="Virtual Consult"
               subtitle="Video & Audio calls"
               onPress={onOpenConsult}
+              isWeb={isWeb}
             />
             <ServiceCard
-              icon="💊"
+              icon="medication"
               title="Pharmacy"
               subtitle="Order medications"
+              isWeb={isWeb}
             />
             <ServiceCard
-              icon="🧪"
+              icon="science"
               title="Lab Tests"
               subtitle="Home sample pickup"
+              isWeb={isWeb}
             />
           </View>
         </View>
       </ScrollView>
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.bottomItem} onPress={onBackHome}>
-          <MaterialIcons name="home" size={22} color="#9CA3AF" style={styles.bottomIcon} />
-          <Text style={styles.bottomLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.bottomItem}>
-          <MaterialIcons
-            name="place"
-            size={22}
-            color="#7C3AED"
-            style={[styles.bottomIcon, styles.bottomIconActive]}
-          />
-          <Text style={[styles.bottomLabel, styles.bottomLabelActive]}>
-            Place
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.bottomCenter}>
-          <View style={styles.bottomPlusCircle}>
-            <Text style={styles.bottomPlusIcon}>＋</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.bottomItem} onPress={onOpenGroups}>
-          <MaterialIcons name="groups" size={22} color="#9CA3AF" style={styles.bottomIcon} />
-          <Text style={styles.bottomLabel}>Social</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.bottomItem} onPress={onOpenProfile}>
-          <MaterialIcons name="assignment" size={22} color="#9CA3AF" style={styles.bottomIcon} />
-          <Text style={styles.bottomLabel}>Records</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-function ServiceCard({ icon, title, subtitle, onPress }) {
+function ServiceCard({ icon, title, subtitle, onPress, isWeb }) {
   return (
-    <TouchableOpacity style={styles.serviceCard} onPress={onPress}>
+    <TouchableOpacity style={[styles.serviceCard, isWeb && styles.webServiceCard]} onPress={onPress}>
       <View style={styles.serviceIconCircle}>
-        <Text style={styles.serviceIcon}>{icon}</Text>
+        <MaterialIcons name={icon} size={28} color="#7C3AED" />
       </View>
       <Text style={styles.serviceTitle}>{title}</Text>
       <Text style={styles.serviceSubtitle}>{subtitle}</Text>
@@ -138,238 +134,219 @@ function ServiceCard({ icon, title, subtitle, onPress }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   logo: {
-    width: 120,
-    height: 36,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  headerBellCircle: {
-    width: 32,
+    width: 110,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  headerBellIcon: {
-    fontSize: 18,
+  headerIconBtn: {
+    padding: 4,
+    position: 'relative',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 160,
-    paddingTop: 8,
+    paddingBottom: 24,
+  },
+  webScrollContent: {
+    paddingBottom: 40,
   },
   contentMaxWidth: {
-    width: '100%',
-    maxWidth: 520,
-    alignSelf: 'center',
+    paddingHorizontal: 20,
+  },
+  webContentMaxWidth: {
+    paddingHorizontal: 0,
+  },
+  mainFeatured: {
+    marginTop: 20,
+    gap: 20,
+  },
+  webMainFeatured: {
+    flexDirection: 'row',
+  },
+  mapCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  webMapCard: {
+    flex: 2,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#111827',
   },
   sectionAction: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#7C3AED',
-    fontWeight: '500',
-  },
-  mapCard: {
-    borderRadius: 20,
-    backgroundColor: '#E5E7EB',
-    marginBottom: 20,
-    overflow: 'hidden',
+    fontWeight: '600',
   },
   mapSearchBar: {
-    height: 44,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  searchIcon: {
+    marginRight: 8,
   },
   mapSearchPlaceholder: {
-    fontSize: 13,
     color: '#9CA3AF',
+    fontSize: 14,
   },
   mapBody: {
-    height: 160,
+    height: 180,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    borderStyle: 'dashed',
   },
   mapText: {
-    fontSize: 12,
-    color: '#6B7280',
+    marginTop: 8,
+    fontSize: 14,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
   virtualCard: {
-    borderRadius: 20,
     backgroundColor: '#7C3AED',
-    padding: 20,
-    marginBottom: 24,
+    borderRadius: 20,
+    padding: 24,
+    justifyContent: 'center',
+  },
+  webVirtualCard: {
+    flex: 1,
   },
   virtualPillRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   virtualUrgentPill: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: '#FACC15',
+    borderRadius: 6,
     marginRight: 8,
   },
   virtualUrgentText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#1F2937',
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
   },
   virtualPillLabel: {
+    color: 'rgba(255,255,255,0.8)',
     fontSize: 11,
-    color: '#E5E7EB',
-    fontWeight: '500',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   virtualTitle: {
-    fontSize: 20,
-    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 4,
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   virtualSubtitle: {
-    fontSize: 13,
-    color: '#E5E7EB',
-    marginBottom: 16,
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    marginBottom: 20,
   },
   virtualButton: {
-    borderRadius: 999,
-    backgroundColor: '#FACC15',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    borderRadius: 12,
     alignSelf: 'flex-start',
   },
   virtualButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
+    color: '#7C3AED',
+    fontWeight: '700',
+    fontSize: 15,
   },
   servicesTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#111827',
-    marginBottom: 12,
+    marginTop: 32,
+    marginBottom: 16,
   },
   servicesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: 16,
+  },
+  webServicesGrid: {
+    flexDirection: 'row',
   },
   serviceCard: {
-    width: '48%',
-    borderRadius: 16,
+    width: '47%',
     backgroundColor: '#FFFFFF',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  webServiceCard: {
+    width: '23%',
   },
   serviceIconCircle: {
-    width: 32,
-    height: 32,
+    width: 56,
+    height: 56,
     borderRadius: 16,
-    backgroundColor: '#F3F4FF',
+    backgroundColor: '#F5F3FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-  },
-  serviceIcon: {
-    fontSize: 18,
+    marginBottom: 16,
   },
   serviceTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: '#111827',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   serviceSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#6B7280',
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  bottomItem: {
-    alignItems: 'center',
-  },
-  bottomIcon: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
-  bottomLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-  },
-  bottomIconActive: {
-    color: '#7C3AED',
-  },
-  bottomLabelActive: {
-    color: '#7C3AED',
-    fontWeight: '600',
-  },
-  bottomCenter: {
-    alignItems: 'center',
-  },
-  bottomPlusCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#7C3AED',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bottomPlusIcon: {
-    fontSize: 26,
-    color: '#FFFFFF',
-    marginTop: -2,
+    lineHeight: 18,
   },
 });
