@@ -1,6 +1,4 @@
 import React from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -8,15 +6,19 @@ import {
   ScrollView,
   StyleSheet,
   Image,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpenPlace }) {
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web' && width >= 768;
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'M';
-  const userName = user?.email ? user.email.split('@')[0] : 'Marcusina';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.homeContainer}>
+    <View style={styles.homeContainer}>
+      {!isWeb && (
         <View style={styles.homeHeaderRow}>
           <Image 
             source={require('../assets/marcusina.jpeg')} 
@@ -29,24 +31,32 @@ export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpe
                 <Text style={styles.homeAvatarText}>{userInitial}</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity>
-              <View style={styles.cartIconWrapper}>
-                <Text style={styles.cartIcon}>🛒</Text>
-                <View style={styles.cartBadge}>
-                  <Text style={styles.cartBadgeText}>1</Text>
-                </View>
+            <TouchableOpacity style={styles.headerIconButton}>
+              <MaterialIcons name="shopping-cart" size={24} color="#4B5563" />
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>1</Text>
               </View>
             </TouchableOpacity>
           </View>
         </View>
-        <ScrollView
-          contentContainerStyle={styles.homeScroll}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.contentMaxWidth}>
-            <View style={styles.searchBar}>
-              <Text style={styles.searchPlaceholder}>Search medications, vitamins...</Text>
-            </View>
+      )}
+      <ScrollView
+        contentContainerStyle={[
+          styles.homeScroll,
+          isWeb && styles.webHomeScroll
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[
+          styles.contentMaxWidth,
+          isWeb && styles.webContentMaxWidth
+        ]}>
+          <View style={styles.searchBar}>
+            <MaterialIcons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+            <Text style={styles.searchPlaceholder}>Search medications, vitamins...</Text>
+          </View>
+          
+          <View style={[styles.heroSection, isWeb && styles.webHeroSection]}>
             <View style={styles.promoCard}>
               <View style={styles.promoChip}>
                 <Text style={styles.promoChipText}>QuickProcess</Text>
@@ -59,296 +69,360 @@ export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpe
                 <Text style={styles.uploadButtonText}>Upload Now</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Shop by Category</Text>
-              <TouchableOpacity>
-                <Text style={styles.sectionSeeAll}>See all</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoryRow}
-            >
-              {[
-                { label: 'Pain Relief' },
-                { label: 'Vitamins' },
-                { label: 'SkinCare' },
-                { label: 'First Aid' },
-                { label: 'Baby' },
-              ].map((item) => (
-                <View key={item.label} style={styles.categoryItem}>
-                  <View style={styles.categoryCircle} />
-                  <Text style={styles.categoryLabel}>{item.label}</Text>
+            
+            {isWeb && (
+              <View style={styles.webPromoStats}>
+                <View style={styles.statCard}>
+                  <MaterialIcons name="local-shipping" size={24} color="#7C3AED" />
+                  <Text style={styles.statValue}>2hr</Text>
+                  <Text style={styles.statLabel}>Express Delivery</Text>
                 </View>
-              ))}
-            </ScrollView>
-            <Text style={styles.sectionTitle}>Popular Products</Text>
-            <View style={styles.productsGrid}>
-              {[
-                {
-                  badge: 'Best Seller',
-                  name: 'Vitality Vitamin C 1000mg',
-                  meta: '60 Tablets',
-                  price: '$12.99',
-                },
-                {
-                  badge: 'Pain Relief',
-                  name: 'Rapid Relief Paracetamol',
-                  meta: '24 Caplets',
-                  price: '$5.49',
-                },
-                {
-                  badge: '-20%',
-                  name: 'Hyaluronic Acid Serum',
-                  meta: '30ml Bottle',
-                  price: '$24.00',
-                },
-                {
-                  badge: 'Devices',
-                  name: 'Digital Thermometer',
-                  meta: 'Instant Read',
-                  price: '$15.50',
-                },
-              ].map((item) => (
-                <View key={item.name} style={styles.productCard}>
-                  <View style={styles.productImagePlaceholder} />
-                  <Text style={styles.productBadge}>{item.badge}</Text>
-                  <Text style={styles.productName}>{item.name}</Text>
-                  <Text style={styles.productMeta}>{item.meta}</Text>
-                  <View style={styles.productBottomRow}>
-                    <Text style={styles.productPrice}>{item.price}</Text>
-                    <View style={styles.addButton}>
-                      <Text style={styles.addButtonText}>＋</Text>
-                    </View>
-                  </View>
+                <View style={styles.statCard}>
+                  <MaterialIcons name="verified" size={24} color="#7C3AED" />
+                  <Text style={styles.statValue}>100%</Text>
+                  <Text style={styles.statLabel}>Genuine Meds</Text>
                 </View>
-              ))}
-            </View>
+              </View>
+            )}
           </View>
-        </ScrollView>
-        <View style={styles.tabBar}>
-          <TouchableOpacity style={styles.tabItem}>
-            <MaterialIcons name="home" size={22} color="#7C3AED" style={styles.tabIcon} />
-            <Text style={[styles.tabLabel, styles.tabLabelActive]}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tabItem} onPress={onOpenPlace}>
-            <MaterialIcons name="place" size={22} color="#9CA3AF" style={styles.tabIcon} />
-            <Text style={styles.tabLabel}>Place</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tabItem} onPress={onOpenGroups}>
-            <MaterialIcons name="groups" size={22} color="#9CA3AF" style={styles.tabIcon} />
-            <Text style={styles.tabLabel}>Social</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tabItem} onPress={onOpenProfile}>
-            <MaterialIcons name="person" size={22} color="#9CA3AF" style={styles.tabIcon} />
-            <Text style={styles.tabLabel}>Profile</Text>
-          </TouchableOpacity>
+
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Shop by Category</Text>
+            <TouchableOpacity>
+              <Text style={styles.sectionSeeAll}>See all</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryRow}
+          >
+            {[
+              { label: 'Pain Relief', icon: 'healing' },
+              { label: 'Vitamins', icon: 'Spa' },
+              { label: 'SkinCare', icon: 'face' },
+              { label: 'First Aid', icon: 'medical-services' },
+              { label: 'Baby', icon: 'child-care' },
+            ].map((item) => (
+              <View key={item.label} style={styles.categoryItem}>
+                <View style={styles.categoryCircle}>
+                  <MaterialIcons name={item.icon || 'category'} size={24} color="#7C3AED" />
+                </View>
+                <Text style={styles.categoryLabel}>{item.label}</Text>
+              </View>
+            ))}
+          </ScrollView>
+
+          <Text style={styles.sectionTitle}>Popular Products</Text>
+          <View style={styles.productsGrid}>
+            {[
+              {
+                badge: 'Best Seller',
+                name: 'Vitality Vitamin C 1000mg',
+                meta: '60 Tablets',
+                price: '$12.99',
+              },
+              {
+                badge: 'Pain Relief',
+                name: 'Rapid Relief Paracetamol',
+                meta: '24 Caplets',
+                price: '$5.49',
+              },
+              {
+                badge: '-20%',
+                name: 'Hyaluronic Acid Serum',
+                meta: '30ml Bottle',
+                price: '$24.00',
+              },
+              {
+                badge: 'Devices',
+                name: 'Digital Thermometer',
+                meta: 'Instant Read',
+                price: '$15.50',
+              },
+            ].map((item) => (
+              <View key={item.name} style={[styles.productCard, isWeb && styles.webProductCard]}>
+                <View style={styles.productImagePlaceholder}>
+                  <MaterialIcons name="image" size={40} color="#E5E7EB" />
+                </View>
+                <View style={styles.productBadgeContainer}>
+                  <Text style={styles.productBadge}>{item.badge}</Text>
+                </View>
+                <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
+                <Text style={styles.productMeta}>{item.meta}</Text>
+                <View style={styles.productBottomRow}>
+                  <Text style={styles.productPrice}>{item.price}</Text>
+                  <TouchableOpacity style={styles.addButton}>
+                    <MaterialIcons name="add" size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
   homeContainer: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
   },
   homeHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   homeHeaderRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   homeLogo: {
-    width: 120,
-    height: 36,
+    width: 110,
+    height: 32,
   },
-  homeBrandText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+  headerIconButton: {
+    marginLeft: 16,
+    padding: 4,
+    position: 'relative',
   },
   homeAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F3E8FF',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F5F3FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
   },
   homeAvatarText: {
-    fontSize: 14,
-    fontWeight: '600',
     color: '#7C3AED',
-  },
-  cartIconWrapper: {
-    padding: 4,
-  },
-  cartIcon: {
-    fontSize: 22,
-  },
-  cartBadge: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#EC4899',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadgeText: {
-    fontSize: 10,
-    color: '#FFFFFF',
     fontWeight: '600',
+    fontSize: 14,
   },
   homeScroll: {
-    paddingHorizontal: 24,
-    paddingBottom: 160,
-    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  webHomeScroll: {
+    paddingBottom: 40,
   },
   contentMaxWidth: {
-    width: '100%',
-    maxWidth: 520,
-    alignSelf: 'center',
+    paddingHorizontal: 20,
+  },
+  webContentMaxWidth: {
+    paddingHorizontal: 0,
   },
   searchBar: {
-    height: 44,
-    borderRadius: 999,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingVertical: 12,
+    marginTop: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+      }
+    }),
+  },
+  searchIcon: {
+    marginRight: 10,
   },
   searchPlaceholder: {
-    fontSize: 14,
     color: '#9CA3AF',
+    fontSize: 15,
   },
-  promoCard: {
-    borderRadius: 20,
-    padding: 20,
-    backgroundColor: '#7C3AED',
+  heroSection: {
     marginBottom: 24,
   },
+  webHeroSection: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  promoCard: {
+    flex: 2,
+    backgroundColor: '#7C3AED',
+    borderRadius: 20,
+    padding: 24,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  webPromoStats: {
+    flex: 1,
+    gap: 16,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
   promoChip: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: '#FBBF24',
     marginBottom: 12,
   },
   promoChipText: {
-    fontSize: 11,
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '600',
-    color: '#1F2937',
   },
   promoTitle: {
-    fontSize: 20,
-    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 4,
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   promoSubtitle: {
-    fontSize: 13,
-    color: '#E5E7EB',
-    marginBottom: 16,
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    marginBottom: 20,
+    maxWidth: '70%',
   },
   uploadButton: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignSelf: 'flex-start',
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#FBBF24',
   },
   uploadButtonText: {
-    fontSize: 14,
+    color: '#7C3AED',
     fontWeight: '600',
-    color: '#1F2937',
+    fontSize: 14,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#111827',
   },
   sectionSeeAll: {
-    fontSize: 13,
     color: '#7C3AED',
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
   categoryRow: {
-    paddingVertical: 4,
-    marginBottom: 20,
+    paddingBottom: 8,
+    marginBottom: 24,
   },
   categoryItem: {
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 20,
   },
   categoryCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#F3F4F6',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F5F3FF',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
   },
   categoryLabel: {
-    fontSize: 12,
-    color: '#374151',
+    fontSize: 13,
+    color: '#4B5563',
+    fontWeight: '500',
   },
   productsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginTop: 8,
+    gap: 16,
   },
   productCard: {
-    width: '48%',
-    borderRadius: 16,
+    width: '47%',
     backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  webProductCard: {
+    width: '23%',
   },
   productImagePlaceholder: {
-    height: 96,
+    aspectRatio: 1,
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    marginBottom: 8,
+    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  productBadgeContainer: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
   },
   productBadge: {
-    fontSize: 11,
-    color: '#F97316',
-    marginBottom: 4,
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#7C3AED',
+    backgroundColor: '#F5F3FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   productName: {
     fontSize: 14,
     fontWeight: '600',
     color: '#111827',
+    marginBottom: 4,
+    height: 40,
   },
   productMeta: {
     fontSize: 12,
-    color: '#9CA3AF',
-    marginBottom: 8,
+    color: '#6B7280',
+    marginBottom: 12,
   },
   productBottomRow: {
     flexDirection: 'row',
@@ -356,55 +430,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   productPrice: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     color: '#111827',
   },
   addButton: {
+    backgroundColor: '#7C3AED',
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: '#7C3AED',
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addButtonText: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    marginTop: -2,
-  },
-  tabBar: {
+  cartBadge: {
     position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 16,
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  tabItem: {
-    flex: 1,
+    top: -4,
+    right: -4,
+    backgroundColor: '#EF4444',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
-  tabIcon: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
-  tabLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-  },
-  tabLabelActive: {
-    color: '#7C3AED',
-    fontWeight: '600',
+  cartBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '700',
   },
 });
