@@ -10,8 +10,15 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
-import { login as loginApi, register as registerApi, verifyEmail as verifyEmailApi, checkVerificationStatus } from '../api/auth.api';
+import {
+  login as loginApi,
+  register as registerApi,
+  verifyEmailOtp as verifyEmailOtpApi,
+  resendVerificationEmail,
+  verifyIdentityByOtp,
+} from '../api/auth.api';
 import { validate } from '../utils/validator';
 import { loginSchema, registerSchema } from '../constants/schemas';
 
@@ -111,11 +118,27 @@ function StepHeader({ stepIndex, totalSteps, title, showSkip, onBack, onSkip }) 
   );
 }
 
-export function LoginScreen({ onSignUp, onLoginSuccess }) {
+// Helper function for showing alerts on both web and mobile
+function showAlert(title, message, onDismiss = null) {
+  if (Platform.OS === 'web') {
+    // For web, use a modal-like alert
+    alert(`${title}\n\n${message}`);
+    if (onDismiss && typeof onDismiss === 'function') {
+      onDismiss();
+    }
+  } else {
+    const buttons = onDismiss ? [{ text: 'OK', onPress: onDismiss }] : [{ text: 'OK' }];
+    Alert.alert(title, message, buttons);
+  }
+}
+
+export function LoginScreen({ onSignUp, onLoginSuccess, onEmailVerifyNeeded }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [otpMode, setOtpMode] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
 
   const handleLogin = async () => {
     const { isValid, errors: validationErrors } = validate(loginSchema.body, { email, password });
@@ -145,15 +168,98 @@ export function LoginScreen({ onSignUp, onLoginSuccess }) {
         const fallbackToken = userToken || 'dummy-token';
         onLoginSuccess(fallbackUser, fallbackToken);
       } else {
-        Alert.alert('Login Failed', response.message || 'Unknown error');
+        showAlert('Login Failed', response.message || 'Unknown error');
       }
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert('Login Error', error.message || 'Failed to connect to server');
+      console.error('Error stack:', error.stack);
+      // Check if email verification is needed
+      if (error.message.includes('Verify your email') || error.message.includes('email verified')) {
+        if (onEmailVerifyNeeded) {
+          showAlert('Email Verification Required', 'Please verify your email address to continue.', () => {
+            onEmailVerifyNeeded(email);
+          });
+        } else {
+          showAlert('Email Verification Required', error.message || 'Please verify your email address to continue.');
+        }
+      } else if (error.message.includes('New device detected') || error.message.includes('verify with OTP')) {
+        setOtpMode(true);
+        showAlert('Verification Needed', 'A verification code has been sent to your email. Please enter it below.');
+      } else {
+        showAlert('Login Error', error.message || 'Failed to connect to server');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const handleOtpChange = (value) => {
+    setOtp(value);
+  };
+
+  const handleVerifyOtp = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      showAlert('Invalid OTP', 'Please enter all 6 digits');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await verifyIdentityByOtp(email, otpCode);
+      console.log('OTP verification response:', JSON.stringify(response, null, 2));
+      
+      const userData = response.user || response.data?.user;
+      const userToken = response.token || response.data?.token;
+
+      if (userToken && userData) {
+        onLoginSuccess(userData, userToken);
+      } else if (response.message || response.token) {
+        // Some responses might have token but in different structure
+        onLoginSuccess({ email }, response.token || 'dummy-token');
+      } else {
+        showAlert('Verification Failed', response.message || response.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      showAlert('Verification Error', error.message || 'Failed to verify OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (otpMode) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.contentMaxWidth}>
+            <AppHeaderTitle />
+            <View style={styles.loginCard}>
+              <Text style={styles.screenTitle}>Verify Your Identity</Text>
+              <Text style={styles.screenSubtitle}>
+                A verification code has been sent to {email}. Please enter it below.
+              </Text>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Verification Code</Text>
+                <CodeInputRow length={6} values={otp} onChange={handleOtpChange} />
+                <Text style={styles.otpHelpText}>Enter the 6-digit code</Text>
+              </View>
+              <PrimaryButton 
+                label={loading ? <ActivityIndicator color="#FFF" /> : "Verify"} 
+                onPress={handleVerifyOtp} 
+                disabled={loading}
+              />
+              <View style={styles.footerRow}>
+                <TouchableOpacity onPress={() => { setOtpMode(false); setOtp(['', '', '', '', '', '']); }}>
+                  <Text style={styles.footerLink}>Back to Login</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -215,33 +321,39 @@ export function LoginScreen({ onSignUp, onLoginSuccess }) {
 }
 
 export function EmailVerifyScreen({ email, onBack, onVerified }) {
+  const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
-  const handleCheckStatus = async () => {
+  const handleVerifyEmail = async () => {
+    const otpCode = code.join('');
+    if (otpCode.length !== 6) {
+      showAlert('Invalid Code', 'Please enter the full 6-digit code from your email.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await checkVerificationStatus(email);
-      if (response.verified) {
-        Alert.alert('Success', 'Email verified successfully!');
-        onVerified();
-      } else {
-        Alert.alert('Not Verified', 'We haven\'t detected your verification yet. Please click the link in your email and try again.');
-      }
+      await verifyEmailOtpApi(email, otpCode);
+      showAlert('Success', 'Email verified successfully!', onVerified);
     } catch (error) {
-      if (error.message.includes('not found') || error.message.includes('404')) {
-        Alert.alert(
-          'Verification Check Error', 
-          'The verification check endpoint was not found on the server. Please ensure the backend supports this route or try to proceed manually.',
-          [
-            { text: 'Wait and Try Again', style: 'cancel' },
-            { text: 'Proceed to Next Step', onPress: onVerified }
-          ]
-        );
-      } else {
-        Alert.alert('Error', error.message || 'Failed to check verification status');
-      }
+      console.error('[EmailVerify] Error:', error);
+      showAlert('Verification Error', error.message || 'Failed to verify email');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setResending(true);
+    try {
+      const response = await resendVerificationEmail(email);
+      showAlert('Code Sent', response.message || 'A new verification code has been sent to your email.');
+    } catch (error) {
+      console.error('[EmailVerify][Resend] Error:', error);
+      showAlert('Resend Failed', error.message || 'Failed to resend verification code');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -266,24 +378,22 @@ export function EmailVerifyScreen({ email, onBack, onVerified }) {
           <View style={styles.onboardingBody}>
             <Text style={styles.screenTitle}>Verify your email</Text>
             <Text style={styles.screenSubtitle}>
-              We sent a verification link to {email || 'your email'}.
-              Please click the link in the email to verify your account.
+              Enter the 6-digit verification code sent to {email || 'your email'}.
             </Text>
-            <View style={styles.linkInfoBox}>
-              <Text style={styles.linkInfoText}>
-                Once you've clicked the link, tap the button below to continue.
-              </Text>
-            </View>
+            <CodeInputRow length={6} values={code} onChange={setCode} />
+            <Text style={styles.otpHelpText}>The code expires after a short time, so use the most recent one.</Text>
             <View style={styles.didntReceiveContainer}>
-              <Text style={styles.didntReceiveText}>I didn't receive an email</Text>
-              <TouchableOpacity>
-                <Text style={styles.resendLink}>Resend Link</Text>
+              <Text style={styles.didntReceiveText}>Didn't receive the code?</Text>
+              <TouchableOpacity onPress={handleResendCode} disabled={resending}>
+                <Text style={styles.resendLink}>
+                  {resending ? 'Sending...' : 'Resend Code'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
           <PrimaryButton 
-            label={loading ? <ActivityIndicator color="#FFF" /> : "I've Verified My Email"} 
-            onPress={handleCheckStatus} 
+            label={loading ? <ActivityIndicator color="#FFF" /> : "Verify Email"} 
+            onPress={handleVerifyEmail} 
             disabled={loading}
           />
         </View>
@@ -316,7 +426,7 @@ export function PhoneVerifyScreen({ onBack, onVerified }) {
           <View style={styles.onboardingBody}>
             <Text style={styles.screenTitle}>Check your phone</Text>
             <Text style={styles.screenSubtitle}>
-              Enter the 6-digit code sent via SMS to +1 (555) 123-4567.
+              Enter the 6-digit code sent via SMS to your phone number.
             </Text>
             <CodeInputRow length={6} values={code} onChange={setCode} />
             <View style={styles.resendRow}>
@@ -376,7 +486,7 @@ export function NameStepScreen({ onBack, onNext, onSkip }) {
               onChangeText={setLastName}
             />
           </View>
-          <PrimaryButton label="Next Step" onPress={onNext} />
+          <PrimaryButton label="Next Step" onPress={() => onNext({ name: `${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim() })} />
           <Text style={styles.termsText}>
             By continuing, you agree to our Terms of Service.
           </Text>
@@ -421,7 +531,7 @@ export function ContactStepScreen({ onBack, onNext, onSkip }) {
               onChangeText={setPhone}
             />
           </View>
-          <PrimaryButton label="Next Step" onPress={onNext} />
+          <PrimaryButton label="Next Step" onPress={() => onNext({ email, phone })} />
           <Text style={styles.termsText}>
             By continuing, you agree to our Terms of Service and Privacy Policy.
           </Text>
@@ -432,6 +542,8 @@ export function ContactStepScreen({ onBack, onNext, onSkip }) {
 }
 
 export function LocationStepScreen({ onBack, onComplete }) {
+  const [address, setAddress] = useState('');
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
@@ -458,8 +570,8 @@ export function LocationStepScreen({ onBack, onComplete }) {
             <TextField
               label="Street Address"
               placeholder="Search for your address..."
-              value=""
-              onChangeText={() => {}}
+              value={address}
+              onChangeText={setAddress}
             />
             <View style={styles.privacyCard}>
               <Text style={styles.privacyTitle}>Privacy First</Text>
@@ -469,7 +581,7 @@ export function LocationStepScreen({ onBack, onComplete }) {
               </Text>
             </View>
           </View>
-          <PrimaryButton label="Complete Registration" onPress={onComplete} />
+          <PrimaryButton label="Complete Registration" onPress={() => onComplete({ location: address })} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -495,11 +607,18 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
 
     setLoading(true);
     try {
+      console.log('[Registration] Sending request with:', { email, passwordLength: password?.length });
       const response = await registerApi({ email, password });
-      Alert.alert('Success', 'Registration successful! Please check your email for verification.');
-      onRegisterSuccess(email);
+      console.log('[Registration] Success:', response);
+      showAlert('Success', 'Registration successful! Please check your email for your 6-digit verification code.', () => {
+        onRegisterSuccess({ email, gender, dob });
+      });
     } catch (error) {
-      Alert.alert('Registration Error', error.message || 'Failed to register');
+      console.error('[Registration] Error:', error.message);
+      console.error('[Registration] Full error:', error);
+      // Show more detailed error message
+      const errorMessage = error.message || 'Failed to register';
+      showAlert('Registration Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -560,15 +679,7 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
               >
                 <Text style={styles.genderOptionLabel}>Female</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.genderOption,
-                  gender === 'other' && styles.genderOptionSelected,
-                ]}
-                onPress={() => setGender('other')}
-              >
-                <Text style={styles.genderOptionLabel}>Other</Text>
-              </TouchableOpacity>
+             
             </View>
             <View style={styles.fieldContainer}>
               <Text style={styles.fieldLabel}>Date of Birth</Text>
@@ -655,7 +766,7 @@ export function ProfileCustomizeScreen({ onBack, onNext, onSkip }) {
             />
             <Text style={styles.bioCounter}>{bio.length}/150</Text>
           </View>
-          <PrimaryButton label="Next" onPress={onNext} />
+          <PrimaryButton label="Next" onPress={() => onNext({ bio })} />
           <TouchableOpacity onPress={onSkip}>
             <Text style={styles.skipForNowText}>Skip for now</Text>
           </TouchableOpacity>
@@ -736,6 +847,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#374151',
     marginBottom: 6,
+  },
+  otpHelpText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 8,
+    textAlign: 'center',
   },
   textInput: {
     borderRadius: 12,

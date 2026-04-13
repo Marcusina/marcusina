@@ -12,6 +12,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 
 export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
+  const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
+  
   return (
     <SafeAreaView style={styles.publicSafeArea}>
       <View style={styles.publicHeaderRow}>
@@ -30,14 +32,14 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
           <View style={styles.publicAvatarWrapper}>
             <View style={styles.publicAvatarRing}>
               <View style={styles.publicAvatarCircle}>
-                <Text style={styles.publicAvatarInitial}>M</Text>
+                <Text style={styles.publicAvatarInitial}>{avatarInitial}</Text>
               </View>
             </View>
             <View style={styles.healthPremiumPill}>
               <Text style={styles.healthPremiumText}>PREMIUM</Text>
             </View>
           </View>
-          <Text style={styles.publicName}>{profile.name}</Text>
+          <Text style={styles.publicName}>{profile.name || 'User'}</Text>
           <Text style={styles.healthAccountLabel}>Personal Account</Text>
           <TouchableOpacity style={styles.healthEditButton} onPress={onEditProfile}>
             <Text style={styles.healthEditButtonLabel}>Edit Profile</Text>
@@ -45,17 +47,17 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
           <View style={styles.healthStatsRow}>
             <View style={styles.healthStatCard}>
               <Text style={styles.healthStatIcon}>🩸</Text>
-              <Text style={styles.healthStatValue}>{profile.bloodType}</Text>
+              <Text style={styles.healthStatValue}>{profile.bloodType || '—'}</Text>
               <Text style={styles.healthStatLabel}>Blood Type</Text>
             </View>
             <View style={styles.healthStatCard}>
               <Text style={styles.healthStatIcon}>📏</Text>
-              <Text style={styles.healthStatValue}>{profile.height}</Text>
+              <Text style={styles.healthStatValue}>{profile.height || '—'}</Text>
               <Text style={styles.healthStatLabel}>Height</Text>
             </View>
             <View style={styles.healthStatCard}>
               <Text style={styles.healthStatIcon}>⚖️</Text>
-              <Text style={styles.healthStatValue}>{profile.weight}</Text>
+              <Text style={styles.healthStatValue}>{profile.weight || '—'}</Text>
               <Text style={styles.healthStatLabel}>Weight</Text>
             </View>
           </View>
@@ -67,46 +69,29 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
             <View style={styles.healthRecordCard}>
               <Text style={styles.healthRecordIcon}>📄</Text>
               <Text style={styles.healthRecordTitle}>Medical History</Text>
-              <Text style={styles.healthRecordSubtitle}>24 entries found</Text>
+              <Text style={styles.healthRecordSubtitle}>No entries found</Text>
             </View>
             <View style={styles.healthRecordCard}>
               <Text style={styles.healthRecordIcon}>💊</Text>
               <Text style={styles.healthRecordTitle}>Prescriptions</Text>
-              <Text style={styles.healthRecordSubtitle}>3 active scripts</Text>
+              <Text style={styles.healthRecordSubtitle}>No active scripts</Text>
             </View>
             <View style={styles.healthRecordCard}>
               <Text style={styles.healthRecordIcon}>🧪</Text>
               <Text style={styles.healthRecordTitle}>Lab Results</Text>
-              <Text style={styles.healthRecordSubtitle}>Last updated: Oct 12</Text>
+              <Text style={styles.healthRecordSubtitle}>No results yet</Text>
             </View>
             <View style={styles.healthRecordCard}>
               <Text style={styles.healthRecordIcon}>💉</Text>
               <Text style={styles.healthRecordTitle}>Vaccinations</Text>
-              <Text style={styles.healthRecordSubtitle}>Up to date</Text>
+              <Text style={styles.healthRecordSubtitle}>No records found</Text>
             </View>
           </View>
           <Text style={styles.healthSectionTitle}>Recent Activity</Text>
           <View style={styles.healthActivityList}>
-            <View style={styles.healthActivityItem}>
-              <View style={styles.healthActivityIconCircle}>
-                <Text style={styles.healthActivityIcon}>➕</Text>
-              </View>
-              <View style={styles.healthActivityText}>
-                <Text style={styles.healthActivityTitle}>Consultation with Dr. Smith</Text>
-                <Text style={styles.healthActivitySubtitle}>Yesterday at 2:30 PM</Text>
-              </View>
-              <Text style={styles.healthActivityChevron}>›</Text>
-            </View>
-            <View style={styles.healthActivityItem}>
-              <View style={styles.healthActivityIconCircleGreen}>
-                <Text style={styles.healthActivityIcon}>🛒</Text>
-              </View>
-              <View style={styles.healthActivityText}>
-                <Text style={styles.healthActivityTitle}>Pharmacy Order #4421</Text>
-                <Text style={styles.healthActivitySubtitle}>Delivered · 2 days ago</Text>
-              </View>
-              <Text style={styles.healthActivityChevron}>›</Text>
-            </View>
+            <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 20, marginBottom: 40 }}>
+              No recent activity found.
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -153,6 +138,8 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
 }
 
 export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
+  const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
+
   return (
     <SafeAreaView style={styles.publicSafeArea}>
       <View style={styles.publicHeaderRow}>
@@ -171,16 +158,16 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
           <View style={styles.publicAvatarWrapper}>
             <View style={styles.publicAvatarRing}>
               <View style={styles.publicAvatarCircle}>
-                <Text style={styles.publicAvatarInitial}>M</Text>
+                <Text style={styles.publicAvatarInitial}>{avatarInitial}</Text>
               </View>
             </View>
             <View style={styles.publicBadgeCircle}>
               <Text style={styles.publicBadgeIcon}>★</Text>
             </View>
           </View>
-          <Text style={styles.publicName}>{profile.name}</Text>
-          <Text style={styles.publicHandle}>{profile.handle}</Text>
-          <Text style={styles.publicBio}>{profile.bio}</Text>
+          <Text style={styles.publicName}>{profile.name || 'User'}</Text>
+          <Text style={styles.publicHandle}>{profile.handle || '@user'}</Text>
+          <Text style={styles.publicBio}>{profile.bio || 'No bio yet.'}</Text>
           <View style={styles.publicActionsRow}>
             <TouchableOpacity style={styles.publicFollowButton}>
               <Text style={styles.publicFollowLabel}>Follow</Text>
@@ -191,15 +178,15 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
           </View>
           <View style={styles.publicStatsRow}>
             <View style={styles.publicStatItem}>
-              <Text style={styles.publicStatValue}>12.5K</Text>
+              <Text style={styles.publicStatValue}>0</Text>
               <Text style={styles.publicStatLabel}>FOLLOWERS</Text>
             </View>
             <View style={styles.publicStatItem}>
-              <Text style={styles.publicStatValue}>842</Text>
+              <Text style={styles.publicStatValue}>0</Text>
               <Text style={styles.publicStatLabel}>FOLLOWING</Text>
             </View>
             <View style={styles.publicStatItem}>
-              <Text style={styles.publicStatValue}>128</Text>
+              <Text style={styles.publicStatValue}>0</Text>
               <Text style={styles.publicStatLabel}>POSTS</Text>
             </View>
           </View>
@@ -209,17 +196,6 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.publicCommunitiesRow}
           >
-            {[
-              { label: 'Fitness', color: '#FEE2E2' },
-              { label: 'Dietary', color: '#FCE7F3' },
-              { label: 'Mind', color: '#EDE9FE' },
-              { label: 'Heart', color: '#FEF3C7' },
-            ].map((item) => (
-              <View key={item.label} style={styles.publicCommunityItem}>
-                <View style={[styles.publicCommunityCircle, { backgroundColor: item.color }]} />
-                <Text style={styles.publicCommunityLabel}>{item.label}</Text>
-              </View>
-            ))}
             <View style={styles.publicCommunityItem}>
               <View style={[styles.publicCommunityCircle, styles.publicCommunityJoinCircle]}>
                 <Text style={styles.publicCommunityJoinPlus}>＋</Text>
@@ -239,9 +215,9 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
             </TouchableOpacity>
           </View>
           <View style={styles.publicGrid}>
-            {Array.from({ length: 6 }).map((_, index) => (
-              <View key={index} style={styles.publicGridItem} />
-            ))}
+            <Text style={{ textAlign: 'center', color: '#9CA3AF', width: '100%', marginTop: 40 }}>
+              No content posted yet.
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -298,6 +274,8 @@ export function ProfileScreen({ onCancel, onSave, profile }) {
   const [height, setHeight] = useState(profile.height);
   const [weight, setWeight] = useState(profile.weight);
 
+  const avatarInitial = name ? name.charAt(0).toUpperCase() : '?';
+
   const handleSave = () => {
     onSave({
       ...profile,
@@ -327,7 +305,7 @@ export function ProfileScreen({ onCancel, onSave, profile }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitial}>M</Text>
+            <Text style={styles.avatarInitial}>{avatarInitial}</Text>
           </View>
           <View style={styles.avatarEditBadge}>
             <Text style={styles.avatarEditIcon}>✎</Text>
