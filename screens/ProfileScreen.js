@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
+export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogout }) {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
   const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
@@ -29,6 +29,9 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
           <View style={styles.headerIconsRow}>
             <TouchableOpacity style={styles.headerIconBtn}>
               <MaterialIcons name="search" size={24} color="#4B5563" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={onLogout}>
+              <MaterialIcons name="logout" size={24} color="#EF4444" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerIconBtn}>
               <MaterialIcons name="settings" size={24} color="#4B5563" />

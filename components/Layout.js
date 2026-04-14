@@ -14,7 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 const SIDEBAR_WIDTH = 260;
 const MOBILE_BREAKPOINT = 768;
 
-export function Layout({ children, currentScreen, onNavigate, userProfile }) {
+export function Layout({ children, currentScreen, onNavigate, userProfile, onLogout }) {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= MOBILE_BREAKPOINT;
 
@@ -74,7 +74,10 @@ export function Layout({ children, currentScreen, onNavigate, userProfile }) {
             <Text style={styles.userName} numberOfLines={1}>{userProfile?.name || 'Marcusina'}</Text>
             <Text style={styles.userEmail} numberOfLines={1}>{userProfile?.email || ''}</Text>
           </View>
-          <MaterialIcons name="more-vert" size={20} color="#9CA3AF" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutItem} onPress={onLogout}>
+          <MaterialIcons name="logout" size={20} color="#EF4444" />
+          <Text style={styles.logoutLabel}>Logout</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -131,6 +134,9 @@ export function Layout({ children, currentScreen, onNavigate, userProfile }) {
                   <MaterialIcons name="shopping-cart" size={22} color="#4B5563" />
                 </TouchableOpacity>
                 <View style={styles.headerDivider} />
+                <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+                  <MaterialIcons name="logout" size={20} color="#4B5563" />
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.headerProfileButton}>
                   <View style={styles.headerAvatar}>
                     <Text style={styles.headerAvatarText}>
@@ -215,6 +221,20 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
+  },
+  logoutItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    backgroundColor: '#FFF1F2',
+  },
+  logoutLabel: {
+    marginLeft: 12,
+    fontSize: 14,
+    color: '#EF4444',
+    fontWeight: '600',
   },
   userProfile: {
     flexDirection: 'row',
@@ -307,6 +327,14 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
+    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  logoutButton: {
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
     marginLeft: 8,
     borderWidth: 1,
     borderColor: '#F3F4F6',

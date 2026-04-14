@@ -95,6 +95,17 @@ export default function App() {
     setScreen('home');
   };
 
+  const handleLogout = async () => {
+    try {
+      setToken(null);
+      setUser(null);
+      await removeToken();
+      setScreen('login');
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  };
+
   console.log('[App] Rendering screen:', screen);
 
   useEffect(() => {
@@ -284,6 +295,7 @@ export default function App() {
         onBackHome={() => setScreen('home')}
         onEditProfile={() => setScreen('profileEdit')}
         profile={profile}
+        onLogout={handleLogout}
       />
     );
   } else if (screen === 'profilePublic') {
@@ -373,6 +385,7 @@ export default function App() {
           currentScreen={screen}
           onNavigate={(target) => setScreen(target)}
           userProfile={profile}
+          onLogout={handleLogout}
         >
           {content}
         </Layout>
