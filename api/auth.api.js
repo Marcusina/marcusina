@@ -15,6 +15,13 @@ export const register = async (userData) => {
   });
 };
 
+export const registerDoctor = async (doctorData) => {
+  return await apiClient('/doctors/register', {
+    method: 'POST',
+    body: doctorData,
+  });
+};
+
 export const verifyEmailOtp = async (email, otp) => {
   return await apiClient('/verify-email-otp', {
     method: 'POST',
@@ -160,5 +167,39 @@ export const updateProfile = async (token, profileData) => {
   } catch (error) {
     console.error('[API updateProfile Error]', error);
     throw error;
+  }
+};
+
+/**
+ * Fetch user's prescriptions
+ */
+export const getUserPrescriptions = async (token, userId) => {
+  try {
+    return await apiClient(`/patients/${userId}/prescriptions`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    console.error('[API getUserPrescriptions Error]', error);
+    return []; // Return empty array if error
+  }
+};
+
+/**
+ * Fetch user's communities
+ */
+export const getUserCommunities = async (token) => {
+  try {
+    return await apiClient('/communities/my', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    console.error('[API getUserCommunities Error]', error);
+    return []; // Return empty array if error
   }
 };

@@ -87,17 +87,27 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogo
 
           <View style={[styles.recordsGrid, isWeb && styles.webRecordsGrid]}>
             <RecordCard icon="description" title="Medical History" subtitle="No recent entries" isWeb={isWeb} />
-            <RecordCard icon="medication" title="Prescriptions" subtitle="2 active scripts" isWeb={isWeb} />
+            <RecordCard icon="medication" title="Prescriptions" subtitle={`${profile.prescriptions?.length || 0} active scripts`} isWeb={isWeb} />
             <RecordCard icon="science" title="Lab Results" subtitle="1 new result" isWeb={isWeb} />
             <RecordCard icon="vaccines" title="Vaccinations" subtitle="Up to date" isWeb={isWeb} />
           </View>
 
           <Text style={styles.sectionTitle}>Recent Health Activity</Text>
           <View style={styles.activityList}>
-            <View style={styles.emptyActivity}>
-              <MaterialIcons name="history" size={40} color="#E5E7EB" />
-              <Text style={styles.emptyActivityText}>No recent health activity found.</Text>
-            </View>
+            {profile.recentActivity?.length > 0 ? (
+              profile.recentActivity.map((activity, idx) => (
+                <View key={idx} style={styles.activityItem}>
+                  <MaterialIcons name="check-circle" size={20} color="#10B981" />
+                  <Text style={styles.activityText}>{activity.title}</Text>
+                  <Text style={styles.activityDate}>{activity.date}</Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyActivity}>
+                <MaterialIcons name="history" size={40} color="#E5E7EB" />
+                <Text style={styles.emptyActivityText}>No recent health activity found.</Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -191,15 +201,15 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
 
           <View style={styles.socialStatsRow}>
             <View style={styles.socialStatItem}>
-              <Text style={styles.socialStatValue}>124</Text>
+              <Text style={styles.socialStatValue}>{profile.followers || 0}</Text>
               <Text style={styles.socialStatLabel}>FOLLOWERS</Text>
             </View>
             <View style={styles.socialStatItem}>
-              <Text style={styles.socialStatValue}>89</Text>
+              <Text style={styles.socialStatValue}>{profile.following || 0}</Text>
               <Text style={styles.socialStatLabel}>FOLLOWING</Text>
             </View>
             <View style={styles.socialStatItem}>
-              <Text style={styles.socialStatValue}>12</Text>
+              <Text style={styles.socialStatValue}>{profile.posts || 0}</Text>
               <Text style={styles.socialStatLabel}>POSTS</Text>
             </View>
           </View>
@@ -210,13 +220,17 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.communitiesScroll}
           >
-            {[1, 2, 3].map((i) => (
-              <View key={i} style={styles.communityThumb}>
-                <View style={styles.communityThumbCircle}>
-                  <MaterialIcons name="groups" size={24} color="#7C3AED" />
+            {profile.communities && profile.communities.length > 0 ? (
+              profile.communities.map((community, i) => (
+                <View key={community._id || i} style={styles.communityThumb}>
+                  <Text style={styles.communityThumbText}>{community.name?.charAt(0) || 'C'}</Text>
                 </View>
+              ))
+            ) : (
+              <View style={styles.communityThumb}>
+                <MaterialIcons name="groups" size={24} color="#7C3AED" />
               </View>
-            ))}
+            )}
             <TouchableOpacity style={styles.joinMoreBtn}>
               <MaterialIcons name="add" size={24} color="#9CA3AF" />
             </TouchableOpacity>
@@ -791,5 +805,30 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginBottom: 16,
     marginTop: 8,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  activityText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '500',
+    marginLeft: 12,
+  },
+  activityDate: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  communityThumbText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#7C3AED',
   },
 });

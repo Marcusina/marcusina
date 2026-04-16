@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,38 +8,103 @@ import {
   Image,
   Platform,
   useWindowDimensions,
+  TextInput,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { getMedications, getCart, addToCart } from '../api/meds.api';
+import { useTheme } from '../context/ThemeContext';
 
-export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpenPlace }) {
+export function HomeScreen({ user, token, onOpenProfile, onConsult, onOpenGroups, onOpenPlace }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'M';
 
+  const [medications, setMedications] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const fetchMedications = useCallback(async (search = '', category = null) => {
+    if (!token) return;
+    try {
+      setIsSearching(true);
+      const query = category || search;
+      const response = await getMedications(token, { search: query });
+      setMedications(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch medications:', error);
+    } finally {
+      setIsSearching(false);
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  const fetchCartCount = useCallback(async () => {
+    if (!token) return;
+    try {
+      const cart = await getCart(token);
+      const count = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+      setCartCount(count);
+    } catch (error) {
+      console.error('Failed to fetch cart:', error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchMedications();
+    fetchCartCount();
+  }, [fetchMedications, fetchCartCount]);
+
+  const handleSearch = (text) => {
+    setSearchQuery(text);
+    setSelectedCategory(null);
+    fetchMedications(text, null);
+  };
+
+  const handleCategorySelect = (category) => {
+    if (selectedCategory === category) {
+      setSelectedCategory(null);
+      fetchMedications(searchQuery, null);
+    } else {
+      setSelectedCategory(category);
+      fetchMedications('', category);
+    }
+  };
+
+  const handleAddToCart = async (medicationId) => {
+    if (!token) {
+      Alert.alert('Error', 'You must be logged in to add items to cart');
+      return;
+    }
+    try {
+      await addToCart(token, medicationId, 1);
+      fetchCartCount();
+      Alert.alert('Success', 'Item added to cart');
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to add item to cart');
+    }
+  };
+
+  const handleUploadPrescription = () => {
+    Alert.alert('Coming Soon', 'Prescription upload will be available in the next update.');
+  };
+
+  const categories = [
+    { label: 'Pain Relief', icon: 'healing', value: 'Analgesic' },
+    { label: 'Vitamins', icon: 'spa', value: 'Vitamin' },
+    { label: 'Antibiotics', icon: 'biotech', value: 'Antibiotic' },
+    { label: 'First Aid', icon: 'medical-services', value: 'First Aid' },
+    { label: 'Baby', icon: 'child-care', value: 'Baby' },
+  ];
+
   return (
     <View style={styles.homeContainer}>
-      {!isWeb && (
-        <View style={styles.homeHeaderRow}>
-          <Image 
-            source={require('../assets/marcusina.jpeg')} 
-            style={styles.homeLogo}
-            resizeMode="contain"
-          />
-          <View style={styles.homeHeaderRight}>
-            <TouchableOpacity onPress={onOpenProfile}>
-              <View style={styles.homeAvatar}>
-                <Text style={styles.homeAvatarText}>{userInitial}</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIconButton}>
-              <MaterialIcons name="shopping-cart" size={24} color="#4B5563" />
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>1</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
       <ScrollView
         contentContainerStyle={[
           styles.homeScroll,
@@ -53,7 +118,14 @@ export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpe
         ]}>
           <View style={styles.searchBar}>
             <MaterialIcons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
-            <Text style={styles.searchPlaceholder}>Search medications, vitamins...</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search medications, vitamins..."
+              value={searchQuery}
+              onChangeText={handleSearch}
+              placeholderTextColor="#9CA3AF"
+            />
+            {isSearching && <ActivityIndicator size="small" color="#7C3AED" />}
           </View>
           
           <View style={[styles.heroSection, isWeb && styles.webHeroSection]}>
@@ -65,7 +137,7 @@ export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpe
               <Text style={styles.promoSubtitle}>
                 Quick processing & home delivery within 2 hours.
               </Text>
-              <TouchableOpacity style={styles.uploadButton}>
+              <TouchableOpacity style={styles.uploadButton} onPress={handleUploadPrescription}>
                 <Text style={styles.uploadButtonText}>Upload Now</Text>
               </TouchableOpacity>
             </View>
@@ -88,7 +160,7 @@ export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpe
 
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Shop by Category</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => handleCategorySelect(null)}>
               <Text style={styles.sectionSeeAll}>See all</Text>
             </TouchableOpacity>
           </View>
@@ -97,78 +169,89 @@ export function HomeScreen({ user, onOpenProfile, onConsult, onOpenGroups, onOpe
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoryRow}
           >
-            {[
-              { label: 'Pain Relief', icon: 'healing' },
-              { label: 'Vitamins', icon: 'Spa' },
-              { label: 'SkinCare', icon: 'face' },
-              { label: 'First Aid', icon: 'medical-services' },
-              { label: 'Baby', icon: 'child-care' },
-            ].map((item) => (
-              <View key={item.label} style={styles.categoryItem}>
-                <View style={styles.categoryCircle}>
-                  <MaterialIcons name={item.icon || 'category'} size={24} color="#7C3AED" />
+            {categories.map((item) => (
+              <TouchableOpacity 
+                key={item.label} 
+                style={[
+                  styles.categoryItem,
+                  selectedCategory === item.value && styles.categoryItemActive
+                ]}
+                onPress={() => handleCategorySelect(item.value)}
+              >
+                <View style={[
+                  styles.categoryCircle,
+                  selectedCategory === item.value && styles.categoryCircleActive
+                ]}>
+                  <MaterialIcons 
+                    name={item.icon || 'category'} 
+                    size={24} 
+                    color={selectedCategory === item.value ? "#FFFFFF" : "#7C3AED"} 
+                  />
                 </View>
-                <Text style={styles.categoryLabel}>{item.label}</Text>
-              </View>
+                <Text style={[
+                  styles.categoryLabel,
+                  selectedCategory === item.value && styles.categoryLabelActive
+                ]}>{item.label}</Text>
+              </TouchableOpacity>
             ))}
           </ScrollView>
 
-          <Text style={styles.sectionTitle}>Popular Products</Text>
-          <View style={styles.productsGrid}>
-            {[
-              {
-                badge: 'Best Seller',
-                name: 'Vitality Vitamin C 1000mg',
-                meta: '60 Tablets',
-                price: '$12.99',
-              },
-              {
-                badge: 'Pain Relief',
-                name: 'Rapid Relief Paracetamol',
-                meta: '24 Caplets',
-                price: '$5.49',
-              },
-              {
-                badge: '-20%',
-                name: 'Hyaluronic Acid Serum',
-                meta: '30ml Bottle',
-                price: '$24.00',
-              },
-              {
-                badge: 'Devices',
-                name: 'Digital Thermometer',
-                meta: 'Instant Read',
-                price: '$15.50',
-              },
-            ].map((item) => (
-              <View key={item.name} style={[styles.productCard, isWeb && styles.webProductCard]}>
-                <View style={styles.productImagePlaceholder}>
-                  <MaterialIcons name="image" size={40} color="#E5E7EB" />
+          <Text style={styles.sectionTitle}>
+            {selectedCategory ? `${selectedCategory} Products` : searchQuery ? 'Search Results' : 'Popular Products'}
+          </Text>
+          
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#7C3AED" style={{ marginTop: 20 }} />
+          ) : medications.length > 0 ? (
+            <View style={styles.productsGrid}>
+              {medications.map((item) => (
+                <View key={item._id} style={[styles.productCard, isWeb && styles.webProductCard]}>
+                  <View style={styles.productImagePlaceholder}>
+                    {item.image_url && item.image_url.length > 0 ? (
+                      <Image 
+                        source={{ uri: item.image_url[0].url }} 
+                        style={styles.productImage} 
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <MaterialIcons name="image" size={40} color="#E5E7EB" />
+                    )}
+                  </View>
+                  <View style={styles.productBadgeContainer}>
+                    <Text style={styles.productBadge}>
+                      {item.requires_prescription ? 'Prescription Req.' : 'OTC'}
+                    </Text>
+                  </View>
+                  <Text style={styles.productName} numberOfLines={2}>{item.medication_name}</Text>
+                  <Text style={styles.productMeta}>{item.generic_name}</Text>
+                  <View style={styles.productBottomRow}>
+                    <Text style={styles.productPrice}>$10.00</Text> 
+                    <TouchableOpacity 
+                      style={styles.addButton} 
+                      onPress={() => handleAddToCart(item._id)}
+                    >
+                      <MaterialIcons name="add" size={20} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <View style={styles.productBadgeContainer}>
-                  <Text style={styles.productBadge}>{item.badge}</Text>
-                </View>
-                <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-                <Text style={styles.productMeta}>{item.meta}</Text>
-                <View style={styles.productBottomRow}>
-                  <Text style={styles.productPrice}>{item.price}</Text>
-                  <TouchableOpacity style={styles.addButton}>
-                    <MaterialIcons name="add" size={20} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <MaterialIcons name="search-off" size={64} color="#D1D5DB" />
+              <Text style={styles.emptyText}>No medications found.</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   homeContainer: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: theme.background,
   },
   homeHeaderRow: {
     flexDirection: 'row',
@@ -177,9 +260,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.border,
   },
   homeHeaderRight: {
     flexDirection: 'row',
@@ -194,18 +277,36 @@ const styles = StyleSheet.create({
     padding: 4,
     position: 'relative',
   },
+  cartBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: theme.error,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: theme.surface,
+  },
+  cartBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '700',
+  },
   homeAvatar: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.primaryLight,
   },
   homeAvatarText: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
     fontSize: 14,
   },
@@ -224,35 +325,22 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 4,
     marginTop: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
-      web: {
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-      }
-    }),
+    borderColor: theme.border,
   },
   searchIcon: {
     marginRight: 10,
   },
-  searchPlaceholder: {
-    color: '#9CA3AF',
+  searchInput: {
+    flex: 1,
     fontSize: 15,
+    color: theme.text,
   },
   heroSection: {
     marginBottom: 24,
@@ -263,7 +351,7 @@ const styles = StyleSheet.create({
   },
   promoCard: {
     flex: 2,
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     borderRadius: 20,
     padding: 24,
     position: 'relative',
@@ -275,23 +363,23 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginTop: 2,
   },
   promoChip: {
@@ -327,7 +415,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   uploadButtonText: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
     fontSize: 14,
   },
@@ -340,10 +428,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   sectionSeeAll: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -359,17 +447,25 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.primaryLight,
+  },
+  categoryCircleActive: {
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
   categoryLabel: {
     fontSize: 13,
-    color: '#4B5563',
+    color: theme.textSecondary,
     fontWeight: '500',
+  },
+  categoryLabelActive: {
+    color: theme.primary,
+    fontWeight: 'bold',
   },
   productsGrid: {
     flexDirection: 'row',
@@ -379,23 +475,27 @@ const styles = StyleSheet.create({
   },
   productCard: {
     width: '47%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   webProductCard: {
     width: '23%',
   },
   productImagePlaceholder: {
     aspectRatio: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     borderRadius: 12,
     marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
   },
   productBadgeContainer: {
     position: 'absolute',
@@ -405,8 +505,8 @@ const styles = StyleSheet.create({
   productBadge: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#7C3AED',
-    backgroundColor: '#F5F3FF',
+    color: theme.primary,
+    backgroundColor: theme.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -415,13 +515,13 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 4,
     height: 40,
   },
   productMeta: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.textMuted,
     marginBottom: 12,
   },
   productBottomRow: {
@@ -432,32 +532,25 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   addButton: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     width: 32,
     height: 32,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cartBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#EF4444',
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+  emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    paddingVertical: 40,
+    width: '100%',
   },
-  cartBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '700',
+  emptyText: {
+    marginTop: 12,
+    color: theme.textMuted,
+    fontSize: 16,
   },
 });

@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 
 const STORAGE_KEY = '@marcusina_token';
 const PROFILE_KEY = '@marcusina_profile';
+const THEME_KEY = '@marcusina_theme';
 
 export const saveToken = async (token) => {
   try {
@@ -78,5 +79,30 @@ export const removeProfile = async () => {
     }
   } catch (e) {
     console.error('Error removing profile', e);
+  }
+};
+
+export const saveTheme = async (theme) => {
+  try {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(THEME_KEY, theme);
+    } else {
+      await AsyncStorage.setItem(THEME_KEY, theme);
+    }
+  } catch (e) {
+    console.error('Error saving theme', e);
+  }
+};
+
+export const getTheme = async () => {
+  try {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(THEME_KEY);
+    } else {
+      return await AsyncStorage.getItem(THEME_KEY);
+    }
+  } catch (e) {
+    console.error('Error getting theme', e);
+    return null;
   }
 };

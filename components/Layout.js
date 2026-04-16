@@ -8,13 +8,17 @@ import {
   Platform,
   ScrollView,
   Image,
+  Switch,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const SIDEBAR_WIDTH = 260;
 const MOBILE_BREAKPOINT = 768;
 
 export function Layout({ children, currentScreen, onNavigate, userProfile, onLogout }) {
+  const { theme, themeMode, toggleTheme } = useTheme();
+  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= MOBILE_BREAKPOINT;
 
@@ -49,7 +53,7 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
               <MaterialIcons
                 name={item.icon}
                 size={22}
-                color={currentScreen === item.id ? '#7C3AED' : '#6B7280'}
+                color={currentScreen === item.id ? theme.primary : theme.textSecondary}
               />
             </View>
             <Text
@@ -62,6 +66,22 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
             </Text>
           </TouchableOpacity>
         ))}
+        <View style={styles.themeToggleContainer}>
+          <MaterialIcons 
+            name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
+            size={20} 
+            color={theme.textSecondary} 
+          />
+          <Text style={styles.themeToggleLabel}>
+            {themeMode === 'dark' ? 'Dark Mode' : 'Light Mode'}
+          </Text>
+          <Switch
+            value={themeMode === 'dark'}
+            onValueChange={toggleTheme}
+            trackColor={{ false: '#D1D5DB', true: theme.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
       </ScrollView>
       <View style={styles.sidebarFooter}>
         <TouchableOpacity style={styles.userProfile}>
@@ -94,7 +114,7 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
           <MaterialIcons
             name={item.icon}
             size={24}
-            color={currentScreen === item.id ? '#7C3AED' : '#9CA3AF'}
+            color={currentScreen === item.id ? theme.primary : theme.textMuted}
           />
           <Text
             style={[
@@ -113,6 +133,22 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
     <View style={styles.container}>
       {isDesktop && renderSidebar()}
       <View style={styles.mainContent}>
+        {!isDesktop && (
+          <View style={styles.mobileHeader}>
+            <Image 
+              source={require('../assets/marcusina.jpeg')} 
+              style={styles.mobileLogo}
+              resizeMode="contain"
+            />
+            <TouchableOpacity style={styles.mobileThemeToggle} onPress={toggleTheme}>
+              <MaterialIcons 
+                name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
+                size={24} 
+                color={theme.primary} 
+              />
+            </TouchableOpacity>
+          </View>
+        )}
         {isDesktop && (
           <View style={styles.webHeader}>
             <View style={styles.webHeaderContent}>
@@ -126,8 +162,15 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
                 <Text style={styles.searchPlaceholder}>Search anything...</Text>
               </View>
               <View style={styles.webHeaderActions}>
+                <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
+                  <MaterialIcons 
+                    name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
+                    size={22} 
+                    color={theme.textSecondary} 
+                  />
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton}>
-                  <MaterialIcons name="notifications-none" size={22} color="#4B5563" />
+                  <MaterialIcons name="notifications-none" size={22} color={theme.textSecondary} />
                   <View style={styles.notificationBadge} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton}>
@@ -168,17 +211,17 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
   },
   sidebar: {
     width: SIDEBAR_WIDTH,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRightWidth: 1,
-    borderRightColor: '#F3F4F6',
+    borderRightColor: theme.border,
     display: 'flex',
   },
   sidebarHeader: {
@@ -201,7 +244,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   navItemActive: {
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
   },
   navIconWrapper: {
     width: 32,
@@ -210,17 +253,32 @@ const styles = StyleSheet.create({
   navLabel: {
     marginLeft: 8,
     fontSize: 15,
-    color: '#4B5563',
+    color: theme.textSecondary,
     fontWeight: '500',
   },
   navLabelActive: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
+  },
+  themeToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: theme.border,
+  },
+  themeToggleLabel: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 14,
+    color: theme.textSecondary,
+    fontWeight: '500',
   },
   sidebarFooter: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: theme.border,
   },
   logoutItem: {
     flexDirection: 'row',
@@ -228,12 +286,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginTop: 8,
-    backgroundColor: '#FFF1F2',
+    backgroundColor: theme.errorLight,
   },
   logoutLabel: {
     marginLeft: 12,
     fontSize: 14,
-    color: '#EF4444',
+    color: theme.error,
     fontWeight: '600',
   },
   userProfile: {
@@ -241,18 +299,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
     borderRadius: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
   },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E9D5FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '700',
     fontSize: 16,
   },
@@ -263,11 +321,29 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.text,
   },
   userEmail: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.textMuted,
+  },
+  mobileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 12 : 12,
+    paddingBottom: 12,
+    backgroundColor: theme.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  mobileLogo: {
+    width: 100,
+    height: 30,
+  },
+  mobileThemeToggle: {
+    padding: 8,
   },
   mainContent: {
     flex: 1,
@@ -275,9 +351,9 @@ const styles = StyleSheet.create({
   },
   webHeader: {
     height: 72,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.border,
     justifyContent: 'center',
     paddingHorizontal: 32,
     zIndex: 10,
@@ -296,13 +372,13 @@ const styles = StyleSheet.create({
   webPageTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   webHeaderSearch: {
     flex: 2,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.surfaceSubtle,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
@@ -313,7 +389,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   searchPlaceholder: {
-    color: '#9CA3AF',
+    color: theme.textMuted,
     fontSize: 14,
   },
   webHeaderActions: {
@@ -326,18 +402,18 @@ const styles = StyleSheet.create({
     position: 'relative',
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     marginLeft: 8,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   logoutButton: {
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     marginLeft: 8,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   notificationBadge: {
     position: 'absolute',
@@ -346,14 +422,14 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.error,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: theme.surface,
   },
   headerDivider: {
     width: 1,
     height: 32,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.divider,
     marginHorizontal: 16,
   },
   headerProfileButton: {
@@ -363,14 +439,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.primaryLight,
   },
   headerAvatarText: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
     fontSize: 14,
   },
@@ -391,9 +467,9 @@ const styles = StyleSheet.create({
   bottomNav: {
     flexDirection: 'row',
     height: 64,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: theme.border,
     paddingBottom: Platform.OS === 'ios' ? 20 : 8,
     paddingTop: 8,
   },
@@ -405,11 +481,11 @@ const styles = StyleSheet.create({
   bottomNavLabel: {
     fontSize: 11,
     marginTop: 4,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     fontWeight: '500',
   },
   bottomNavLabelActive: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
   },
 });

@@ -15,6 +15,7 @@ import {
 import {
   login as loginApi,
   register as registerApi,
+  registerDoctor as registerDoctorApi,
   verifyEmailOtp as verifyEmailOtpApi,
   resendVerificationEmail,
   verifyIdentityByOtp,
@@ -621,11 +622,20 @@ export function LocationStepScreen({ onBack, onComplete }) {
 
 export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
   const [email, setEmail] = useState('');
+  const [role, setRole] = useState('patient'); // 'patient' or 'doctor'
   const [gender, setGender] = useState('female');
   const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Doctor-specific fields
+  const [specialization, setSpecialization] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [licenseAuthority, setLicenseAuthority] = useState('');
+  const [licenseExpiry, setLicenseExpiry] = useState('');
+  const [yearsOfExperience, setYearsOfExperience] = useState('');
+  const [consultationFee, setConsultationFee] = useState('');
 
   const handleRegister = async () => {
     const { isValid, errors: validationErrors } = validate(registerSchema.body, { email, password });
@@ -638,16 +648,32 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
 
     setLoading(true);
     try {
-      console.log('[Registration] Sending request with:', { email, passwordLength: password?.length });
-      const response = await registerApi({ email, password });
+      let response;
+      if (role === 'doctor') {
+        const doctorData = {
+          email,
+          password,
+          specialization,
+          license_number: licenseNumber,
+          license_issuing_authority: licenseAuthority,
+          license_expiry_date: licenseExpiry, // Expecting YYYY-MM-DD
+          years_of_experience: parseInt(yearsOfExperience) || 0,
+          consultation_fee: parseFloat(consultationFee) || 0,
+        };
+        console.log('[Registration] Registering as doctor:', doctorData);
+        response = await registerDoctorApi(doctorData);
+      } else {
+        console.log('[Registration] Registering as patient:', { email });
+        response = await registerApi({ email, password });
+      }
+      
       console.log('[Registration] Success:', response);
       showAlert('Success', 'Registration successful! Please check your email for your 6-digit verification code.', () => {
-        onRegisterSuccess({ email, gender, dob });
+        onRegisterSuccess({ email, gender, dob, role });
       });
     } catch (error) {
       console.error('[Registration] Error:', error.message);
       console.error('[Registration] Full error:', error);
-      // Show more detailed error message
       const errorMessage = error.message || 'Failed to register';
       showAlert('Registration Error', errorMessage);
     } finally {
@@ -681,8 +707,31 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
           <View style={styles.onboardingBody}>
             <Text style={styles.screenTitle}>Profile Basics</Text>
             <Text style={styles.screenSubtitle}>
-              This helps us personalize your health plan.
+              Join us to transform your healthcare experience.
             </Text>
+
+            <Text style={styles.fieldLabel}>I am a...</Text>
+            <View style={styles.genderRow}>
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  role === 'patient' && styles.genderOptionSelected,
+                ]}
+                onPress={() => setRole('patient')}
+              >
+                <Text style={styles.genderOptionLabel}>Patient</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  role === 'doctor' && styles.genderOptionSelected,
+                ]}
+                onPress={() => setRole('doctor')}
+              >
+                <Text style={styles.genderOptionLabel}>Doctor/Specialist</Text>
+              </TouchableOpacity>
+            </View>
+
             <TextField
               label="Email"
               placeholder="hello@example.com"
@@ -690,6 +739,48 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
               onChangeText={setEmail}
               error={errors.email}
             />
+
+            {role === 'doctor' && (
+              <View style={{ marginTop: 8 }}>
+                <TextField
+                  label="Specialization"
+                  placeholder="e.g. Cardiology"
+                  value={specialization}
+                  onChangeText={setSpecialization}
+                />
+                <TextField
+                  label="Medical License Number"
+                  placeholder="e.g. DOC123456"
+                  value={licenseNumber}
+                  onChangeText={setLicenseNumber}
+                />
+                <TextField
+                  label="License Issuing Authority"
+                  placeholder="e.g. Medical Board"
+                  value={licenseAuthority}
+                  onChangeText={setLicenseAuthority}
+                />
+                <TextField
+                  label="License Expiry Date"
+                  placeholder="YYYY-MM-DD"
+                  value={licenseExpiry}
+                  onChangeText={setLicenseExpiry}
+                />
+                <TextField
+                  label="Years of Experience"
+                  placeholder="e.g. 10"
+                  value={yearsOfExperience}
+                  onChangeText={setYearsOfExperience}
+                />
+                <TextField
+                  label="Consultation Fee ($)"
+                  placeholder="e.g. 100"
+                  value={consultationFee}
+                  onChangeText={setConsultationFee}
+                />
+              </View>
+            )}
+
             <Text style={styles.fieldLabel}>Gender Identity</Text>
             <View style={styles.genderRow}>
               <TouchableOpacity
@@ -710,7 +801,6 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
               >
                 <Text style={styles.genderOptionLabel}>Female</Text>
               </TouchableOpacity>
-             
             </View>
             <View style={styles.fieldContainer}>
               <Text style={styles.fieldLabel}>Date of Birth</Text>
@@ -807,18 +897,27 @@ export function ProfileCustomizeScreen({ onBack, onNext, onSkip }) {
   );
 }
 
-export function SuccessScreen({ onGetStarted }) {
+export function SuccessScreen({ onGetStarted, role }) {
+  const isDoctor = role === 'doctor';
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.successContainer}>
         <View style={styles.successIcon}>
           <Text style={styles.successCheck}>✓</Text>
         </View>
-        <Text style={styles.successTitle}>You're all set!</Text>
-        <Text style={styles.successSubtitle}>
-          Your journey to better health starts now.
+        <Text style={styles.successTitle}>
+          {isDoctor ? "Application Received!" : "You're all set!"}
         </Text>
-        <PrimaryButton label="Get Started" onPress={onGetStarted} />
+        <Text style={styles.successSubtitle}>
+          {isDoctor 
+            ? "Your doctor profile is being reviewed by our medical board. We'll notify you once your account is active."
+            : "Your journey to better health starts now."}
+        </Text>
+        <PrimaryButton 
+          label={isDoctor ? "Go to Dashboard" : "Get Started"} 
+          onPress={onGetStarted} 
+        />
       </View>
     </SafeAreaView>
   );

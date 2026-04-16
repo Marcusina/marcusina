@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { getCurrentUser, updateProfile, getUserProfile, getPatientProfile } from './api/auth.api';
+import { ThemeProvider } from './context/ThemeContext';
+import { getCurrentUser, updateProfile, getUserProfile, getPatientProfile, getUserPrescriptions, getUserCommunities } from './api/auth.api';
 import { getToken, saveToken, removeToken, getProfile, saveProfile } from './utils/storage';
 import {
   LoginScreen,
@@ -45,6 +46,13 @@ export default function App() {
     bloodType: '',
     height: '',
     weight: '',
+    role: 'patient',
+    prescriptions: [],
+    communities: [],
+    followers: 0,
+    following: 0,
+    posts: 0,
+    recentActivity: [],
   });
 
   // Load saved token and profile on mount
@@ -88,6 +96,7 @@ export default function App() {
         bloodType: userData.bloodType || profile.bloodType,
         height: userData.height || profile.height,
         weight: userData.weight || profile.weight,
+        role: userData.role || profile.role || 'patient',
       };
       setProfile(updatedProfile);
       await saveProfile(updatedProfile);
@@ -150,6 +159,28 @@ export default function App() {
               console.log('No patient profile found yet or error fetching');
             }
 
+            // Fetch User Prescriptions
+            try {
+              const prescriptionsData = await getUserPrescriptions(token, userData._id);
+              fullProfile = {
+                ...fullProfile,
+                prescriptions: Array.isArray(prescriptionsData) ? prescriptionsData : [],
+              };
+            } catch (err) {
+              console.log('No prescriptions found or error fetching');
+            }
+
+            // Fetch User Communities
+            try {
+              const communitiesData = await getUserCommunities(token);
+              fullProfile = {
+                ...fullProfile,
+                communities: Array.isArray(communitiesData) ? communitiesData : [],
+              };
+            } catch (err) {
+              console.log('No communities found or error fetching');
+            }
+
             setProfile(fullProfile);
             await saveProfile(fullProfile);
           }
@@ -206,7 +237,12 @@ export default function App() {
             setScreen('login');
           } else {
             // User came from registration, proceed to next step
-            setScreen('phoneVerify');
+            // If doctor, skip most of the patient onboarding for now or show success
+            if (profile.role === 'doctor') {
+              setScreen('success');
+            } else {
+              setScreen('phoneVerify');
+            }
           }
         }}
       />
@@ -278,11 +314,12 @@ export default function App() {
       />
     );
   } else if (screen === 'success') {
-    content = <SuccessScreen onGetStarted={() => setScreen('home')} />;
+    content = <SuccessScreen onGetStarted={() => setScreen('home')} role={profile.role} />;
   } else if (screen === 'home') {
     content = (
       <HomeScreen
         user={user}
+        token={token}
         onOpenProfile={() => setScreen('profileHealth')}
         onOpenGroups={() => setScreen('groups')}
         onConsult={() => setScreen('consultBook')}
@@ -344,6 +381,7 @@ export default function App() {
   } else if (screen === 'groups') {
     content = (
       <GroupsScreen
+        token={token}
         onBackHome={() => setScreen('home')}
         onOpenConsult={() => setScreen('consultBook')}
         onOpenProfile={() => setScreen('profileHealth')}
@@ -375,27 +413,29 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      {isLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#7C3AED" />
-          <Text style={{ marginTop: 12, color: '#6B7280' }}>Initializing...</Text>
-        </View>
-      ) : isAuthScreen ? (
-        <Layout
-          currentScreen={screen}
-          onNavigate={(target) => setScreen(target)}
-          userProfile={profile}
-          onLogout={handleLogout}
-        >
-          {content}
-        </Layout>
-      ) : (
-        content || (
+      <ThemeProvider>
+        {isLoading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Loading App...</Text>
+            <ActivityIndicator size="large" color="#7C3AED" />
+            <Text style={{ marginTop: 12, color: '#6B7280' }}>Initializing...</Text>
           </View>
-        )
-      )}
+        ) : isAuthScreen ? (
+          <Layout
+            currentScreen={screen}
+            onNavigate={(target) => setScreen(target)}
+            userProfile={profile}
+            onLogout={handleLogout}
+          >
+            {content}
+          </Layout>
+        ) : (
+          content || (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text>Loading App...</Text>
+            </View>
+          )
+        )}
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
