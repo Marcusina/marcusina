@@ -10,208 +10,15 @@ import {
   Image,
   Switch,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
 const SIDEBAR_WIDTH = 260;
 const MOBILE_BREAKPOINT = 768;
 
-export function Layout({ children, currentScreen, onNavigate, userProfile, onLogout }) {
-  const { theme, themeMode, toggleTheme } = useTheme();
-  const styles = createStyles(theme);
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width >= MOBILE_BREAKPOINT;
-
-  const navItems = [
-    { id: 'home', label: 'Home', icon: 'home' },
-    { id: 'groups', label: 'Groups', icon: 'group' },
-    { id: 'place', label: 'Market', icon: 'store' },
-    { id: 'consultBook', label: 'Consult', icon: 'medical-services' },
-    { id: 'profileHealth', label: 'Profile', icon: 'person' },
-  ];
-
-  const renderSidebar = () => (
-    <View style={styles.sidebar}>
-      <View style={styles.sidebarHeader}>
-        <Image 
-          source={require('../assets/marcusina.jpeg')} 
-          style={styles.sidebarLogo}
-          resizeMode="contain"
-        />
-      </View>
-      <ScrollView style={styles.sidebarNav}>
-        {navItems.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={[
-              styles.navItem,
-              currentScreen === item.id && styles.navItemActive,
-            ]}
-            onPress={() => onNavigate(item.id)}
-          >
-            <View style={styles.navIconWrapper}>
-              <MaterialIcons
-                name={item.icon}
-                size={22}
-                color={currentScreen === item.id ? theme.primary : theme.textSecondary}
-              />
-            </View>
-            <Text
-              style={[
-                styles.navLabel,
-                currentScreen === item.id && styles.navLabelActive,
-              ]}
-            >
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-        <View style={styles.themeToggleContainer}>
-          <MaterialIcons 
-            name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
-            size={20} 
-            color={theme.textSecondary} 
-          />
-          <Text style={styles.themeToggleLabel}>
-            {themeMode === 'dark' ? 'Dark Mode' : 'Light Mode'}
-          </Text>
-          <Switch
-            value={themeMode === 'dark'}
-            onValueChange={toggleTheme}
-            trackColor={{ false: '#D1D5DB', true: theme.primary }}
-            thumbColor="#FFFFFF"
-          />
-        </View>
-      </ScrollView>
-      <View style={styles.sidebarFooter}>
-        <TouchableOpacity style={styles.userProfile}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {userProfile?.name?.charAt(0) || 'M'}
-            </Text>
-          </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName} numberOfLines={1}>{userProfile?.name || 'Marcusina'}</Text>
-            <Text style={styles.userEmail} numberOfLines={1}>{userProfile?.email || ''}</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutItem} onPress={onLogout}>
-          <MaterialIcons name="logout" size={20} color="#EF4444" />
-          <Text style={styles.logoutLabel}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  const renderBottomNav = () => (
-    <View style={styles.bottomNav}>
-      {navItems.map((item) => (
-        <TouchableOpacity
-          key={item.id}
-          style={styles.bottomNavItem}
-          onPress={() => onNavigate(item.id)}
-        >
-          <MaterialIcons
-            name={item.icon}
-            size={24}
-            color={currentScreen === item.id ? theme.primary : theme.textMuted}
-          />
-          <Text
-            style={[
-              styles.bottomNavLabel,
-              currentScreen === item.id && styles.bottomNavLabelActive,
-            ]}
-          >
-            {item.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      {isDesktop && renderSidebar()}
-      <View style={styles.mainContent}>
-        {!isDesktop && (
-          <View style={styles.mobileHeader}>
-            <Image 
-              source={require('../assets/marcusina.jpeg')} 
-              style={styles.mobileLogo}
-              resizeMode="contain"
-            />
-            <TouchableOpacity style={styles.mobileThemeToggle} onPress={toggleTheme}>
-              <MaterialIcons 
-                name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
-                size={24} 
-                color={theme.primary} 
-              />
-            </TouchableOpacity>
-          </View>
-        )}
-        {isDesktop && (
-          <View style={styles.webHeader}>
-            <View style={styles.webHeaderContent}>
-              <View style={styles.webHeaderLeft}>
-                <Text style={styles.webPageTitle}>
-                  {navItems.find(i => i.id === currentScreen)?.label || 'Dashboard'}
-                </Text>
-              </View>
-              <View style={styles.webHeaderSearch}>
-                <MaterialIcons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
-                <Text style={styles.searchPlaceholder}>Search anything...</Text>
-              </View>
-              <View style={styles.webHeaderActions}>
-                <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
-                  <MaterialIcons 
-                    name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
-                    size={22} 
-                    color={theme.textSecondary} 
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
-                  <MaterialIcons name="notifications-none" size={22} color={theme.textSecondary} />
-                  <View style={styles.notificationBadge} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
-                  <MaterialIcons name="shopping-cart" size={22} color="#4B5563" />
-                </TouchableOpacity>
-                <View style={styles.headerDivider} />
-                <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-                  <MaterialIcons name="logout" size={20} color="#4B5563" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.headerProfileButton}>
-                  <View style={styles.headerAvatar}>
-                    <Text style={styles.headerAvatarText}>
-                      {userProfile?.name?.charAt(0) || 'M'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
-        <ScrollView
-          style={styles.mainArea}
-          contentContainerStyle={[
-            isDesktop && styles.webMainArea,
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={[
-            styles.contentContainer,
-            isDesktop && styles.webContentContainer
-          ]}>
-            {children}
-          </View>
-        </ScrollView>
-        {!isDesktop && renderBottomNav()}
-      </View>
-    </View>
-  );
-}
-
-const createStyles = (theme) => StyleSheet.create({
+function createStyles(theme) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
@@ -327,23 +134,31 @@ const createStyles = (theme) => StyleSheet.create({
     fontSize: 12,
     color: theme.textMuted,
   },
-  mobileHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 12 : 12,
-    paddingBottom: 12,
+  safeHeader: {
     backgroundColor: theme.surface,
     borderBottomWidth: 1,
     borderBottomColor: theme.border,
   },
+  mobileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
   mobileLogo: {
-    width: 100,
-    height: 30,
+    width: 120,
+    height: 32,
   },
   mobileThemeToggle: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: theme.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  themeToggleIconWrapper: {
+    padding: 4,
   },
   mainContent: {
     flex: 1,
@@ -464,13 +279,15 @@ const createStyles = (theme) => StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
+  bottomNavContainer: {
+    backgroundColor: theme.surface,
+    borderTopWidth: 1,
+    borderTopColor: theme.border,
+  },
   bottomNav: {
     flexDirection: 'row',
     height: 64,
     backgroundColor: theme.surface,
-    borderTopWidth: 1,
-    borderTopColor: theme.border,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
     paddingTop: 8,
   },
   bottomNavItem: {
@@ -488,4 +305,204 @@ const createStyles = (theme) => StyleSheet.create({
     color: theme.primary,
     fontWeight: '600',
   },
-});
+  });
+}
+
+export function Layout({ children, currentScreen, onNavigate, userProfile, onLogout }) {
+  const { theme, themeMode, toggleTheme } = useTheme();
+  const styles = createStyles(theme);
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= MOBILE_BREAKPOINT;
+
+  const navItems = [
+    { id: 'home', label: 'Home', icon: 'home' },
+    { id: 'groups', label: 'Groups', icon: 'group' },
+    { id: 'place', label: 'Market', icon: 'store' },
+    { id: 'consultBook', label: 'Consult', icon: 'medical-services' },
+    { id: 'profileHealth', label: 'Profile', icon: 'person' },
+  ];
+
+  const renderSidebar = () => (
+    <View style={styles.sidebar}>
+      <View style={styles.sidebarHeader}>
+        <Image 
+          source={require('../assets/marcusina.jpeg')} 
+          style={styles.sidebarLogo}
+          resizeMode="contain"
+        />
+      </View>
+      <ScrollView style={styles.sidebarNav}>
+        {navItems.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[
+              styles.navItem,
+              currentScreen === item.id && styles.navItemActive,
+            ]}
+            onPress={() => onNavigate(item.id)}
+          >
+            <View style={styles.navIconWrapper}>
+              <MaterialIcons
+                name={item.icon}
+                size={22}
+                color={currentScreen === item.id ? theme.primary : theme.textSecondary}
+              />
+            </View>
+            <Text
+              style={[
+                styles.navLabel,
+                currentScreen === item.id && styles.navLabelActive,
+              ]}
+            >
+              {item.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <View style={styles.themeToggleContainer}>
+          <MaterialIcons 
+            name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
+            size={20} 
+            color={theme.textSecondary} 
+          />
+          <Text style={styles.themeToggleLabel}>
+            {themeMode === 'dark' ? 'Dark Mode' : 'Light Mode'}
+          </Text>
+          <Switch
+            value={themeMode === 'dark'}
+            onValueChange={toggleTheme}
+            trackColor={{ false: '#D1D5DB', true: theme.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+      </ScrollView>
+      <View style={styles.sidebarFooter}>
+        <TouchableOpacity style={styles.userProfile}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {userProfile?.name?.charAt(0) || 'M'}
+            </Text>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName} numberOfLines={1}>{userProfile?.name || 'Marcusina'}</Text>
+            <Text style={styles.userEmail} numberOfLines={1}>{userProfile?.email || ''}</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutItem} onPress={onLogout}>
+          <MaterialIcons name="logout" size={20} color="#EF4444" />
+          <Text style={styles.logoutLabel}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderBottomNav = () => (
+    <SafeAreaView edges={['bottom']} style={styles.bottomNavContainer}>
+      <View style={styles.bottomNav}>
+        {navItems.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.bottomNavItem}
+            onPress={() => onNavigate(item.id)}
+          >
+            <MaterialIcons
+              name={item.icon}
+              size={24}
+              color={currentScreen === item.id ? theme.primary : theme.textMuted}
+            />
+            <Text
+              style={[
+                styles.bottomNavLabel,
+                currentScreen === item.id && styles.bottomNavLabelActive,
+              ]}
+            >
+              {item.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SafeAreaView>
+  );
+
+  return (
+    <View style={styles.container}>
+      {isDesktop && renderSidebar()}
+      <View style={styles.mainContent}>
+        {!isDesktop && (
+          <SafeAreaView edges={['top']} style={styles.safeHeader}>
+            <View style={styles.mobileHeader}>
+              <Image 
+                source={require('../assets/marcusina.jpeg')} 
+                style={styles.mobileLogo}
+                resizeMode="contain"
+              />
+              <TouchableOpacity style={styles.mobileThemeToggle} onPress={toggleTheme}>
+                <MaterialIcons 
+                  name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
+                  size={20} 
+                  color={theme.primary} 
+                />
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+        )}
+        {isDesktop && (
+          <View style={styles.webHeader}>
+            <View style={styles.webHeaderContent}>
+              <View style={styles.webHeaderLeft}>
+                <Text style={styles.webPageTitle}>
+                  {navItems.find(i => i.id === currentScreen)?.label || 'Dashboard'}
+                </Text>
+              </View>
+              <View style={styles.webHeaderSearch}>
+                <MaterialIcons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+                <Text style={styles.searchPlaceholder}>Search anything...</Text>
+              </View>
+              <View style={styles.webHeaderActions}>
+                <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
+                  <MaterialIcons 
+                    name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
+                    size={22} 
+                    color={theme.textSecondary} 
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconButton}>
+                  <MaterialIcons name="notifications-none" size={22} color={theme.textSecondary} />
+                  <View style={styles.notificationBadge} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconButton}>
+                  <MaterialIcons name="shopping-cart" size={22} color="#4B5563" />
+                </TouchableOpacity>
+                <View style={styles.headerDivider} />
+                <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+                  <MaterialIcons name="logout" size={20} color="#4B5563" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.headerProfileButton}>
+                  <View style={styles.headerAvatar}>
+                    <Text style={styles.headerAvatarText}>
+                      {userProfile?.name?.charAt(0) || 'M'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+        <ScrollView
+          style={styles.mainArea}
+          contentContainerStyle={[
+            isDesktop && styles.webMainArea,
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[
+            styles.contentContainer,
+            isDesktop && styles.webContentContainer
+          ]}>
+            {children}
+          </View>
+        </ScrollView>
+        {!isDesktop && renderBottomNav()}
+      </View>
+    </View>
+  );
+}

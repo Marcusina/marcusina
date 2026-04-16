@@ -14,8 +14,11 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getCommunities, getMyCommunities, joinCommunity } from '../api/community.api';
+import { useTheme } from '../context/ThemeContext';
 
 export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
 
@@ -107,21 +110,14 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
   return (
     <View style={styles.container}>
       {!isWeb && (
-        <View style={styles.headerRow}>
-          <Image 
-            source={require('../assets/marcusina.jpeg')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <View style={styles.headerIconsRow}>
-            <TouchableOpacity style={styles.headerIconBtn} onPress={onOpenProfile}>
-              <MaterialIcons name="person-outline" size={24} color="#4B5563" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIconBtn}>
-              <MaterialIcons name="notifications-none" size={24} color="#4B5563" />
-              <View style={styles.notificationDot} />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.headerActionsRow}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={onOpenProfile}>
+            <MaterialIcons name="person-outline" size={24} color={theme.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <MaterialIcons name="notifications-none" size={24} color={theme.textSecondary} />
+            <View style={styles.notificationDot} />
+          </TouchableOpacity>
         </View>
       )}
       
@@ -265,45 +261,34 @@ function CommunityCard({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
-  headerRow: {
+  headerActionsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  logo: {
-    width: 100,
-    height: 32,
-  },
-  headerIconsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   headerIconBtn: {
     marginLeft: 16,
-    padding: 4,
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: theme.surfaceSubtle,
     position: 'relative',
   },
   notificationDot: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.error,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: theme.surfaceSubtle,
   },
   scrollContent: {
     paddingBottom: 24,
@@ -324,12 +309,12 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: Platform.OS === 'ios' ? 10 : 2,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   searchIcon: {
     marginRight: 8,
@@ -337,7 +322,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: '#111827',
+    color: theme.text,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -349,11 +334,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   sectionAction: {
     fontSize: 14,
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
   },
   suggestedRow: {
@@ -374,19 +359,19 @@ const styles = StyleSheet.create({
   },
   suggestedLabel: {
     fontSize: 12,
-    color: '#4B5563',
+    color: theme.textSecondary,
     fontWeight: '500',
     textAlign: 'center',
     width: '100%',
   },
   activePill: {
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
   },
   activePillText: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -401,11 +386,11 @@ const styles = StyleSheet.create({
   communityCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   webCommunityCard: {
     width: '48%',
@@ -417,7 +402,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -432,11 +417,11 @@ const styles = StyleSheet.create({
   communityTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginRight: 8,
   },
   communityBadge: {
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.error,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
@@ -448,7 +433,7 @@ const styles = StyleSheet.create({
   },
   communityMeta: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.textMuted,
     marginBottom: 8,
   },
   communityChip: {
@@ -461,12 +446,12 @@ const styles = StyleSheet.create({
   communityChipLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#4B5563',
+    color: theme.textSecondary,
     marginRight: 4,
   },
   communityChipText: {
     fontSize: 12,
-    color: '#4B5563',
+    color: theme.textSecondary,
     flex: 1,
   },
   emptyContainer: {
@@ -476,7 +461,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 12,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     fontSize: 15,
     textAlign: 'center',
   },
@@ -487,12 +472,12 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#7C3AED',
+        shadowColor: theme.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -501,7 +486,7 @@ const styles = StyleSheet.create({
         elevation: 6,
       },
       web: {
-        boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
+        boxShadow: `0 4px 12px ${theme.primary}4D`,
       }
     }),
   },

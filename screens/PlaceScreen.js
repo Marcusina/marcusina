@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 export function PlaceScreen({
   onBackHome,
@@ -17,20 +18,17 @@ export function PlaceScreen({
   onOpenGroups,
   onOpenProfile,
 }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
 
   return (
     <View style={styles.container}>
       {!isWeb && (
-        <View style={styles.headerRow}>
-          <Image 
-            source={require('../assets/marcusina.jpeg')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
+        <View style={styles.headerActionsRow}>
           <TouchableOpacity style={styles.headerIconBtn}>
-            <MaterialIcons name="notifications-none" size={24} color="#4B5563" />
+            <MaterialIcons name="notifications-none" size={24} color={theme.textSecondary} />
             <View style={styles.notificationDot} />
           </TouchableOpacity>
         </View>
@@ -133,40 +131,33 @@ function ServiceCard({ icon, title, subtitle, onPress, isWeb }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: theme.background,
   },
-  headerRow: {
+  headerActionsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  logo: {
-    width: 110,
-    height: 32,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   headerIconBtn: {
-    padding: 4,
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: theme.surfaceSubtle,
     position: 'relative',
   },
   notificationDot: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.error,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: theme.surfaceSubtle,
   },
   scrollContent: {
     paddingBottom: 24,
@@ -189,11 +180,11 @@ const styles = StyleSheet.create({
   },
   mapCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   webMapCard: {
     flex: 2,
@@ -207,49 +198,49 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   sectionAction: {
     fontSize: 14,
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
   },
   mapSearchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   searchIcon: {
     marginRight: 8,
   },
   mapSearchPlaceholder: {
-    color: '#9CA3AF',
+    color: theme.textMuted,
     fontSize: 14,
   },
   mapBody: {
     height: 180,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
     borderStyle: 'dashed',
   },
   mapText: {
     marginTop: 8,
     fontSize: 14,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     fontWeight: '500',
   },
   virtualCard: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     borderRadius: 20,
     padding: 24,
     justifyContent: 'center',
@@ -263,7 +254,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   virtualUrgentPill: {
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.error,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -299,14 +290,14 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   virtualButtonText: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '700',
     fontSize: 15,
   },
   servicesTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginTop: 32,
     marginBottom: 16,
   },
@@ -320,11 +311,11 @@ const styles = StyleSheet.create({
   },
   serviceCard: {
     width: '47%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   webServiceCard: {
     width: '23%',
@@ -333,7 +324,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -341,12 +332,12 @@ const styles = StyleSheet.create({
   serviceTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 4,
   },
   serviceSubtitle: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.textMuted,
     lineHeight: 18,
   },
 });

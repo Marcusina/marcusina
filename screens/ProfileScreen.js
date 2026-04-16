@@ -11,8 +11,11 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogout }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
   const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
@@ -20,23 +23,13 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogo
   return (
     <View style={styles.container}>
       {!isWeb && (
-        <View style={styles.headerRow}>
-          <Image 
-            source={require('../assets/marcusina.jpeg')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <View style={styles.headerIconsRow}>
-            <TouchableOpacity style={styles.headerIconBtn}>
-              <MaterialIcons name="search" size={24} color="#4B5563" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIconBtn} onPress={onLogout}>
-              <MaterialIcons name="logout" size={24} color="#EF4444" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIconBtn}>
-              <MaterialIcons name="settings" size={24} color="#4B5563" />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.headerActionsRow}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={onLogout}>
+            <MaterialIcons name="logout" size={24} color={theme.error} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <MaterialIcons name="settings" size={24} color={theme.textSecondary} />
+          </TouchableOpacity>
         </View>
       )}
       
@@ -355,33 +348,22 @@ export function ProfileScreen({ profile, onCancel, onSave }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
   },
-  headerRow: {
+  headerActionsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  logo: {
-    width: 110,
-    height: 32,
-  },
-  headerIconsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   headerIconBtn: {
     marginLeft: 16,
-    padding: 4,
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: theme.surfaceSubtle,
   },
   scrollContent: {
     paddingBottom: 40,
@@ -414,26 +396,21 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: '#FFFFFF',
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
-      android: { elevation: 4 },
-      web: { boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }
-    }),
+    borderColor: theme.surface,
   },
   avatarInitial: {
     fontSize: 40,
     fontWeight: '700',
-    color: '#7C3AED',
+    color: theme.primary,
   },
   premiumBadge: {
     position: 'absolute',
     bottom: -4,
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -448,14 +425,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 4,
     right: 4,
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     width: 24,
     height: 24,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: theme.surface,
   },
   profileInfo: {
     alignItems: 'center',
@@ -468,23 +445,23 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 4,
   },
   profileType: {
     fontSize: 14,
-    color: '#6B7280',
+    color: theme.textMuted,
     marginBottom: 16,
   },
   profileHandle: {
     fontSize: 16,
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
     marginBottom: 8,
   },
   profileBio: {
     fontSize: 14,
-    color: '#4B5563',
+    color: theme.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
@@ -493,15 +470,15 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.primaryLight,
   },
   editButtonText: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
     fontSize: 14,
   },
@@ -517,12 +494,12 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   webStatCard: {
     flex: 0,
@@ -532,7 +509,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -540,12 +517,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 11,
-    color: '#6B7280',
+    color: theme.textMuted,
     fontWeight: '500',
   },
   sectionHeader: {
@@ -557,11 +534,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 16,
   },
   viewAllText: {
-    color: '#7C3AED',
+    color: theme.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -577,11 +554,11 @@ const styles = StyleSheet.create({
   recordCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   webRecordCard: {
     width: '48.5%',
@@ -590,7 +567,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -601,19 +578,19 @@ const styles = StyleSheet.create({
   recordTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 2,
   },
   recordSubtitle: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.textMuted,
   },
   activityList: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 32,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
     alignItems: 'center',
   },
   emptyActivity: {
@@ -621,7 +598,7 @@ const styles = StyleSheet.create({
   },
   emptyActivityText: {
     marginTop: 12,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     fontSize: 14,
   },
   actionButtonsRow: {
@@ -630,7 +607,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   followButton: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 12,
@@ -641,15 +618,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   messageButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
   },
   messageButtonText: {
-    color: '#111827',
+    color: theme.text,
     fontWeight: '600',
     fontSize: 15,
   },
@@ -657,11 +634,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 20,
     marginBottom: 32,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   socialStatItem: {
     alignItems: 'center',
@@ -669,11 +646,11 @@ const styles = StyleSheet.create({
   socialStatValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   socialStatLabel: {
     fontSize: 10,
-    color: '#6B7280',
+    color: theme.textMuted,
     fontWeight: '700',
     letterSpacing: 1,
     marginTop: 4,
@@ -686,32 +663,32 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.primaryLight,
   },
   joinMoreBtn: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     borderStyle: 'dashed',
   },
   editHeaderTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   saveText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#7C3AED',
+    color: theme.primary,
   },
   webEditHeader: {
     flexDirection: 'row',
@@ -722,7 +699,7 @@ const styles = StyleSheet.create({
   webEditTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#111827',
+    color: theme.text,
   },
   webEditActions: {
     flexDirection: 'row',
@@ -732,30 +709,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
   },
   webCancelText: {
-    color: '#4B5563',
+    color: theme.textSecondary,
     fontWeight: '600',
   },
   webSaveBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
   },
   webSaveText: {
     color: '#FFFFFF',
     fontWeight: '700',
   },
   editSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   webEditGrid: {
     flexDirection: 'row',
@@ -775,18 +752,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: theme.textSecondary,
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
     fontSize: 15,
-    color: '#111827',
+    color: theme.text,
   },
   textArea: {
     height: 100,
@@ -795,14 +772,14 @@ const styles = StyleSheet.create({
   divider: {
     width: '100%',
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.border,
     marginVertical: 12,
   },
   formSubTitle: {
     width: '100%',
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 16,
     marginTop: 8,
   },
@@ -811,24 +788,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     borderRadius: 12,
     marginBottom: 12,
   },
   activityText: {
     flex: 1,
     fontSize: 14,
-    color: '#111827',
+    color: theme.text,
     fontWeight: '500',
     marginLeft: 12,
   },
   activityDate: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: theme.textMuted,
   },
   communityThumbText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#7C3AED',
+    color: theme.primary,
   },
 });
