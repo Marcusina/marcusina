@@ -58,7 +58,7 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogo
               <Text style={styles.profileName}>{profile.name || 'User'}</Text>
               <Text style={styles.profileType}>Personal Health Account</Text>
               <TouchableOpacity style={styles.editButton} onPress={onEditProfile}>
-                <MaterialIcons name="edit" size={18} color="#7C3AED" style={{ marginRight: 6 }} />
+                <MaterialIcons name="edit" size={18} color={theme.primary} style={{ marginRight: 6 }} />
                 <Text style={styles.editButtonText}>Edit Health Profile</Text>
               </TouchableOpacity>
             </View>
@@ -109,10 +109,12 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogo
 }
 
 function StatCard({ icon, value, label, isWeb }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <View style={[styles.statCard, isWeb && styles.webStatCard]}>
       <View style={styles.statIconCircle}>
-        <MaterialIcons name={icon} size={24} color="#7C3AED" />
+        <MaterialIcons name={icon} size={24} color={theme.primary} />
       </View>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
@@ -121,10 +123,12 @@ function StatCard({ icon, value, label, isWeb }) {
 }
 
 function RecordCard({ icon, title, subtitle, isWeb }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <TouchableOpacity style={[styles.recordCard, isWeb && styles.webRecordCard]}>
       <View style={styles.recordIconBox}>
-        <MaterialIcons name={icon} size={28} color="#7C3AED" />
+        <MaterialIcons name={icon} size={28} color={theme.primary} />
       </View>
       <View style={styles.recordInfo}>
         <Text style={styles.recordTitle}>{title}</Text>
@@ -136,6 +140,8 @@ function RecordCard({ icon, title, subtitle, isWeb }) {
 }
 
 export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
   const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
@@ -145,7 +151,7 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
       {!isWeb && (
         <View style={styles.headerRow}>
           <Image 
-            source={require('../assets/marcusina.jpeg')} 
+            source={require('../assets/logo.png')} 
             style={styles.logo}
             resizeMode="contain"
           />
@@ -221,7 +227,7 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
               ))
             ) : (
               <View style={styles.communityThumb}>
-                <MaterialIcons name="groups" size={24} color="#7C3AED" />
+                <MaterialIcons name="groups" size={24} color={theme.primary} />
               </View>
             )}
             <TouchableOpacity style={styles.joinMoreBtn}>
@@ -235,6 +241,8 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
 }
 
 export function ProfileScreen({ profile, onCancel, onSave }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [edited, setEdited] = useState({ ...profile });
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
@@ -278,70 +286,78 @@ export function ProfileScreen({ profile, onCancel, onSave }) {
             </View>
           )}
 
-          <View style={[styles.editSection, isWeb && styles.webEditGrid]}>
-            <View style={[styles.inputGroup, isWeb && styles.webInputHalf]}>
-              <Text style={styles.inputLabel}>Full Name</Text>
-              <TextInput
-                style={styles.textInput}
-                value={edited.name}
-                onChangeText={(t) => setEdited({ ...edited, name: t })}
-                placeholder="Enter your name"
-              />
+            <View style={[styles.editSection, isWeb && styles.webEditGrid]}>
+              <View style={[styles.inputGroup, isWeb && styles.webInputHalf]}>
+                <Text style={styles.inputLabel}>Full Name</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={edited.name}
+                  onChangeText={(t) => setEdited({ ...edited, name: t })}
+                  placeholder="Enter your name"
+                />
+              </View>
+              <View style={[styles.inputGroup, isWeb && styles.webInputHalf]}>
+                <Text style={styles.inputLabel}>Username Handle</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={edited.handle}
+                  onChangeText={(t) => setEdited({ ...edited, handle: t })}
+                  placeholder="@username"
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Bio</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textArea]}
+                  value={edited.bio}
+                  onChangeText={(t) => setEdited({ ...edited, bio: t })}
+                  placeholder="Tell us about yourself"
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+              
+              <View style={styles.divider} />
+              <Text style={styles.formSubTitle}>Health Information</Text>
+              
+              <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
+                <Text style={styles.inputLabel}>Blood Type</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={edited.bloodType}
+                  onChangeText={(t) => setEdited({ ...edited, bloodType: t })}
+                  placeholder="e.g. O+"
+                />
+              </View>
+              <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
+                <Text style={styles.inputLabel}>Height (cm)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={edited.height}
+                  onChangeText={(t) => setEdited({ ...edited, height: t })}
+                  placeholder="e.g. 175"
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
+                <Text style={styles.inputLabel}>Weight (kg)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={edited.weight}
+                  onChangeText={(t) => setEdited({ ...edited, weight: t })}
+                  placeholder="e.g. 70"
+                  keyboardType="numeric"
+                />
+              </View>
             </View>
-            <View style={[styles.inputGroup, isWeb && styles.webInputHalf]}>
-              <Text style={styles.inputLabel}>Username Handle</Text>
-              <TextInput
-                style={styles.textInput}
-                value={edited.handle}
-                onChangeText={(t) => setEdited({ ...edited, handle: t })}
-                placeholder="@username"
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Bio</Text>
-              <TextInput
-                style={[styles.textInput, styles.textArea]}
-                value={edited.bio}
-                onChangeText={(t) => setEdited({ ...edited, bio: t })}
-                placeholder="Tell us about yourself"
-                multiline
-                numberOfLines={3}
-              />
-            </View>
-            
-            <View style={styles.divider} />
-            <Text style={styles.formSubTitle}>Health Information</Text>
-            
-            <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
-              <Text style={styles.inputLabel}>Blood Type</Text>
-              <TextInput
-                style={styles.textInput}
-                value={edited.bloodType}
-                onChangeText={(t) => setEdited({ ...edited, bloodType: t })}
-                placeholder="e.g. O+"
-              />
-            </View>
-            <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
-              <Text style={styles.inputLabel}>Height (cm)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={edited.height}
-                onChangeText={(t) => setEdited({ ...edited, height: t })}
-                placeholder="e.g. 175"
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
-              <Text style={styles.inputLabel}>Weight (kg)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={edited.weight}
-                onChangeText={(t) => setEdited({ ...edited, weight: t })}
-                placeholder="e.g. 70"
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
+
+            {!isWeb && (
+              <View style={styles.mobileEditFooter}>
+                <TouchableOpacity style={styles.mobileSaveBtn} onPress={() => onSave(edited)}>
+                  <Text style={styles.mobileSaveText}>Save Changes</Text>
+                </TouchableOpacity>
+              </View>
+            )}
         </View>
       </ScrollView>
     </View>
@@ -613,7 +629,7 @@ const createStyles = (theme) => StyleSheet.create({
     borderRadius: 12,
   },
   followButtonText: {
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
     fontWeight: '700',
     fontSize: 15,
   },
@@ -690,6 +706,22 @@ const createStyles = (theme) => StyleSheet.create({
     fontWeight: '700',
     color: theme.primary,
   },
+  mobileEditFooter: {
+    marginTop: 24,
+    marginBottom: 32,
+  },
+  mobileSaveBtn: {
+    backgroundColor: theme.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileSaveText: {
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   webEditHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -724,7 +756,7 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.primary,
   },
   webSaveText: {
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
     fontWeight: '700',
   },
   editSection: {

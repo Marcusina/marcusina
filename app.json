@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "marcusina",
-    "slug": "marcusina",
+    "name": "Medgram",
+    "slug": "medgram",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/marcusina.jpeg",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -17,13 +17,13 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/marcusina.jpeg",
+        "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/marcusina.jpeg"
+      "favicon": "./assets/logo.png"
     }
   }
 }

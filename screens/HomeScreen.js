@@ -125,7 +125,7 @@ export function HomeScreen({ user, token, onOpenProfile, onConsult, onOpenGroups
               onChangeText={handleSearch}
               placeholderTextColor="#9CA3AF"
             />
-            {isSearching && <ActivityIndicator size="small" color="#7C3AED" />}
+            {isSearching && <ActivityIndicator size="small" color={theme.primary} />}
           </View>
           
           <View style={[styles.heroSection, isWeb && styles.webHeroSection]}>
@@ -145,12 +145,12 @@ export function HomeScreen({ user, token, onOpenProfile, onConsult, onOpenGroups
             {isWeb && (
               <View style={styles.webPromoStats}>
                 <View style={styles.statCard}>
-                  <MaterialIcons name="local-shipping" size={24} color="#7C3AED" />
+                  <MaterialIcons name="local-shipping" size={24} color={theme.primary} />
                   <Text style={styles.statValue}>2hr</Text>
                   <Text style={styles.statLabel}>Express Delivery</Text>
                 </View>
                 <View style={styles.statCard}>
-                  <MaterialIcons name="verified" size={24} color="#7C3AED" />
+                  <MaterialIcons name="verified" size={24} color={theme.primary} />
                   <Text style={styles.statValue}>100%</Text>
                   <Text style={styles.statLabel}>Genuine Meds</Text>
                 </View>
@@ -185,7 +185,7 @@ export function HomeScreen({ user, token, onOpenProfile, onConsult, onOpenGroups
                   <MaterialIcons 
                     name={item.icon || 'category'} 
                     size={24} 
-                    color={selectedCategory === item.value ? "#FFFFFF" : "#7C3AED"} 
+                    color={selectedCategory === item.value ? "#FFFFFF" : theme.primary} 
                   />
                 </View>
                 <Text style={[
@@ -201,7 +201,7 @@ export function HomeScreen({ user, token, onOpenProfile, onConsult, onOpenGroups
           </Text>
           
           {isLoading ? (
-            <ActivityIndicator size="large" color="#7C3AED" style={{ marginTop: 20 }} />
+            <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 20 }} />
           ) : medications.length > 0 ? (
             <View style={styles.productsGrid}>
               {medications.map((item) => (

@@ -326,7 +326,7 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
     <View style={styles.sidebar}>
       <View style={styles.sidebarHeader}>
         <Image 
-          source={require('../assets/marcusina.jpeg')} 
+          source={require('../assets/logo.png')} 
           style={styles.sidebarLogo}
           resizeMode="contain"
         />
@@ -383,7 +383,7 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
             </Text>
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName} numberOfLines={1}>{userProfile?.name || 'Marcusina'}</Text>
+            <Text style={styles.userName} numberOfLines={1}>{userProfile?.name || 'Medgram'}</Text>
             <Text style={styles.userEmail} numberOfLines={1}>{userProfile?.email || ''}</Text>
           </View>
         </TouchableOpacity>
@@ -431,7 +431,7 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
           <SafeAreaView edges={['top']} style={styles.safeHeader}>
             <View style={styles.mobileHeader}>
               <Image 
-                source={require('../assets/marcusina.jpeg')} 
+                source={require('../assets/logo.png')} 
                 style={styles.mobileLogo}
                 resizeMode="contain"
               />

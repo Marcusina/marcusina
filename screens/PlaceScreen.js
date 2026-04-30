@@ -120,10 +120,12 @@ export function PlaceScreen({
 }
 
 function ServiceCard({ icon, title, subtitle, onPress, isWeb }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <TouchableOpacity style={[styles.serviceCard, isWeb && styles.webServiceCard]} onPress={onPress}>
       <View style={styles.serviceIconCircle}>
-        <MaterialIcons name={icon} size={28} color="#7C3AED" />
+        <MaterialIcons name={icon} size={28} color={theme.primary} />
       </View>
       <Text style={styles.serviceTitle}>{title}</Text>
       <Text style={styles.serviceSubtitle}>{subtitle}</Text>

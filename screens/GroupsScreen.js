@@ -142,7 +142,7 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
                 onChangeText={handleSearch}
                 placeholderTextColor="#9CA3AF"
               />
-              {isSearching && <ActivityIndicator size="small" color="#7C3AED" />}
+              {isSearching && <ActivityIndicator size="small" color={theme.primary} />}
             </View>
           </View>
 
@@ -159,7 +159,7 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
             contentContainerStyle={styles.suggestedRow}
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color="#7C3AED" style={{ padding: 20 }} />
+              <ActivityIndicator size="small" color={theme.primary} style={{ padding: 20 }} />
             ) : suggestedGroups.length > 0 ? (
               suggestedGroups.map((item) => (
                 <TouchableOpacity 
@@ -170,7 +170,7 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
                   <View
                     style={[styles.suggestedCircle, { backgroundColor: getCommunityColor(item.community_type) }]}
                   >
-                    <MaterialIcons name={getCommunityIcon(item.community_type)} size={24} color="#7C3AED" />
+                    <MaterialIcons name={getCommunityIcon(item.community_type)} size={24} color={theme.primary} />
                   </View>
                   <Text style={styles.suggestedLabel} numberOfLines={1}>{item.community_name}</Text>
                 </TouchableOpacity>
@@ -188,7 +188,7 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
           </View>
 
           {isLoading ? (
-            <ActivityIndicator size="large" color="#7C3AED" style={{ marginTop: 40 }} />
+            <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
           ) : myCommunities.length > 0 ? (
             <View style={[styles.communityList, isWeb && styles.webCommunityGrid]}>
               {myCommunities.map((community) => (
@@ -232,11 +232,13 @@ function CommunityCard({
   icon,
   isWeb,
 }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <TouchableOpacity style={[styles.communityCard, isWeb && styles.webCommunityCard]}>
       <View style={styles.communityLeft}>
         <View style={styles.communityAvatar}>
-          <MaterialIcons name={icon} size={20} color="#7C3AED" />
+          <MaterialIcons name={icon} size={20} color={theme.primary} />
         </View>
       </View>
       <View style={styles.communityContent}>

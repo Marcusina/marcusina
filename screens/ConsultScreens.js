@@ -9,8 +9,11 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
   const [selectedDoctor, setSelectedDoctor] = useState('Dr. Sarah');
@@ -84,7 +87,7 @@ export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
                       onPress={() => setSelectedDoctor(doctor.name)}
                     >
                       <View style={styles.doctorAvatar}>
-                        <MaterialIcons name="person" size={32} color={isSelected ? '#7C3AED' : '#9CA3AF'} />
+                        <MaterialIcons name="person" size={32} color={isSelected ? '#000000' : '#9CA3AF'} />
                         {isSelected && (
                           <View style={styles.selectedCheck}>
                             <MaterialIcons name="check" size={12} color="#FFFFFF" />
@@ -117,13 +120,13 @@ export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
                       onPress={() => setSelectedService(item.label)}
                     >
                       <View style={[styles.serviceIconBox, isSelected && styles.serviceIconBoxSelected]}>
-                        <MaterialIcons name={item.icon} size={24} color={isSelected ? '#FFFFFF' : '#7C3AED'} />
+                        <MaterialIcons name={item.icon} size={24} color={isSelected ? '#FFFFFF' : '#000000'} />
                       </View>
                       <View style={styles.serviceInfo}>
                         <Text style={[styles.serviceLabel, isSelected && styles.serviceLabelSelected]}>{item.label}</Text>
                         <Text style={styles.servicePrice}>{item.price}</Text>
                       </View>
-                      {isSelected && <MaterialIcons name="check-circle" size={20} color="#7C3AED" />}
+                      {isSelected && <MaterialIcons name="check-circle" size={20} color="#000000" />}
                     </TouchableOpacity>
                   );
                 })}
@@ -204,6 +207,8 @@ export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
 }
 
 export function ConsultConfirmScreen({ onBack, onDone }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
 
@@ -246,7 +251,7 @@ export function ConsultConfirmScreen({ onBack, onDone }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -258,14 +263,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.border,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   headerRight: {
     width: 24,
@@ -311,11 +316,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   sectionAction: {
     fontSize: 14,
-    color: '#7C3AED',
+    color: theme.primary,
     fontWeight: '600',
   },
   quickRow: {
@@ -323,23 +328,23 @@ const styles = StyleSheet.create({
   },
   doctorCard: {
     width: 140,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 20,
     padding: 16,
     marginRight: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   doctorCardSelected: {
-    borderColor: '#7C3AED',
-    backgroundColor: '#F5F3FF',
+    borderColor: theme.primary,
+    backgroundColor: theme.primaryLight,
   },
   doctorAvatar: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -349,34 +354,34 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     width: 20,
     height: 20,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: theme.surface,
   },
   doctorName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 4,
   },
   doctorNameSelected: {
-    color: '#7C3AED',
+    color: theme.primary,
   },
   doctorSpecialty: {
     fontSize: 11,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginBottom: 8,
     textAlign: 'center',
   },
   ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFBEB',
+    backgroundColor: theme.warningLight,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -384,7 +389,7 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#B45309',
+    color: theme.warning,
     marginLeft: 4,
   },
   serviceRow: {
@@ -397,30 +402,30 @@ const styles = StyleSheet.create({
   serviceItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
     ...Platform.select({
       web: { flex: 1, minWidth: 200 }
     })
   },
   serviceItemSelected: {
-    borderColor: '#7C3AED',
-    backgroundColor: '#F5F3FF',
+    borderColor: theme.primary,
+    backgroundColor: theme.primaryLight,
   },
   serviceIconBox: {
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: theme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
   },
   serviceIconBoxSelected: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
   },
   serviceInfo: {
     flex: 1,
@@ -428,22 +433,22 @@ const styles = StyleSheet.create({
   serviceLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.text,
   },
   serviceLabelSelected: {
-    color: '#7C3AED',
+    color: theme.primary,
   },
   servicePrice: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginTop: 2,
   },
   scheduleCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
     ...Platform.select({
       web: {
         boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
@@ -459,7 +464,7 @@ const styles = StyleSheet.create({
   scheduleMonth: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4B5563',
+    color: theme.textSecondary,
   },
   dateRow: {
     paddingBottom: 20,
@@ -468,21 +473,21 @@ const styles = StyleSheet.create({
     width: 64,
     height: 80,
     borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   dateItemSelected: {
-    backgroundColor: '#7C3AED',
-    borderColor: '#7C3AED',
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
   dateLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginBottom: 4,
   },
   dateLabelSelected: {
@@ -491,15 +496,15 @@ const styles = StyleSheet.create({
   dateDay: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
   },
   dateDaySelected: {
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
   },
   subSectionTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: theme.textMuted,
     letterSpacing: 1,
     marginTop: 12,
     marginBottom: 12,
@@ -514,24 +519,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.background,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
   },
   slotPillSelected: {
-    backgroundColor: '#F5F3FF',
-    borderColor: '#7C3AED',
+    backgroundColor: theme.primaryLight,
+    borderColor: theme.primary,
   },
   slotLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#4B5563',
+    color: theme.textSecondary,
   },
   slotLabelSelected: {
-    color: '#7C3AED',
+    color: theme.primary,
   },
   proceedButton: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -540,7 +545,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   proceedButtonText: {
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
     marginRight: 8,
@@ -555,7 +560,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#10B981',
+    backgroundColor: theme.success,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 32,
@@ -563,24 +568,24 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#111827',
+    color: theme.text,
     textAlign: 'center',
     marginBottom: 12,
   },
   successSubtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: theme.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 40,
   },
   summaryCard: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.border,
     marginBottom: 40,
   },
   webSummaryCard: {
@@ -594,25 +599,25 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 15,
-    color: '#6B7280',
+    color: theme.textSecondary,
   },
   summaryValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.text,
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.border,
     marginVertical: 12,
   },
   totalPrice: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#7C3AED',
+    color: theme.primary,
   },
   doneButton: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: theme.primary,
     paddingHorizontal: 48,
     paddingVertical: 16,
     borderRadius: 16,
@@ -621,7 +626,7 @@ const styles = StyleSheet.create({
     })
   },
   doneButtonText: {
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',

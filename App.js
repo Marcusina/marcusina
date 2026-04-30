@@ -9,6 +9,7 @@ import {
   ProfileBasicsScreen,
   EmailVerifyScreen,
   PhoneVerifyScreen,
+  VerificationChoiceScreen,
   ProfileCustomizeScreen,
   NameStepScreen,
   ContactStepScreen,
@@ -222,15 +223,23 @@ export default function App() {
           const updated = { ...profile, ...data };
           setProfile(updated);
           saveProfile(updated);
-          setScreen('emailVerify');
+          setScreen('verificationChoice');
         }}
+      />
+    );
+  } else if (screen === 'verificationChoice') {
+    content = (
+      <VerificationChoiceScreen
+        onBack={() => setScreen('profileBasics')}
+        onChooseEmail={() => setScreen('emailVerify')}
+        onChoosePhone={() => setScreen('phoneVerify')}
       />
     );
   } else if (screen === 'emailVerify') {
     content = (
       <EmailVerifyScreen
         email={regEmail}
-        onBack={() => setScreen(verificationSource === 'login' ? 'login' : 'profileBasics')}
+        onBack={() => setScreen(verificationSource === 'login' ? 'login' : 'verificationChoice')}
         onVerified={() => {
           if (verificationSource === 'login') {
             // User came from login, go back to login to retry
@@ -241,7 +250,7 @@ export default function App() {
             if (profile.role === 'doctor') {
               setScreen('success');
             } else {
-              setScreen('phoneVerify');
+              setScreen('profileCustomize');
             }
           }
         }}
@@ -250,7 +259,7 @@ export default function App() {
   } else if (screen === 'phoneVerify') {
     content = (
       <PhoneVerifyScreen
-        onBack={() => setScreen('emailVerify')}
+        onBack={() => setScreen('verificationChoice')}
         onVerified={() => setScreen('profileCustomize')}
       />
     );
@@ -416,7 +425,7 @@ export default function App() {
       <ThemeProvider>
         {isLoading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#7C3AED" />
+            <ActivityIndicator size="large" color="#000000" />
             <Text style={{ marginTop: 12, color: '#6B7280' }}>Initializing...</Text>
           </View>
         ) : isAuthScreen ? (

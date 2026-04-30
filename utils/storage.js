@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const STORAGE_KEY = '@marcusina_token';
-const PROFILE_KEY = '@marcusina_profile';
-const THEME_KEY = '@marcusina_theme';
+const STORAGE_KEY = '@medgram_token';
+const PROFILE_KEY = '@medgram_profile';
+const THEME_KEY = '@medgram_theme';
 
 export const saveToken = async (token) => {
   try {

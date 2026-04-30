@@ -27,7 +27,7 @@ function AppHeaderTitle() {
   return (
     <View style={styles.appHeaderContainer}>
       <Image 
-        source={require('../assets/marcusina.jpeg')} 
+        source={require('../assets/logo.png')} 
         style={styles.appLogo}
         resizeMode="contain"
       />
@@ -398,7 +398,7 @@ export function EmailVerifyScreen({ email, onBack, onVerified }) {
               <TouchableOpacity onPress={onBack} hitSlop={16}>
                 <Text style={styles.backArrow}>←</Text>
               </TouchableOpacity>
-              <Text style={styles.stepHeaderStepText}>Step 2 of 3</Text>
+              <Text style={styles.stepHeaderStepText}>Verify Email</Text>
               <View style={{ width: 40 }} />
             </View>
           </View>
@@ -446,7 +446,7 @@ export function PhoneVerifyScreen({ onBack, onVerified }) {
               <TouchableOpacity onPress={onBack} hitSlop={16}>
                 <Text style={styles.backArrow}>←</Text>
               </TouchableOpacity>
-              <Text style={styles.stepHeaderStepText}>Step 2 of 3</Text>
+              <Text style={styles.stepHeaderStepText}>Verify Phone</Text>
               <View style={{ width: 40 }} />
             </View>
           </View>
@@ -470,6 +470,62 @@ export function PhoneVerifyScreen({ onBack, onVerified }) {
             <Text style={styles.resendTimerText}>Resend available in 00:24</Text>
           </View>
           <PrimaryButton label="Confirm & Continue" onPress={onVerified} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+export function VerificationChoiceScreen({ onBack, onChooseEmail, onChoosePhone }) {
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.onboardingContent}>
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.stepHeaderContainer}>
+            <View style={styles.stepHeaderTopRow}>
+              <TouchableOpacity onPress={onBack} hitSlop={16}>
+                <Text style={styles.backArrow}>←</Text>
+              </TouchableOpacity>
+              <Text style={styles.stepHeaderStepText}>Verify Account</Text>
+              <View style={{ width: 40 }} />
+            </View>
+          </View>
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Verification Method</Text>
+            <Text style={styles.screenSubtitle}>
+              Choose how you'd like to verify your account to ensure your medical data stays secure.
+            </Text>
+
+            <TouchableOpacity 
+              style={styles.methodCard} 
+              onPress={onChooseEmail}
+              activeOpacity={0.7}
+            >
+              <View style={styles.methodIconCircle}>
+                <Text style={styles.methodIcon}>✉️</Text>
+              </View>
+              <View style={styles.methodInfo}>
+                <Text style={styles.methodTitle}>Email Verification</Text>
+                <Text style={styles.methodDescription}>Receive a 6-digit code at your registered email address.</Text>
+              </View>
+              <Text style={styles.methodArrow}>→</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.methodCard, { marginTop: 16 }]} 
+              onPress={onChoosePhone}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.methodIconCircle, styles.phoneIconCircle]}>
+                <Text style={styles.methodIcon}>📱</Text>
+              </View>
+              <View style={styles.methodInfo}>
+                <Text style={styles.methodTitle}>Phone Verification</Text>
+                <Text style={styles.methodDescription}>Receive a verification code via SMS on your mobile phone.</Text>
+              </View>
+              <Text style={styles.methodArrow}>→</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -903,21 +959,25 @@ export function SuccessScreen({ onGetStarted, role }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.successContainer}>
-        <View style={styles.successIcon}>
-          <Text style={styles.successCheck}>✓</Text>
+        <View style={styles.contentMaxWidth}>
+          <View style={{ alignItems: 'center', marginBottom: 32 }}>
+            <View style={styles.successIcon}>
+              <Text style={styles.successCheck}>✓</Text>
+            </View>
+            <Text style={styles.successTitle}>
+              {isDoctor ? "Application Received!" : "You're all set!"}
+            </Text>
+            <Text style={styles.successSubtitle}>
+              {isDoctor 
+                ? "Your doctor profile is being reviewed by our medical board. We'll notify you once your account is active."
+                : "Your journey to better health starts now."}
+            </Text>
+          </View>
+          <PrimaryButton 
+            label={isDoctor ? "Go to Dashboard" : "Get Started"} 
+            onPress={onGetStarted} 
+          />
         </View>
-        <Text style={styles.successTitle}>
-          {isDoctor ? "Application Received!" : "You're all set!"}
-        </Text>
-        <Text style={styles.successSubtitle}>
-          {isDoctor 
-            ? "Your doctor profile is being reviewed by our medical board. We'll notify you once your account is active."
-            : "Your journey to better health starts now."}
-        </Text>
-        <PrimaryButton 
-          label={isDoctor ? "Go to Dashboard" : "Get Started"} 
-          onPress={onGetStarted} 
-        />
       </View>
     </SafeAreaView>
   );
@@ -966,7 +1026,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#7C3AED',
+    color: '#000000',
   },
   loginCard: {
     marginTop: 8,
@@ -974,7 +1034,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#111827',
+    color: '#000000',
     marginBottom: 8,
   },
   screenSubtitle: {
@@ -1015,12 +1075,13 @@ const styles = StyleSheet.create({
     color: '#F97316',
   },
   primaryButton: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: '#000000',
     paddingVertical: 14,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
+    width: '100%',
   },
   primaryButtonLabel: {
     color: '#FFFFFF',
@@ -1086,7 +1147,7 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     fontSize: 13,
-    color: '#7C3AED',
+    color: '#000000',
     fontWeight: '600',
   },
   stepHeaderContainer: {
@@ -1108,7 +1169,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 14,
-    color: '#7C3AED',
+    color: '#000000',
     fontWeight: '500',
   },
   progressTrack: {
@@ -1182,7 +1243,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#7C3AED',
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -1228,11 +1289,11 @@ const styles = StyleSheet.create({
     }),
   },
   codeBoxFilled: {
-    borderColor: '#7C3AED',
+    borderColor: '#000000',
   },
   codeBoxFocused: {
-    borderColor: '#7C3AED',
-    backgroundColor: '#F5F3FF',
+    borderColor: '#000000',
+    backgroundColor: '#F3F4F6',
     borderWidth: 2,
   },
   verificationIconWrapper: {
@@ -1270,7 +1331,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginVertical: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#7C3AED',
+    borderLeftColor: '#000000',
   },
   linkInfoText: {
     fontSize: 14,
@@ -1318,8 +1379,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   genderOptionSelected: {
-    borderColor: '#7C3AED',
-    backgroundColor: '#F3E8FF',
+    borderColor: '#000000',
+    backgroundColor: '#F3F4F6',
   },
   genderOptionLabel: {
     fontSize: 14,
@@ -1374,7 +1435,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#7C3AED',
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1406,5 +1467,45 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
     textAlign: 'center',
+  },
+  methodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  methodIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  methodIcon: {
+    fontSize: 24,
+  },
+  methodInfo: {
+    flex: 1,
+  },
+  methodTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 2,
+  },
+  methodDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    lineHeight: 16,
+  },
+  methodArrow: {
+    fontSize: 20,
+    color: '#D1D5DB',
+    marginLeft: 8,
   },
 });
