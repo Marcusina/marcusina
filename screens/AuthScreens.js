@@ -11,6 +11,7 @@ import {
   Alert,
   Image,
   Platform,
+  Switch,
 } from 'react-native';
 import {
   login as loginApi,
@@ -52,18 +53,25 @@ function PrimaryButton({ label, onPress, disabled }) {
   );
 }
 
-function TextField({ label, placeholder, value, onChangeText, secureTextEntry, error }) {
+function TextField({ label, placeholder, value, onChangeText, secureTextEntry, error, rightIcon, onRightIconPress }) {
   return (
     <View style={styles.fieldContainer}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor="#9CA3AF"
-        secureTextEntry={secureTextEntry}
-        style={[styles.textInput, error && styles.inputError]}
-      />
+      <View style={styles.inputRow}>
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor="#9CA3AF"
+          secureTextEntry={secureTextEntry}
+          style={[styles.textInput, error && styles.inputError, rightIcon && styles.textInputWithIcon]}
+        />
+        {rightIcon ? (
+          <TouchableOpacity style={styles.inputIconButton} onPress={onRightIconPress} activeOpacity={0.8}>
+            <Text style={styles.inputIcon}>{rightIcon}</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
@@ -167,6 +175,9 @@ function showAlert(title, message, onDismiss = null) {
 export function LoginScreen({ onSignUp, onLoginSuccess, onEmailVerifyNeeded }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginMethod, setLoginMethod] = useState('email');
+  const [showPassword, setShowPassword] = useState(false);
+  const [staySignedIn, setStaySignedIn] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [otpMode, setOtpMode] = useState(false);
@@ -297,52 +308,82 @@ export function LoginScreen({ onSignUp, onLoginSuccess, onEmailVerifyNeeded }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.contentMaxWidth}>
-          <AppHeaderTitle />
+          <View style={styles.topBar}>
+            <View />
+            <TouchableOpacity style={styles.languageButton} activeOpacity={0.8}>
+              <Text style={styles.languageText}>English</Text>
+              <Text style={styles.languageChevron}>⌄</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.welcomeTitle}>Welcome back</Text>
+          <Text style={styles.welcomeSubtitle}>Sign in to Medgram</Text>
+          <View style={styles.loginMethodTabs}>
+            <TouchableOpacity
+              style={[styles.loginMethodTab, loginMethod === 'email' && styles.loginMethodTabActive]}
+              onPress={() => setLoginMethod('email')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.loginMethodLabel, loginMethod === 'email' && styles.loginMethodLabelActive]}>
+                Username / Email
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.loginMethodTab, loginMethod === 'phone' && styles.loginMethodTabActive]}
+              onPress={() => setLoginMethod('phone')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.loginMethodLabel, loginMethod === 'phone' && styles.loginMethodLabelActive]}>
+                Phone
+              </Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.loginCard}>
-            <Text style={styles.screenTitle}>Log In</Text>
-            <Text style={styles.screenSubtitle}>
-              Welcome back. Your health journey continues here.
-            </Text>
             <TextField
-              label="Email"
-              placeholder="hello@example.com"
+              label={loginMethod === 'phone' ? 'Phone' : 'Username or Email'}
+              placeholder={loginMethod === 'phone' ? '+1 234 567 8900' : 'username or email address'}
               value={email}
               onChangeText={setEmail}
               error={errors.email}
             />
             <TextField
               label="Password"
-              placeholder="●●●●●●●●"
+              placeholder="Enter your password"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
+              secureTextEntry={!showPassword}
+              rightIcon={showPassword ? '🙈' : '👁️'}
+              onRightIconPress={() => setShowPassword((prev) => !prev)}
               error={errors.password}
             />
-            <View style={styles.forgotPasswordRow}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            <View style={styles.staySignedInRow}>
+              <View style={styles.staySignedInInfo}>
+                <Text style={styles.staySignedInLabel}>Stay signed in</Text>
+                <Text style={styles.staySignedInHint}>Keep me signed in on this device.</Text>
+              </View>
+              <Switch
+                value={staySignedIn}
+                onValueChange={setStaySignedIn}
+                thumbColor={staySignedIn ? '#000000' : '#FFFFFF'}
+                trackColor={{ false: '#D1D5DB', true: '#000000' }}
+              />
             </View>
-            <PrimaryButton 
-              label={loading ? <ActivityIndicator color="#FFF" /> : "Log In"} 
-              onPress={handleLogin} 
+            <PrimaryButton
+              label={loading ? <ActivityIndicator color="#FFF" /> : 'Sign In'}
+              onPress={handleLogin}
               disabled={loading}
             />
             <View style={styles.orRow}>
               <View style={styles.orDivider} />
-              <Text style={styles.orText}>OR CONTINUE WITH</Text>
+              <Text style={styles.orText}>or continue with</Text>
               <View style={styles.orDivider} />
             </View>
-            <View style={styles.socialRow}>
-              <View style={styles.socialButton}>
-                <Text style={styles.socialButtonLabel}>G</Text>
-              </View>
-              <View style={styles.socialButton}>
-                <Text style={styles.socialButtonLabel}></Text>
-              </View>
-            </View>
-            <View style={styles.footerRow}>
-              <Text style={styles.footerText}>Don't have an account?</Text>
+            <TouchableOpacity style={styles.fingerprintButton} activeOpacity={0.8}>
+              <Text style={styles.fingerprintIcon}></Text>
+            </TouchableOpacity>
+            <View style={styles.createAccountRow}>
+              <Text style={styles.footerText}>New to Medgram?</Text>
               <TouchableOpacity onPress={onSignUp}>
-                <Text style={styles.footerLink}>Sign Up</Text>
+                <Text style={styles.footerLink}>Create an account</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1029,7 +1070,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   loginCard: {
-    marginTop: 8,
+    marginTop: 24,
   },
   screenTitle: {
     fontSize: 28,
@@ -1041,6 +1082,129 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginBottom: 24,
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: '#FFFFFF',
+  },
+  languageText: {
+    fontSize: 13,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  languageChevron: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 6,
+  },
+  welcomeTitle: {
+    fontSize: 34,
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: 6,
+  },
+  welcomeSubtitle: {
+    fontSize: 15,
+    color: '#6B7280',
+    marginBottom: 28,
+  },
+  loginMethodTabs: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+  loginMethodTab: {
+    flex: 1,
+    borderRadius: 999,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 14,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  loginMethodTabActive: {
+    backgroundColor: '#000000',
+    borderColor: '#000000',
+  },
+  loginMethodLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  loginMethodLabelActive: {
+    color: '#FFFFFF',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  textInputWithIcon: {
+    flex: 1,
+    paddingRight: 48,
+  },
+  inputIconButton: {
+    position: 'absolute',
+    right: 16,
+    height: 24,
+    justifyContent: 'center',
+  },
+  inputIcon: {
+    fontSize: 18,
+    color: '#6B7280',
+  },
+  staySignedInRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    paddingVertical: 6,
+  },
+  staySignedInInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  staySignedInLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  staySignedInHint: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  fingerprintButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    alignSelf: 'center',
+    marginBottom: 24,
+  },
+  fingerprintIcon: {
+    fontSize: 32,
+    color: '#111827',
+  },
+  createAccountRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   fieldContainer: {
     marginBottom: 16,

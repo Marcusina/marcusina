@@ -8,13 +8,12 @@ import {
   Platform,
   ScrollView,
   Image,
-  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
-const SIDEBAR_WIDTH = 260;
+const SIDEBAR_WIDTH = 230;
 const MOBILE_BREAKPOINT = 768;
 
 function createStyles(theme) {
@@ -34,10 +33,23 @@ function createStyles(theme) {
   sidebarHeader: {
     padding: 24,
     paddingBottom: 32,
+    paddingLeft: 12,
+  },
+  sidebarHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   sidebarLogo: {
     width: 140,
     height: 40,
+    paddingLeft: 1,
+  },
+  sidebarLogoText: {
+    fontSize: 10,
+
+    fontWeight: '800',
+    color: theme.text,
   },
   sidebarNav: {
     flex: 1,
@@ -66,21 +78,6 @@ function createStyles(theme) {
   navLabelActive: {
     color: theme.primary,
     fontWeight: '600',
-  },
-  themeToggleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    marginTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: theme.border,
-  },
-  themeToggleLabel: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 14,
-    color: theme.textSecondary,
-    fontWeight: '500',
   },
   sidebarFooter: {
     padding: 16,
@@ -143,22 +140,22 @@ function createStyles(theme) {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 12,
+  },
+  mobileHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   mobileLogo: {
     width: 120,
     height: 32,
   },
-  mobileThemeToggle: {
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: theme.surfaceSubtle,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  themeToggleIconWrapper: {
-    padding: 4,
+  mobileLogoText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: theme.text,
   },
   mainContent: {
     flex: 1,
@@ -309,7 +306,7 @@ function createStyles(theme) {
 }
 
 export function Layout({ children, currentScreen, onNavigate, userProfile, onLogout }) {
-  const { theme, themeMode, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= MOBILE_BREAKPOINT;
@@ -325,11 +322,14 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
   const renderSidebar = () => (
     <View style={styles.sidebar}>
       <View style={styles.sidebarHeader}>
-        <Image 
-          source={require('../assets/logo.png')} 
-          style={styles.sidebarLogo}
-          resizeMode="contain"
-        />
+        <View style={styles.sidebarHeaderContent}>
+          <Image 
+            source={require('../assets/logo.png')} 
+            style={styles.sidebarLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.sidebarLogoText}>MEDGRAM</Text>
+        </View>
       </View>
       <ScrollView style={styles.sidebarNav}>
         {navItems.map((item) => (
@@ -358,22 +358,6 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
             </Text>
           </TouchableOpacity>
         ))}
-        <View style={styles.themeToggleContainer}>
-          <MaterialIcons 
-            name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
-            size={20} 
-            color={theme.textSecondary} 
-          />
-          <Text style={styles.themeToggleLabel}>
-            {themeMode === 'dark' ? 'Dark Mode' : 'Light Mode'}
-          </Text>
-          <Switch
-            value={themeMode === 'dark'}
-            onValueChange={toggleTheme}
-            trackColor={{ false: '#D1D5DB', true: theme.primary }}
-            thumbColor="#FFFFFF"
-          />
-        </View>
       </ScrollView>
       <View style={styles.sidebarFooter}>
         <TouchableOpacity style={styles.userProfile}>
@@ -430,18 +414,14 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
         {!isDesktop && (
           <SafeAreaView edges={['top']} style={styles.safeHeader}>
             <View style={styles.mobileHeader}>
-              <Image 
-                source={require('../assets/logo.png')} 
-                style={styles.mobileLogo}
-                resizeMode="contain"
-              />
-              <TouchableOpacity style={styles.mobileThemeToggle} onPress={toggleTheme}>
-                <MaterialIcons 
-                  name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
-                  size={20} 
-                  color={theme.primary} 
+              <View style={styles.mobileHeaderContent}>
+                <Image 
+                  source={require('../assets/logo.png')} 
+                  style={styles.mobileLogo}
+                  resizeMode="contain"
                 />
-              </TouchableOpacity>
+                <Text style={styles.mobileLogoText}>MEDGRAM</Text>
+              </View>
             </View>
           </SafeAreaView>
         )}
@@ -458,13 +438,6 @@ export function Layout({ children, currentScreen, onNavigate, userProfile, onLog
                 <Text style={styles.searchPlaceholder}>Search anything...</Text>
               </View>
               <View style={styles.webHeaderActions}>
-                <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
-                  <MaterialIcons 
-                    name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
-                    size={22} 
-                    color={theme.textSecondary} 
-                  />
-                </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton}>
                   <MaterialIcons name="notifications-none" size={22} color={theme.textSecondary} />
                   <View style={styles.notificationBadge} />

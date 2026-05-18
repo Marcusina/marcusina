@@ -17,7 +17,7 @@ import { getCommunities, getMyCommunities, joinCommunity } from '../api/communit
 import { useTheme } from '../context/ThemeContext';
 
 export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }) {
-  const { theme } = useTheme();
+  const { theme, themeMode } = useTheme();
   const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
@@ -96,14 +96,15 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
     }
   };
 
-  const getCommunityColor = (type) => {
+  const getCommunityColor = (type, themeMode) => {
+    const isDark = themeMode === 'dark';
     switch (type) {
-      case 'condition_support': return '#FEE2E2';
-      case 'wellness': return '#DCFCE7';
-      case 'mental_health': return '#E0E7FF';
-      case 'caregivers': return '#FCE7F3';
-      case 'local_health': return '#FEF3C7';
-      default: return '#F3F4F6';
+      case 'condition_support': return isDark ? '#7F1D1D' : '#FEE2E2';
+      case 'wellness': return isDark ? '#064E3B' : '#DCFCE7';
+      case 'mental_health': return isDark ? '#1E3A8A' : '#E0E7FF';
+      case 'caregivers': return isDark ? '#500724' : '#FCE7F3';
+      case 'local_health': return isDark ? '#451A03' : '#FEF3C7';
+      default: return isDark ? '#1F2937' : '#F3F4F6';
     }
   };
 
@@ -168,7 +169,7 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
                   onPress={() => handleJoinGroup(item._id)}
                 >
                   <View
-                    style={[styles.suggestedCircle, { backgroundColor: getCommunityColor(item.community_type) }]}
+                    style={[styles.suggestedCircle, { backgroundColor: getCommunityColor(item.community_type, themeMode) }]}
                   >
                     <MaterialIcons name={getCommunityIcon(item.community_type)} size={24} color={theme.primary} />
                   </View>
@@ -199,7 +200,7 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
                   meta={community.post_count > 0 ? `${community.post_count} posts` : 'Up to date'}
                   chipLabel="Latest"
                   chipText={community.latest_post || 'No posts yet'}
-                  chipColor={getCommunityColor(community.community_type)}
+                  chipColor={getCommunityColor(community.community_type, themeMode)}
                   icon={getCommunityIcon(community.community_type)}
                   isWeb={isWeb}
                 />

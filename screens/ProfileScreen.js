@@ -9,12 +9,13 @@ import {
   Image,
   Platform,
   useWindowDimensions,
+  Switch,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
 export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogout }) {
-  const { theme } = useTheme();
+  const { theme, themeMode, toggleTheme } = useTheme();
   const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
@@ -101,6 +102,28 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogo
                 <Text style={styles.emptyActivityText}>No recent health activity found.</Text>
               </View>
             )}
+          </View>
+
+          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Settings</Text>
+          <View style={styles.settingsCard}>
+            <View style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <MaterialIcons 
+                  name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
+                  size={24} 
+                  color={theme.textSecondary} 
+                />
+                <Text style={styles.settingLabel}>
+                  {themeMode === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                </Text>
+              </View>
+              <Switch
+                value={themeMode === 'dark'}
+                onValueChange={toggleTheme}
+                trackColor={{ false: '#D1D5DB', true: theme.primary }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -839,5 +862,28 @@ const createStyles = (theme) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: theme.primary,
+  },
+  settingsCard: {
+    backgroundColor: theme.surface,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: theme.border,
+    marginTop: 16,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  settingLabel: {
+    fontSize: 15,
+    color: theme.text,
+    fontWeight: '500',
   },
 });

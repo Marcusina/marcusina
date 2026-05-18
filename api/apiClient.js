@@ -1,18 +1,30 @@
 // api/apiClient.js
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 const DEV_URLS = {
-  ios: 'localhost',
-  android: '10.0.2.2',
+  ios: '192.168.1.52', // Local IP for physical iOS devices
+  androidEmulator: '10.0.2.2', // Android emulator default
+  androidGenymotion: '10.0.3.2', // Genymotion emulator
+  androidPhysical: '192.168.1.52', // Local IP for physical Android devices
   web: 'localhost',
-  physical: '192.168.1.52' // Replace with your machine's IP for physical devices
+};
+
+const getAndroidHost = () => {
+  // Use Expo debugger host when available (in dev mode).
+  const debuggerHost = Constants.manifest?.debuggerHost;
+  if (debuggerHost) {
+    return debuggerHost.split(':')[0];
+  }
+
+  // Fallback to Android emulator host. Override this value if using a physical device.
+  return DEV_URLS.androidEmulator;
 };
 
 const getHost = () => {
-  if (Platform.OS === 'android') return DEV_URLS.android;
   if (Platform.OS === 'web') return DEV_URLS.web;
-  if (Platform.OS === 'ios') return DEV_URLS.ios;
-  return DEV_URLS.android; // Default
+  if (Platform.OS === 'android') return getAndroidHost();
+  return DEV_URLS.ios;
 };
 
 const API_BASE_URL = `http://${getHost()}:3001/api/v1`;
@@ -58,9 +70,14 @@ const apiClient = async (endpoint, options = {}) => {
     }
 
     if (!response.ok) {
-      console.error('[API Full Error Response]', JSON.stringify(data, null, 2));
       const errorMsg = data.message || data.error || data.details || `Error ${response.status}: ${textResponse}`;
-      console.error('[API Error Final Message]', errorMsg);
+      
+      // Only log full error response if it's NOT a "must create profile" message
+      if (!errorMsg.includes('create a profile')) {
+        console.error('[API Full Error Response]', JSON.stringify(data, null, 2));
+        console.error('[API Error Final Message]', errorMsg);
+      }
+      
       throw new Error(errorMsg);
     }
 
@@ -78,7 +95,9 @@ Possible solutions:
       console.error(errorDetails);
       throw new Error(errorDetails);
     } else {
-      console.error(`[API Error] ${error.message}`);
+      if (!error.message.includes('create a profile')) {
+        console.error(`[API Error] ${error.message}`);
+      }
       throw error;
     }
   }

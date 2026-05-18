@@ -68,21 +68,35 @@ export const getCurrentUser = async (token) => {
 };
 
 export const getUserProfile = async (token, userId) => {
-  return await apiClient(`/profiles/${userId}/get`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  try {
+    return await apiClient(`/profiles/${userId}/get`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    if (!error.message.includes('create a profile')) {
+      console.error('[API getUserProfile Error]', error);
+    }
+    return null;
+  }
 };
 
 export const getPatientProfile = async (token, userId) => {
-  return await apiClient(`/profiles/patient/${userId}`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  try {
+    return await apiClient(`/profiles/patient/${userId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    if (!error.message.includes('create a profile')) {
+      console.error('[API getPatientProfile Error]', error);
+    }
+    return null;
+  }
 };
 
 export const updateProfile = async (token, profileData) => {
@@ -119,10 +133,15 @@ export const updateProfile = async (token, profileData) => {
         body: generalProfile,
       });
     } catch (error) {
-      // If profile doesn't exist (404), try to create it
-      if (error.message.includes('404') || error.message.includes('not found')) {
+      // If profile doesn't exist, create it instead.
+      if (
+        error.message.includes('404') ||
+        error.message.includes('not found') ||
+        error.message.includes('create a profile') ||
+        error.message.includes('You must create a profile')
+      ) {
         await apiClient('/profiles/create', {
-          method: 'POST',
+          method: 'PUT',
           headers: { Authorization: `Bearer ${token}` },
           body: generalProfile,
         });
@@ -182,7 +201,9 @@ export const getUserPrescriptions = async (token, userId) => {
       },
     });
   } catch (error) {
-    console.error('[API getUserPrescriptions Error]', error);
+    if (!error.message.includes('create a profile')) {
+      console.error('[API getUserPrescriptions Error]', error);
+    }
     return []; // Return empty array if error
   }
 };
@@ -199,7 +220,10 @@ export const getUserCommunities = async (token) => {
       },
     });
   } catch (error) {
-    console.error('[API getUserCommunities Error]', error);
+    // Only log if it's NOT the "must create profile" error
+    if (!error.message.includes('create a profile')) {
+      console.error('[API getUserCommunities Error]', error);
+    }
     return []; // Return empty array if error
   }
 };
