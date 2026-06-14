@@ -1,57 +1,57 @@
 // api/auth.api.js
-import apiClient from './apiClient';
+import apiClient from "./apiClient";
 
 export const login = async (email, password) => {
-  return await apiClient('/auth/login', {
-    method: 'POST',
+  return await apiClient("/auth/login", {
+    method: "POST",
     body: { email, password },
   });
 };
 
 export const register = async (userData) => {
-  return await apiClient('/auth/register', {
-    method: 'POST',
+  return await apiClient("/auth/register", {
+    method: "POST",
     body: userData,
   });
 };
 
 export const registerDoctor = async (doctorData) => {
-  return await apiClient('/doctors/register', {
-    method: 'POST',
+  return await apiClient("/doctors/register", {
+    method: "POST",
     body: doctorData,
   });
 };
 
 export const verifyEmailOtp = async (email, otp) => {
-  return await apiClient('/verify-email-otp', {
-    method: 'POST',
+  return await apiClient("/verify-email-otp", {
+    method: "POST",
     body: { email, otp },
   });
 };
 
 export const checkVerificationStatus = async (email) => {
   return await apiClient(`/check-verification-status?email=${email}`, {
-    method: 'GET',
+    method: "GET",
   });
 };
 
 export const resendVerificationEmail = async (email) => {
-  return await apiClient('/resend-verification', {
-    method: 'POST',
+  return await apiClient("/resend-verification", {
+    method: "POST",
     body: { email },
   });
 };
 
 export const verifyIdentityByOtp = async (email, otp) => {
-  return await apiClient('/auth/verify-identity', {
-    method: 'POST',
+  return await apiClient("/auth/verify-device", {
+    method: "POST",
     body: { email, otp },
   });
 };
 
 export const logout = async (token) => {
-  return await apiClient('/auth/logout', {
-    method: 'POST',
+  return await apiClient("/auth/logout", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -59,8 +59,8 @@ export const logout = async (token) => {
 };
 
 export const getCurrentUser = async (token) => {
-  return await apiClient('/get-user', {
-    method: 'GET',
+  return await apiClient("/get-user", {
+    method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -70,14 +70,14 @@ export const getCurrentUser = async (token) => {
 export const getUserProfile = async (token, userId) => {
   try {
     return await apiClient(`/profiles/${userId}/get`, {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
   } catch (error) {
-    if (!error.message.includes('create a profile')) {
-      console.error('[API getUserProfile Error]', error);
+    if (!error.message.includes("create a profile")) {
+      console.error("[API getUserProfile Error]", error);
     }
     return null;
   }
@@ -86,14 +86,14 @@ export const getUserProfile = async (token, userId) => {
 export const getPatientProfile = async (token, userId) => {
   try {
     return await apiClient(`/profiles/patient/${userId}`, {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
   } catch (error) {
-    if (!error.message.includes('create a profile')) {
-      console.error('[API getPatientProfile Error]', error);
+    if (!error.message.includes("create a profile")) {
+      console.error("[API getPatientProfile Error]", error);
     }
     return null;
   }
@@ -101,47 +101,47 @@ export const getPatientProfile = async (token, userId) => {
 
 export const updateProfile = async (token, profileData) => {
   // Split name into first and last
-  const nameParts = (profileData.name || '').trim().split(/\s+/);
-  const first_name = nameParts[0] || 'User';
-  const last_name = nameParts.slice(1).join(' ') || ' ';
+  const nameParts = (profileData.name || "").trim().split(/\s+/);
+  const first_name = nameParts[0] || "User";
+  const last_name = nameParts.slice(1).join(" ") || " ";
 
   // Prepare general profile data
   const generalProfile = {
     first_name,
     last_name,
-    bio: profileData.bio || '',
-    location_address: profileData.location || '',
+    bio: profileData.bio || "",
+    location_address: profileData.location || "",
     // These are required by the backend createProfile schema but not in the frontend state
     // We'll use defaults if missing
-    preferred_language: 'en',
-    timezone: 'UTC',
-    gender: 'other',
+    preferred_language: "en",
+    timezone: "UTC",
+    gender: "other",
     date_of_birth: new Date().toISOString(), // Default for now
-    location_country: 'Unknown',
-    location_state: 'Unknown',
-    location_city: 'Unknown',
-    postal_code: '00000',
+    location_country: "Unknown",
+    location_state: "Unknown",
+    location_city: "Unknown",
+    postal_code: "00000",
   };
 
   try {
     // 1. Update general user profile
     // First try to update
     try {
-      await apiClient('/profiles/update', {
-        method: 'PUT',
+      await apiClient("/profiles/update", {
+        method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: generalProfile,
       });
     } catch (error) {
       // If profile doesn't exist, create it instead.
       if (
-        error.message.includes('404') ||
-        error.message.includes('not found') ||
-        error.message.includes('create a profile') ||
-        error.message.includes('You must create a profile')
+        error.message.includes("404") ||
+        error.message.includes("not found") ||
+        error.message.includes("create a profile") ||
+        error.message.includes("You must create a profile")
       ) {
-        await apiClient('/profiles/create', {
-          method: 'PUT',
+        await apiClient("/profiles/create", {
+          method: "PUT",
           headers: { Authorization: `Bearer ${token}` },
           body: generalProfile,
         });
@@ -165,15 +165,18 @@ export const updateProfile = async (token, profileData) => {
 
         try {
           await apiClient(`/profiles/patient/${user._id}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: { Authorization: `Bearer ${token}` },
             body: patientData,
           });
         } catch (error) {
           // If patient profile doesn't exist, create it
-          if (error.message.includes('404') || error.message.includes('not found')) {
-            await apiClient('/profiles/patient/create', {
-              method: 'POST',
+          if (
+            error.message.includes("404") ||
+            error.message.includes("not found")
+          ) {
+            await apiClient("/profiles/patient/create", {
+              method: "POST",
               headers: { Authorization: `Bearer ${token}` },
               body: { ...patientData, user_id: user._id },
             });
@@ -184,7 +187,7 @@ export const updateProfile = async (token, profileData) => {
 
     return { success: true };
   } catch (error) {
-    console.error('[API updateProfile Error]', error);
+    console.error("[API updateProfile Error]", error);
     throw error;
   }
 };
@@ -195,14 +198,14 @@ export const updateProfile = async (token, profileData) => {
 export const getUserPrescriptions = async (token, userId) => {
   try {
     return await apiClient(`/patients/${userId}/prescriptions`, {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
   } catch (error) {
-    if (!error.message.includes('create a profile')) {
-      console.error('[API getUserPrescriptions Error]', error);
+    if (!error.message.includes("create a profile")) {
+      console.error("[API getUserPrescriptions Error]", error);
     }
     return []; // Return empty array if error
   }
@@ -213,16 +216,16 @@ export const getUserPrescriptions = async (token, userId) => {
  */
 export const getUserCommunities = async (token) => {
   try {
-    return await apiClient('/communities/my', {
-      method: 'GET',
+    return await apiClient("/communities/my", {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
   } catch (error) {
     // Only log if it's NOT the "must create profile" error
-    if (!error.message.includes('create a profile')) {
-      console.error('[API getUserCommunities Error]', error);
+    if (!error.message.includes("create a profile")) {
+      console.error("[API getUserCommunities Error]", error);
     }
     return []; // Return empty array if error
   }
