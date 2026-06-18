@@ -1,9 +1,23 @@
-import { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider } from './context/ThemeContext';
-import { getCurrentUser, updateProfile, getUserProfile, getPatientProfile, getUserPrescriptions, getUserCommunities } from './api/auth.api';
-import { getToken, saveToken, removeToken, getProfile, saveProfile } from './utils/storage';
+import "./global.css";
+import { useState, useEffect } from "react";
+import { View, Text, ActivityIndicator } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ThemeProvider } from "./context/ThemeContext";
+import {
+  getCurrentUser,
+  updateProfile,
+  getUserProfile,
+  getPatientProfile,
+  getUserPrescriptions,
+  getUserCommunities,
+} from "./api/auth.api";
+import {
+  getToken,
+  saveToken,
+  removeToken,
+  getProfile,
+  saveProfile,
+} from "./utils/storage";
 import {
   LoginScreen,
   ProfileBasicsScreen,
@@ -15,39 +29,39 @@ import {
   ContactStepScreen,
   LocationStepScreen,
   SuccessScreen,
-} from './screens/AuthScreens';
-import { HomeScreen } from './screens/HomeScreen';
+} from "./screens/AuthScreens";
+import { HomeScreen } from "./screens/HomeScreen";
 import {
   HealthProfileScreen,
   PublicProfileScreen,
   ProfileScreen,
-} from './screens/ProfileScreen';
-import { GroupsScreen } from './screens/GroupsScreen';
-import { PlaceScreen } from './screens/PlaceScreen';
+} from "./screens/ProfileScreen";
+import { GroupsScreen } from "./screens/GroupsScreen";
+import { PlaceScreen } from "./screens/PlaceScreen";
 import {
   ConsultBookingScreen,
   ConsultConfirmScreen,
-} from './screens/ConsultScreens';
-import { Layout } from './components/Layout';
+} from "./screens/ConsultScreens";
+import { Layout } from "./components/Layout";
 
 export default function App() {
-  const [screen, setScreen] = useState('login');
-  const [verificationSource, setVerificationSource] = useState('registration'); // 'registration' or 'login'
+  const [screen, setScreen] = useState("login");
+  const [verificationSource, setVerificationSource] = useState("registration"); // 'registration' or 'login'
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [regEmail, setRegEmail] = useState('');
+  const [regEmail, setRegEmail] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    handle: '',
-    bio: '',
-    bloodType: '',
-    height: '',
-    weight: '',
-    role: 'patient',
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
+    handle: "",
+    bio: "",
+    bloodType: "",
+    height: "",
+    weight: "",
+    role: "patient",
     prescriptions: [],
     communities: [],
     followers: 0,
@@ -62,17 +76,17 @@ export default function App() {
       try {
         const savedToken = await getToken();
         const savedProfile = await getProfile();
-        
+
         if (savedToken) {
           setToken(savedToken);
-          setScreen('home');
+          setScreen("home");
         }
-        
+
         if (savedProfile) {
           setProfile(savedProfile);
         }
       } catch (e) {
-        console.error('Error loading saved data', e);
+        console.error("Error loading saved data", e);
       } finally {
         setIsLoading(false);
       }
@@ -84,7 +98,7 @@ export default function App() {
     setUser(userData);
     setToken(userToken);
     await saveToken(userToken);
-    
+
     if (userData) {
       const updatedProfile = {
         ...profile,
@@ -97,12 +111,12 @@ export default function App() {
         bloodType: userData.bloodType || profile.bloodType,
         height: userData.height || profile.height,
         weight: userData.weight || profile.weight,
-        role: userData.role || profile.role || 'patient',
+        role: userData.role || profile.role || "patient",
       };
       setProfile(updatedProfile);
       await saveProfile(updatedProfile);
     }
-    setScreen('home');
+    setScreen("home");
   };
 
   const handleLogout = async () => {
@@ -110,13 +124,13 @@ export default function App() {
       setToken(null);
       setUser(null);
       await removeToken();
-      setScreen('login');
+      setScreen("login");
     } catch (e) {
-      console.error('Logout error:', e);
+      console.error("Logout error:", e);
     }
   };
 
-  console.log('[App] Rendering screen:', screen);
+  console.log("[App] Rendering screen:", screen);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -124,51 +138,65 @@ export default function App() {
         try {
           const userData = await getCurrentUser(token);
           setUser(userData);
-          
+
           if (userData && userData._id) {
             let fullProfile = { ...profile };
-            
+
             // Fetch User Profile
             try {
               const userProfile = await getUserProfile(token, userData._id);
               if (userProfile) {
                 fullProfile = {
                   ...fullProfile,
-                  name: `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim(),
+                  name: `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim(),
                   bio: userProfile.bio || fullProfile.bio,
-                  location: userProfile.location_address || fullProfile.location,
+                  location:
+                    userProfile.location_address || fullProfile.location,
                   email: userData.email || fullProfile.email,
                   phone: userData.phone_number || fullProfile.phone,
                 };
               }
             } catch (err) {
-              console.log('No user profile found yet or error fetching');
+              console.log("No user profile found yet or error fetching");
             }
 
             // Fetch Patient Profile
             try {
-              const patientProfile = await getPatientProfile(token, userData._id);
+              const patientProfile = await getPatientProfile(
+                token,
+                userData._id,
+              );
               if (patientProfile) {
                 fullProfile = {
                   ...fullProfile,
-                  bloodType: patientProfile.blood_group || fullProfile.bloodType,
-                  height: patientProfile.height_cm ? patientProfile.height_cm.toString() : fullProfile.height,
-                  weight: patientProfile.weight_kg ? patientProfile.weight_kg.toString() : fullProfile.weight,
+                  bloodType:
+                    patientProfile.blood_group || fullProfile.bloodType,
+                  height: patientProfile.height_cm
+                    ? patientProfile.height_cm.toString()
+                    : fullProfile.height,
+                  weight: patientProfile.weight_kg
+                    ? patientProfile.weight_kg.toString()
+                    : fullProfile.weight,
                 };
               }
             } catch (err) {
-              console.log('No patient profile found yet or error fetching');
+              console.log("No patient profile found yet or error fetching");
             }
 
             // Fetch User Prescriptions
             try {
-              const prescriptionsData = await getUserPrescriptions(token, userData._id);
+              const prescriptionsData = await getUserPrescriptions(
+                token,
+                userData._id,
+              );
               fullProfile = {
                 ...fullProfile,
-                prescriptions: Array.isArray(prescriptionsData) ? prescriptionsData : [],
+                prescriptions: Array.isArray(prescriptionsData)
+                  ? prescriptionsData
+                  : [],
               };
             } catch (err) {
-              console.log('No prescriptions found or error fetching');
+              console.log("No prescriptions found or error fetching");
             }
 
             // Fetch User Communities
@@ -176,22 +204,27 @@ export default function App() {
               const communitiesData = await getUserCommunities(token);
               fullProfile = {
                 ...fullProfile,
-                communities: Array.isArray(communitiesData) ? communitiesData : [],
+                communities: Array.isArray(communitiesData)
+                  ? communitiesData
+                  : [],
               };
             } catch (err) {
-              console.log('No communities found or error fetching');
+              console.log("No communities found or error fetching");
             }
 
             setProfile(fullProfile);
             await saveProfile(fullProfile);
           }
         } catch (error) {
-          console.error('Failed to fetch user data:', error);
-          if (error.message.includes('Unauthorized') || error.message.includes('token')) {
+          console.error("Failed to fetch user data:", error);
+          if (
+            error.message.includes("Unauthorized") ||
+            error.message.includes("token")
+          ) {
             setToken(null);
             setUser(null);
             await removeToken();
-            setScreen('login');
+            setScreen("login");
           }
         }
       }
@@ -201,111 +234,115 @@ export default function App() {
 
   let content = null;
 
-  if (screen === 'login') {
+  if (screen === "login") {
     content = (
       <LoginScreen
-        onSignUp={() => setScreen('profileBasics')}
+        onSignUp={() => setScreen("profileBasics")}
         onLoginSuccess={handleLoginSuccess}
         onEmailVerifyNeeded={(email) => {
           setRegEmail(email);
-          setVerificationSource('login');
-          setScreen('emailVerify');
+          setVerificationSource("login");
+          setScreen("emailVerify");
         }}
       />
     );
-  } else if (screen === 'profileBasics') {
+  } else if (screen === "profileBasics") {
     content = (
       <ProfileBasicsScreen
-        onBack={() => setScreen('login')}
+        onBack={() => setScreen("login")}
         onRegisterSuccess={(data) => {
           setRegEmail(data.email);
-          setVerificationSource('registration');
+          setVerificationSource("registration");
           const updated = { ...profile, ...data };
           setProfile(updated);
           saveProfile(updated);
-          setScreen('verificationChoice');
+          setScreen("verificationChoice");
         }}
       />
     );
-  } else if (screen === 'verificationChoice') {
+  } else if (screen === "verificationChoice") {
     content = (
       <VerificationChoiceScreen
-        onBack={() => setScreen('profileBasics')}
-        onChooseEmail={() => setScreen('emailVerify')}
-        onChoosePhone={() => setScreen('phoneVerify')}
+        onBack={() => setScreen("profileBasics")}
+        onChooseEmail={() => setScreen("emailVerify")}
+        onChoosePhone={() => setScreen("phoneVerify")}
       />
     );
-  } else if (screen === 'emailVerify') {
+  } else if (screen === "emailVerify") {
     content = (
       <EmailVerifyScreen
         email={regEmail}
-        onBack={() => setScreen(verificationSource === 'login' ? 'login' : 'verificationChoice')}
+        onBack={() =>
+          setScreen(
+            verificationSource === "login" ? "login" : "verificationChoice",
+          )
+        }
         onVerified={() => {
-          if (verificationSource === 'login') {
+          if (verificationSource === "login") {
             // User came from login, go back to login to retry
-            setScreen('login');
+            setScreen("login");
           } else {
             // User came from registration, proceed to next step
             // If doctor, skip most of the patient onboarding for now or show success
-            if (profile.role === 'doctor') {
-              setScreen('success');
+            if (profile.role === "doctor") {
+              setScreen("success");
             } else {
-              setScreen('profileCustomize');
+              setScreen("profileCustomize");
             }
           }
         }}
       />
     );
-  } else if (screen === 'phoneVerify') {
+  } else if (screen === "phoneVerify") {
     content = (
       <PhoneVerifyScreen
-        onBack={() => setScreen('verificationChoice')}
-        onVerified={() => setScreen('profileCustomize')}
+        onBack={() => setScreen("verificationChoice")}
+        onVerified={() => setScreen("profileCustomize")}
       />
     );
-  } else if (screen === 'profileCustomize') {
+  } else if (screen === "profileCustomize") {
     content = (
       <ProfileCustomizeScreen
-        onBack={() => setScreen('phoneVerify')}
+        onBack={() => setScreen("phoneVerify")}
         onNext={(data) => {
           const updated = { ...profile, ...data };
           setProfile(updated);
           saveProfile(updated);
-          setScreen('name');
+          setScreen("name");
         }}
-        onSkip={() => setScreen('name')}
+        onSkip={() => setScreen("name")}
       />
     );
-  } else if (screen === 'name') {
+  } else if (screen === "name") {
     content = (
       <NameStepScreen
-        onBack={() => setScreen('profileCustomize')}
+        onBack={() => setScreen("profileCustomize")}
         onNext={(data) => {
           const updated = { ...profile, ...data };
           setProfile(updated);
           saveProfile(updated);
-          setScreen('contact');
+          setScreen("contact");
         }}
-        onSkip={() => setScreen('success')}
+        onSkip={() => setScreen("success")}
       />
     );
-  } else if (screen === 'contact') {
+  } else if (screen === "contact") {
     content = (
       <ContactStepScreen
-        onBack={() => setScreen('name')}
+        onBack={() => setScreen("name")}
         onNext={(data) => {
           const updated = { ...profile, ...data };
           setProfile(updated);
           saveProfile(updated);
-          setScreen('location');
+          setScreen("location");
         }}
-        onSkip={() => setScreen('success')}
+        onSkip={() => setScreen("success")}
       />
     );
-  } else if (screen === 'location') {
+  } else if (screen === "location") {
     content = (
       <LocationStepScreen
-        onBack={() => setScreen('contact')}
+        onBack={() => setScreen("contact")}
         onComplete={async (data) => {
           const finalProfile = { ...profile, ...data };
           setProfile(finalProfile);
@@ -316,47 +353,52 @@ export default function App() {
               await updateProfile(token, finalProfile);
             }
           } catch (error) {
-            console.error('Failed to save onboarding data:', error);
+            console.error("Failed to save onboarding data:", error);
           }
-          setScreen('success');
+          setScreen("success");
         }}
       />
     );
-  } else if (screen === 'success') {
-    content = <SuccessScreen onGetStarted={() => setScreen('home')} role={profile.role} />;
-  } else if (screen === 'home') {
+  } else if (screen === "success") {
+    content = (
+      <SuccessScreen
+        onGetStarted={() => setScreen("home")}
+        role={profile.role}
+      />
+    );
+  } else if (screen === "home") {
     content = (
       <HomeScreen
         user={user}
         token={token}
-        onOpenProfile={() => setScreen('profileHealth')}
-        onOpenGroups={() => setScreen('groups')}
-        onConsult={() => setScreen('consultBook')}
-        onOpenPlace={() => setScreen('place')}
+        onOpenProfile={() => setScreen("profileHealth")}
+        onOpenGroups={() => setScreen("groups")}
+        onConsult={() => setScreen("consultBook")}
+        onOpenPlace={() => setScreen("place")}
       />
     );
-  } else if (screen === 'profileHealth') {
+  } else if (screen === "profileHealth") {
     content = (
       <HealthProfileScreen
-        onBackHome={() => setScreen('home')}
-        onEditProfile={() => setScreen('profileEdit')}
+        onBackHome={() => setScreen("home")}
+        onEditProfile={() => setScreen("profileEdit")}
         profile={profile}
         onLogout={handleLogout}
       />
     );
-  } else if (screen === 'profilePublic') {
+  } else if (screen === "profilePublic") {
     content = (
       <PublicProfileScreen
-        onBackHome={() => setScreen('home')}
-        onEditProfile={() => setScreen('profileEdit')}
+        onBackHome={() => setScreen("home")}
+        onEditProfile={() => setScreen("profileEdit")}
         profile={profile}
       />
     );
-  } else if (screen === 'profileEdit') {
+  } else if (screen === "profileEdit") {
     content = (
       <ProfileScreen
         profile={profile}
-        onCancel={() => setScreen('profilePublic')}
+        onCancel={() => setScreen("profilePublic")}
         onSave={async (updated) => {
           try {
             if (token) {
@@ -364,58 +406,58 @@ export default function App() {
             }
             setProfile(updated);
             await saveProfile(updated);
-            setScreen('profilePublic');
+            setScreen("profilePublic");
           } catch (error) {
-            console.error('Failed to update profile:', error);
+            console.error("Failed to update profile:", error);
             // Handle error (e.g., show an alert)
           }
         }}
       />
     );
-  } else if (screen === 'consultBook') {
+  } else if (screen === "consultBook") {
     content = (
       <ConsultBookingScreen
-        onBack={() => setScreen('home')}
-        onProceed={() => setScreen('consultConfirm')}
-        onGoHome={() => setScreen('home')}
+        onBack={() => setScreen("home")}
+        onProceed={() => setScreen("consultConfirm")}
+        onGoHome={() => setScreen("home")}
       />
     );
-  } else if (screen === 'consultConfirm') {
+  } else if (screen === "consultConfirm") {
     content = (
       <ConsultConfirmScreen
-        onBack={() => setScreen('consultBook')}
-        onDone={() => setScreen('home')}
+        onBack={() => setScreen("consultBook")}
+        onDone={() => setScreen("home")}
       />
     );
-  } else if (screen === 'groups') {
+  } else if (screen === "groups") {
     content = (
       <GroupsScreen
         token={token}
-        onBackHome={() => setScreen('home')}
-        onOpenConsult={() => setScreen('consultBook')}
-        onOpenProfile={() => setScreen('profileHealth')}
+        onBackHome={() => setScreen("home")}
+        onOpenConsult={() => setScreen("consultBook")}
+        onOpenProfile={() => setScreen("profileHealth")}
       />
     );
-  } else if (screen === 'place') {
+  } else if (screen === "place") {
     content = (
       <PlaceScreen
-        onBackHome={() => setScreen('home')}
-        onOpenConsult={() => setScreen('consultBook')}
-        onOpenGroups={() => setScreen('groups')}
-        onOpenProfile={() => setScreen('profileHealth')}
+        onBackHome={() => setScreen("home")}
+        onOpenConsult={() => setScreen("consultBook")}
+        onOpenGroups={() => setScreen("groups")}
+        onOpenProfile={() => setScreen("profileHealth")}
       />
     );
   }
 
   const authenticatedScreens = [
-    'home',
-    'profileHealth',
-    'profilePublic',
-    'profileEdit',
-    'consultBook',
-    'consultConfirm',
-    'groups',
-    'place',
+    "home",
+    "profileHealth",
+    "profilePublic",
+    "profileEdit",
+    "consultBook",
+    "consultConfirm",
+    "groups",
+    "place",
   ];
 
   const isAuthScreen = authenticatedScreens.includes(screen);
@@ -424,9 +466,13 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         {isLoading ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
             <ActivityIndicator size="large" color="#000000" />
-            <Text style={{ marginTop: 12, color: '#6B7280' }}>Initializing...</Text>
+            <Text style={{ marginTop: 12, color: "#6B7280" }}>
+              Initializing...
+            </Text>
           </View>
         ) : isAuthScreen ? (
           <Layout
@@ -439,7 +485,13 @@ export default function App() {
           </Layout>
         ) : (
           content || (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               <Text>Loading App...</Text>
             </View>
           )
@@ -448,4 +500,3 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-
