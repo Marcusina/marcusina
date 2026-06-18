@@ -38,6 +38,7 @@ import {
 } from "./screens/ProfileScreen";
 import { GroupsScreen } from "./screens/GroupsScreen";
 import { PlaceScreen } from "./screens/PlaceScreen";
+import { PostScreen } from "./screens/PostScreen";
 import {
   ConsultBookingScreen,
   ConsultConfirmScreen,
@@ -45,6 +46,7 @@ import {
 import { Layout } from "./components/Layout";
 
 export default function App() {
+  const [selectedPostId, setSelectedPostId] = useState("short-2");
   const [screen, setScreen] = useState("login");
   const [verificationSource, setVerificationSource] = useState("registration"); // 'registration' or 'login'
   const [user, setUser] = useState(null);
@@ -375,6 +377,10 @@ export default function App() {
         onOpenGroups={() => setScreen("groups")}
         onConsult={() => setScreen("consultBook")}
         onOpenPlace={() => setScreen("place")}
+        onOpenPost={(id) => {
+          setSelectedPostId(id); // Save targeted item index cleanly
+          setScreen("post"); // Fire screen switch routing state update
+        }}
       />
     );
   } else if (screen === "profileHealth") {
@@ -447,6 +453,16 @@ export default function App() {
         onOpenProfile={() => setScreen("profileHealth")}
       />
     );
+  } else if (screen === "post") {
+    content = (
+      <PostScreen
+        initialPostId={selectedPostId}
+        onBackHome={() => setScreen("home")}
+        onOpenConsult={() => setScreen("consultBook")}
+        onOpenGroups={() => setScreen("groups")}
+        onOpenProfile={() => setScreen("profileHealth")}
+      />
+    );
   }
 
   const authenticatedScreens = [
@@ -458,6 +474,7 @@ export default function App() {
     "consultConfirm",
     "groups",
     "place",
+    "post",
   ];
 
   const isAuthScreen = authenticatedScreens.includes(screen);

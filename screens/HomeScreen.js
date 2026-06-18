@@ -28,6 +28,7 @@ export function HomeScreen({
   onConsult,
   onOpenGroups,
   onOpenPlace,
+  onOpenPost,
 }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
@@ -223,7 +224,8 @@ export function HomeScreen({
                 key={item.id}
                 activeOpacity={0.8}
                 className="items-center w-16 md:w-20 relative"
-                onPress={onOpenPlace}
+                // 2. Updated to fire onOpenPost with current item.id context target
+                onPress={() => onOpenPost && onOpenPost(item.id)}
               >
                 <View className="w-16 h-16 md:w-20 md:h-20 items-center justify-center relative">
                   {/* Native SVG Vector Gradient Layout Ring */}
