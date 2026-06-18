@@ -1,32 +1,74 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   Image,
   Platform,
   useWindowDimensions,
   ActivityIndicator,
   TextInput,
   Alert,
-} from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { getCommunities, getMyCommunities, joinCommunity } from '../api/community.api';
-import { useTheme } from '../context/ThemeContext';
+} from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import {
+  getCommunities,
+  getMyCommunities,
+  joinCommunity,
+} from "../api/community.api";
+import { useTheme } from "../context/ThemeContext";
 
-export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }) {
+export function GroupsScreen({
+  token,
+  onBackHome,
+  onOpenConsult,
+  onOpenProfile,
+}) {
   const { theme, themeMode } = useTheme();
-  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web' && width >= 768;
+  const isWeb = Platform.OS === "web" && width >= 768;
 
   const [suggestedGroups, setSuggestedGroups] = useState([]);
   const [myCommunities, setMyCommunities] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Mock data array for clean iteration
+  const SUGGESTED_COMMUNITIES = [
+    {
+      id: "1",
+      name: "Hypertension Warriors NG",
+      members: "14.2k members",
+      image:
+        "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=300&q=80",
+    },
+    {
+      id: "2",
+      name: "Mama & Baby Health",
+      members: "9.8k members",
+      image:
+        "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=300&q=80",
+    },
+    {
+      id: "3",
+      name: "Men's Health Africa",
+      members: "7.3k members",
+      image:
+        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=300&q=80",
+    },
+    {
+      id: "4",
+      name: "Sickle Cell Warriors",
+      members: "5.6k members",
+      image:
+        "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=300&q=80",
+    },
+  ];
+
+  // Fallback brand color if not explicitly defined outside context
+  const brandPrimaryColor = theme.primary || "#3B82F6";
 
   const fetchCommunities = useCallback(async () => {
     if (!token) return;
@@ -34,16 +76,16 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
       setIsLoading(true);
       const [allRes, myRes] = await Promise.all([
         getCommunities(token, { limit: 10 }),
-        getMyCommunities(token)
+        getMyCommunities(token),
       ]);
-      
-      const myIds = new Set(myRes.map(c => c._id));
-      const suggestions = (allRes.data || []).filter(c => !myIds.has(c._id));
-      
+
+      const myIds = new Set(myRes.map((c) => c._id));
+      const suggestions = (allRes.data || []).filter((c) => !myIds.has(c._id));
+
       setSuggestedGroups(suggestions);
       setMyCommunities(myRes);
     } catch (error) {
-      console.error('Failed to fetch communities:', error);
+      console.error("Failed to fetch communities:", error);
     } finally {
       setIsLoading(false);
     }
@@ -59,13 +101,13 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
       fetchCommunities();
       return;
     }
-    
+
     try {
       setIsSearching(true);
       const res = await getCommunities(token, { search: text });
       setSuggestedGroups(res.data || []);
     } catch (error) {
-      console.error('Search failed:', error);
+      console.error("Search failed:", error);
     } finally {
       setIsSearching(false);
     }
@@ -74,423 +116,493 @@ export function GroupsScreen({ token, onBackHome, onOpenConsult, onOpenProfile }
   const handleJoinGroup = async (communityId) => {
     try {
       await joinCommunity(token, communityId);
-      Alert.alert('Success', 'Joined community successfully!');
+      Alert.alert("Success", "Joined group successfully!");
       fetchCommunities();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to join community');
+      Alert.alert("Error", error.message || "Failed to join group");
     }
   };
 
   const handleCreateGroup = () => {
-    Alert.alert('Coming Soon', 'Group creation will be available in the next update.');
-  };
-
-  const getCommunityIcon = (type) => {
-    switch (type) {
-      case 'condition_support': return 'favorite';
-      case 'wellness': return 'self-improvement';
-      case 'mental_health': return 'psychology';
-      case 'caregivers': return 'child-friendly';
-      case 'local_health': return 'location-on';
-      default: return 'group';
-    }
-  };
-
-  const getCommunityColor = (type, themeMode) => {
-    const isDark = themeMode === 'dark';
-    switch (type) {
-      case 'condition_support': return isDark ? '#7F1D1D' : '#FEE2E2';
-      case 'wellness': return isDark ? '#064E3B' : '#DCFCE7';
-      case 'mental_health': return isDark ? '#1E3A8A' : '#E0E7FF';
-      case 'caregivers': return isDark ? '#500724' : '#FCE7F3';
-      case 'local_health': return isDark ? '#451A03' : '#FEF3C7';
-      default: return isDark ? '#1F2937' : '#F3F4F6';
-    }
+    Alert.alert(
+      "Coming Soon",
+      "Group creation will be available in the next update.",
+    );
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      {/* ─── TOP BAR ─── */}
       {!isWeb && (
-        <View style={styles.headerActionsRow}>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={onOpenProfile}>
-            <MaterialIcons name="person-outline" size={24} color={theme.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIconBtn}>
-            <MaterialIcons name="notifications-none" size={24} color={theme.textSecondary} />
-            <View style={styles.notificationDot} />
-          </TouchableOpacity>
+        <View className="flex-row justify-between items-center px-4 pt-4 pb-3">
+          <Text
+            className="text-2xl font-extrabold"
+            style={{ color: theme.text }}
+          >
+            Groups
+          </Text>
+          <View className="flex-row items-center space-x-3">
+            <TouchableOpacity
+              className="p-2 rounded-xl"
+              style={{ backgroundColor: theme.surfaceSubtle }}
+              onPress={onOpenProfile}
+            >
+              <MaterialIcons
+                name="person-outline"
+                size={24}
+                color={theme.textSecondary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="p-2 rounded-xl relative"
+              style={{ backgroundColor: theme.surfaceSubtle }}
+            >
+              <MaterialIcons
+                name="notifications-none"
+                size={24}
+                color={theme.textSecondary}
+              />
+              <View
+                className="absolute top-2 right-2 w-2 height-2 rounded-full border-2"
+                style={{
+                  backgroundColor: theme.error,
+                  borderColor: theme.surfaceSubtle,
+                }}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
-      
+
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWeb && styles.webScrollContent
-        ]}
+        contentContainerStyle={{ paddingBottom: isWeb ? 40 : 24 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[
-          styles.contentMaxWidth,
-          isWeb && styles.webContentMaxWidth
-        ]}>
-          <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <MaterialIcons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+        <View className={`px-5 ${isWeb ? "max-w-7xl mx-auto w-full" : ""}`}>
+          {/* ─── SEARCH CONTAINER ─── */}
+          <View className="mt-4 mb-2">
+            <View
+              className="flex-row items-center rounded-xl px-4 border"
+              style={{
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+                paddingVertical: Platform.OS === "ios" ? 10 : 2,
+              }}
+            >
+              <MaterialIcons
+                name="search"
+                size={20}
+                color="#9CA3AF"
+                className="mr-2"
+              />
               <TextInput
-                style={styles.searchInput}
-                placeholder="Search communities..."
+                className="flex-1 text-base"
+                style={{ color: theme.text }}
+                placeholder="Search groups..."
                 value={searchQuery}
                 onChangeText={handleSearch}
                 placeholderTextColor="#9CA3AF"
               />
-              {isSearching && <ActivityIndicator size="small" color={theme.primary} />}
+              {isSearching && (
+                <ActivityIndicator size="small" color={brandPrimaryColor} />
+              )}
             </View>
           </View>
 
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Suggested Groups</Text>
-            <TouchableOpacity onPress={() => handleSearch('')}>
-              <Text style={styles.sectionAction}>Refresh</Text>
+          {/* ─── CHOSEN HERO / FEATURED LIVE GROUP ACCENT BANNER ─── */}
+          <View className="mb-6 mt-2">
+            <View
+              className="rounded-2xl p-5 relative overflow-hidden border"
+              style={{
+                backgroundColor: theme.surface, // Kept as theme.surface for unified look
+                borderColor: theme.border,
+                borderWidth: 1,
+              }}
+            >
+              {/* Background Banner Image Layer */}
+              <Image
+                source={{
+                  uri: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80",
+                }}
+                className="absolute inset-0 w-full h-full"
+                style={{ opacity: theme.dark ? 0.08 : 0.12 }}
+                resizeMode="cover"
+              />
+
+              {/* Header Status Row */}
+              <View className="flex-row items-center space-x-2 mb-3">
+                <View className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                <Text
+                  className="text-[9px] font-semibold tracking-[1.2px] uppercase"
+                  style={{
+                    color: theme.dark ? theme.textSecondary : theme.textMuted,
+                  }}
+                >
+                  FEATURED HUB
+                </Text>
+                <Text
+                  className="text-[10px]"
+                  style={{
+                    color: theme.dark ? theme.textSecondary : theme.textMuted,
+                  }}
+                >
+                  • Active Discussion
+                </Text>
+              </View>
+
+              {/* Main Headline */}
+              <Text
+                className="text-lg font-extrabold mb-1.5 tracking-tight"
+                style={{
+                  color: theme.text, // Automatically scales correctly across systems
+                  lineHeight: 23,
+                }}
+              >
+                Mental Health Support Alliance
+              </Text>
+
+              {/* Description Paragraph */}
+              <Text
+                className="text-xs mb-4"
+                style={{
+                  color: theme.dark ? theme.textMuted : theme.textSecondary,
+                }}
+              >
+                Connect safely with certified psychiatrists & clinicians from
+                LUTH.
+              </Text>
+
+              {/* Bottom Control Layer */}
+              <View className="flex-row items-center justify-between">
+                {/* Profile Avatars Cluster */}
+                <View className="flex-row items-center">
+                  <Image
+                    source={{
+                      uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=40&q=80",
+                    }}
+                    className="w-7 h-7 rounded-full border-2"
+                    style={{ borderColor: theme.surface }}
+                  />
+                  <Image
+                    source={{
+                      uri: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=40&q=80",
+                    }}
+                    className="w-7 h-7 rounded-full border-2 -ml-2"
+                    style={{ borderColor: theme.surface }}
+                  />
+                  <Image
+                    source={{
+                      uri: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=40&q=80",
+                    }}
+                    className="w-7 h-7 rounded-full border-2 -ml-2"
+                    style={{ borderColor: theme.surface }}
+                  />
+                  <View
+                    className="w-7 h-7 rounded-full justify-center items-center -ml-2 border-2"
+                    style={{
+                      backgroundColor: theme.dark
+                        ? "rgba(255,255,255,0.08)"
+                        : "rgba(0,0,0,0.05)",
+                      borderColor: theme.surface,
+                    }}
+                  >
+                    <Text
+                      className="text-[9px] font-bold"
+                      style={{
+                        color: theme.dark
+                          ? theme.textSecondary
+                          : brandPrimaryColor,
+                      }}
+                    >
+                      +2.4k
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Primary Action Button Button */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={handleCreateGroup}
+                  className="px-4 py-2 rounded-full border border-white"
+                  style={{
+                    backgroundColor: theme.dark
+                      ? "rgba(255,255,255,0.08)"
+                      : "rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <Text
+                    className="text-xs font-semibold"
+                    style={{
+                      color: brandPrimaryColor,
+                    }}
+                  >
+                    Explore Hub →
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* ─── SUGGESTED GROUPS (HORIZONTAL ROW) ─── */}
+          <View className="flex-row justify-between items-center mt-2 mb-3">
+            <Text className="text-base font-bold" style={{ color: theme.text }}>
+              Suggested Groups
+            </Text>
+            <TouchableOpacity onPress={() => handleSearch("")}>
+              <Text
+                className="text-sm font-semibold"
+                style={{ color: brandPrimaryColor }}
+              >
+                Refresh
+              </Text>
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.suggestedRow}
+            className="pb-2"
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color={theme.primary} style={{ padding: 20 }} />
+              <ActivityIndicator
+                size="small"
+                color={brandPrimaryColor}
+                className="p-5"
+              />
             ) : suggestedGroups.length > 0 ? (
               suggestedGroups.map((item) => (
-                <TouchableOpacity 
-                  key={item._id} 
-                  style={styles.suggestedItem}
+                <TouchableOpacity
+                  key={item._id}
+                  className="items-center mr-5 w-20"
                   onPress={() => handleJoinGroup(item._id)}
                 >
                   <View
-                    style={[styles.suggestedCircle, { backgroundColor: getCommunityColor(item.community_type, themeMode) }]}
+                    className="w-14 h-14 rounded-full items-center justify-center mb-2"
+                    style={{
+                      backgroundColor: theme.dark
+                        ? "rgba(255,255,255,0.06)"
+                        : "rgba(0,0,0,0.04)",
+                    }}
                   >
-                    <MaterialIcons name={getCommunityIcon(item.community_type)} size={24} color={theme.primary} />
+                    <MaterialIcons
+                      name="group"
+                      size={24}
+                      color={brandPrimaryColor}
+                    />
                   </View>
-                  <Text style={styles.suggestedLabel} numberOfLines={1}>{item.community_name}</Text>
+                  <Text
+                    className="text-xs text-center w-full font-medium"
+                    style={{ color: theme.textSecondary }}
+                    numberOfLines={1}
+                  >
+                    {item.community_name}
+                  </Text>
                 </TouchableOpacity>
               ))
             ) : (
-              <Text style={styles.emptyText}>No suggestions found</Text>
+              <Text className="text-sm" style={{ color: theme.textMuted }}>
+                No new suggestions found
+              </Text>
             )}
           </ScrollView>
 
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>My Communities</Text>
-            <View style={styles.activePill}>
-              <Text style={styles.activePillText}>{myCommunities.length} Joined</Text>
+          {/* ─── MY COMMUNITIES (VERTICAL LIST ROW) ─── */}
+          <View className="flex-row justify-between items-center mt-6 mb-3">
+            <Text className="text-base font-bold" style={{ color: theme.text }}>
+              My Communities
+            </Text>
+            <View
+              className="px-3 py-1 rounded-full"
+              style={{
+                backgroundColor:
+                  theme.primaryLight || "rgba(59, 130, 246, 0.1)",
+              }}
+            >
+              <Text
+                className="text-xs font-semibold"
+                style={{ color: brandPrimaryColor }}
+              >
+                {myCommunities.length} Joined
+              </Text>
             </View>
           </View>
 
           {isLoading ? (
-            <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
+            <ActivityIndicator
+              size="large"
+              color={brandPrimaryColor}
+              className="mt-10"
+            />
           ) : myCommunities.length > 0 ? (
-            <View style={[styles.communityList, isWeb && styles.webCommunityGrid]}>
+            <View
+              className={`space-y-3 ${isWeb ? "flex-row flex-wrap gap-5 space-y-0" : ""}`}
+            >
               {myCommunities.map((community) => (
-                <CommunityCard
+                <View
                   key={community._id}
-                  title={community.community_name}
-                  members={`${community.member_count} members`}
-                  meta={community.post_count > 0 ? `${community.post_count} posts` : 'Up to date'}
-                  chipLabel="Latest"
-                  chipText={community.latest_post || 'No posts yet'}
-                  chipColor={getCommunityColor(community.community_type, themeMode)}
-                  icon={getCommunityIcon(community.community_type)}
-                  isWeb={isWeb}
-                />
+                  className={`flex-row items-center p-3 rounded-xl border-b ${isWeb ? "w-[48%]" : "w-full"}`}
+                  style={{ borderColor: theme.border }}
+                >
+                  <Image
+                    source={{
+                      uri: "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=80&q=80",
+                    }}
+                    className="w-10 h-10 rounded-lg mr-3"
+                  />
+                  <View className="flex-1 mr-2">
+                    <Text
+                      numberOfLines={1}
+                      className="text-[13px] font-bold mb-0.5"
+                      style={{ color: theme.text }}
+                    >
+                      {community.community_name}
+                    </Text>
+                    <Text
+                      className="text-[10px]"
+                      style={{ color: theme.textMuted }}
+                    >
+                      {community.member_count} members •{" "}
+                      {community.post_count > 0
+                        ? `${community.post_count} posts`
+                        : "Up to date"}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    className="px-3 py-1.5 rounded-full border"
+                    style={{
+                      backgroundColor: theme.dark
+                        ? theme.surface
+                        : "rgba(0,0,0,0.03)",
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <Text
+                      className="text-[11px] font-bold"
+                      style={{ color: brandPrimaryColor }}
+                    >
+                      View
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               ))}
             </View>
           ) : (
-            <View style={styles.emptyContainer}>
-              <MaterialIcons name="group-off" size={64} color="#D1D5DB" />
-              <Text style={styles.emptyText}>You haven't joined any communities yet.</Text>
+            <View className="items-center justify-center py-14">
+              <MaterialIcons name="group-off" size={54} color="#D1D5DB" />
+              <Text
+                className="mt-3 text-sm text-center font-medium"
+                style={{ color: theme.textMuted }}
+              >
+                You haven't joined any communities yet.
+              </Text>
             </View>
           )}
         </View>
       </ScrollView>
-      
-      <TouchableOpacity style={styles.fab} onPress={handleCreateGroup}>
-        <MaterialIcons name="add" size={28} color="#FFFFFF" />
+
+      <View className="px-4">
+        {/* Section Header Label */}
+        <Text
+          className="text-base font-bold mb-3 mt-[22px]"
+          style={{ color: theme.text }}
+        >
+          Suggested Communities
+        </Text>
+
+        {/* Horizontal Row Wrapper */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="flex-row"
+          contentContainerStyle={{ paddingBottom: 20, gap: 12 }}
+        >
+          {SUGGESTED_COMMUNITIES.map((item) => (
+            <View
+              key={item.id}
+              className="w-[140px] rounded-2xl overflow-hidden border"
+              style={{
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+                borderWidth: 1,
+              }}
+            >
+              {/* Image Wrap Container */}
+              <View className="w-full h-[85px] relative bg-neutral-200 dark:bg-neutral-800">
+                <Image
+                  source={{ uri: item.image }}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                />
+                {/* Image Darkening Overlay Layer */}
+                <View
+                  className="absolute inset-0 bg-black/10"
+                  style={{ opacity: theme.dark ? 0.4 : 0.1 }}
+                />
+              </View>
+
+              {/* Card Body Context */}
+              <View className="p-3 justify-between flex-1">
+                <View className="mb-2">
+                  <Text
+                    numberOfLines={2}
+                    className="text-[11.5px] font-extrabold"
+                    style={{ color: theme.text, lineHeight: 15 }}
+                  >
+                    {item.name}
+                  </Text>
+                  <Text
+                    className="text-[10px] mt-0.5"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    {item.members}
+                  </Text>
+                </View>
+
+                {/* Action Interactive Join Button */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => onJoinPress?.(item.id)}
+                  className="w-full py-1.5 rounded-xl items-center justify-center border border-white"
+                  style={{
+                    backgroundColor: theme.dark
+                      ? "rgba(255,255,255,0.08)"
+                      : "rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <Text
+                    className="text-[11px] font-bold"
+                    style={{ color: brandPrimaryColor }}
+                  >
+                    Join
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* ─── FLOATING ACTION BUTTON ─── */}
+      <TouchableOpacity
+        className="absolute bottom-6 right-5 w-14 h-14 rounded-full items-center justify-center"
+        style={{
+          backgroundColor: theme.dark ? brandPrimaryColor : "#FFFFFF",
+          shadowColor: theme.dark ? "#000000" : brandPrimaryColor,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: theme.dark ? 0.5 : 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        }}
+        onPress={handleCreateGroup}
+      >
+        <MaterialIcons
+          name="add"
+          size={28}
+          color={theme.dark ? "#FFFFFF" : "#111827"}
+        />
       </TouchableOpacity>
     </View>
   );
 }
-
-function CommunityCard({
-  badgeCount,
-  title,
-  members,
-  meta,
-  chipLabel,
-  chipText,
-  chipColor,
-  icon,
-  isWeb,
-}) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  return (
-    <TouchableOpacity style={[styles.communityCard, isWeb && styles.webCommunityCard]}>
-      <View style={styles.communityLeft}>
-        <View style={styles.communityAvatar}>
-          <MaterialIcons name={icon} size={20} color={theme.primary} />
-        </View>
-      </View>
-      <View style={styles.communityContent}>
-        <View style={styles.communityTitleRow}>
-          <Text style={styles.communityTitle} numberOfLines={1}>{title}</Text>
-          {typeof badgeCount === 'number' && (
-            <View style={styles.communityBadge}>
-              <Text style={styles.communityBadgeText}>{badgeCount}</Text>
-            </View>
-          )}
-        </View>
-        <Text style={styles.communityMeta}>
-          {members} • {meta}
-        </Text>
-        <View style={[styles.communityChip, { backgroundColor: chipColor }]}>
-          <Text style={styles.communityChipLabel}>{chipLabel}:</Text>
-          <Text style={styles.communityChipText} numberOfLines={1}>{chipText}</Text>
-        </View>
-      </View>
-      <MaterialIcons name="chevron-right" size={20} color="#9CA3AF" />
-    </TouchableOpacity>
-  );
-}
-
-const createStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  headerActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerIconBtn: {
-    marginLeft: 16,
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: theme.surfaceSubtle,
-    position: 'relative',
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.error,
-    borderWidth: 2,
-    borderColor: theme.surfaceSubtle,
-  },
-  scrollContent: {
-    paddingBottom: 24,
-  },
-  webScrollContent: {
-    paddingBottom: 40,
-  },
-  contentMaxWidth: {
-    paddingHorizontal: 20,
-  },
-  webContentMaxWidth: {
-    paddingHorizontal: 0,
-  },
-  searchContainer: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 2,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: theme.text,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.text,
-  },
-  sectionAction: {
-    fontSize: 14,
-    color: theme.primary,
-    fontWeight: '600',
-  },
-  suggestedRow: {
-    paddingBottom: 8,
-  },
-  suggestedItem: {
-    alignItems: 'center',
-    marginRight: 20,
-    width: 80,
-  },
-  suggestedCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  suggestedLabel: {
-    fontSize: 12,
-    color: theme.textSecondary,
-    fontWeight: '500',
-    textAlign: 'center',
-    width: '100%',
-  },
-  activePill: {
-    backgroundColor: theme.primaryLight,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  activePillText: {
-    color: theme.primary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  communityList: {
-    gap: 12,
-  },
-  webCommunityGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
-  },
-  communityCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  webCommunityCard: {
-    width: '48%',
-  },
-  communityLeft: {
-    marginRight: 16,
-  },
-  communityAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: theme.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  communityContent: {
-    flex: 1,
-  },
-  communityTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  communityTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.text,
-    marginRight: 8,
-  },
-  communityBadge: {
-    backgroundColor: theme.error,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  communityBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  communityMeta: {
-    fontSize: 13,
-    color: theme.textMuted,
-    marginBottom: 8,
-  },
-  communityChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  communityChipLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.textSecondary,
-    marginRight: 4,
-  },
-  communityChipText: {
-    fontSize: 12,
-    color: theme.textSecondary,
-    flex: 1,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    marginTop: 12,
-    color: theme.textMuted,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: theme.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-      web: {
-        boxShadow: `0 4px 12px ${theme.primary}4D`,
-      }
-    }),
-  },
-});
