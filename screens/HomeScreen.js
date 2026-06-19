@@ -29,6 +29,7 @@ export function HomeScreen({
   onOpenGroups,
   onOpenPlace,
   onOpenPost,
+  onOpenCreatePost,
 }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
@@ -183,7 +184,7 @@ export function HomeScreen({
             <TouchableOpacity
               activeOpacity={0.8}
               className="items-center w-16 md:w-20"
-              onPress={onOpenProfile}
+              onPress={onOpenCreatePost}
             >
               <View
                 style={{ backgroundColor: theme.border }}

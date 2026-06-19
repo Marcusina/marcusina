@@ -39,6 +39,7 @@ import {
 import { GroupsScreen } from "./screens/GroupsScreen";
 import { PlaceScreen } from "./screens/PlaceScreen";
 import { PostScreen } from "./screens/PostScreen";
+import { CreatePostScreen } from "./screens/CreatePostScreen";
 import {
   ConsultBookingScreen,
   ConsultConfirmScreen,
@@ -381,6 +382,7 @@ export default function App() {
           setSelectedPostId(id); // Save targeted item index cleanly
           setScreen("post"); // Fire screen switch routing state update
         }}
+        onOpenCreatePost={() => setScreen("createPost")}
       />
     );
   } else if (screen === "profileHealth") {
@@ -463,6 +465,15 @@ export default function App() {
         onOpenProfile={() => setScreen("profileHealth")}
       />
     );
+  } else if (screen === "createPost") {
+    content = (
+      <CreatePostScreen
+        onBackHome={() => setScreen("home")}
+        onOpenConsult={() => setScreen("consultBook")}
+        onOpenGroups={() => setScreen("groups")}
+        onOpenProfile={() => setScreen("profileHealth")}
+      />
+    );
   }
 
   const authenticatedScreens = [
@@ -475,6 +486,7 @@ export default function App() {
     "groups",
     "place",
     "post",
+    "createPost",
   ];
 
   const isAuthScreen = authenticatedScreens.includes(screen);
