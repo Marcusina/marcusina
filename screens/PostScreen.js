@@ -15,8 +15,8 @@ import {
   Alert,
 } from "react-native";
 import { MaterialIcons, Ionicons, FontAwesome } from "@expo/vector-icons";
-import { useVideoPlayer, VideoView } from "expo-video"; // Import modern expo-video elements
-import { useEvent } from "expo"; // Native event updates hook companion
+import { useVideoPlayer, VideoView } from "expo-video";
+import { useEvent } from "expo";
 import { useTheme } from "../context/ThemeContext";
 
 const testVideoUrl = require("../assets/videos/test.mp4");
@@ -35,7 +35,7 @@ const DUMMY_SHORTS = [
       "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=400&q=85",
     ],
     factText:
-      "Did you know? High blood pressure often has no symptoms. Get checked today — early detection saves lives.",
+      "Did you know? High blood pressure often has no symptoms. Get checked today — early detection saves lives. Regular monitoring and maintaining a balanced, low-sodium diet drastically lowers operational risks.",
     likes: "4.2k",
     commentsCount: "312",
     views: "1,240 views",
@@ -56,7 +56,7 @@ const DUMMY_SHORTS = [
     bgImage:
       "https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?auto=format&fit=crop&w=400&q=85",
     factText:
-      "Staying hydrated boosts cognitive processing by up to 15%. Keep a water flask near your workstation.",
+      "Staying hydrated boosts cognitive processing by up to 15%. Keep a water flask near your workstation. Dehydration causes micro-fatigue across complex system environments.",
     likes: "8.9k",
     commentsCount: "520",
     views: "3,410 views",
@@ -79,7 +79,7 @@ const DUMMY_SHORTS = [
     bgImage:
       "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=400&q=85",
     factText:
-      "Early testing mitigates chronic element risks. Speak with a physician online down the timeline.",
+      "Early testing mitigates chronic element risks. Speak with a physician online down the timeline to build structured wellness patterns early.",
     likes: "1.1k",
     commentsCount: "45",
     views: "620 views",
@@ -89,96 +89,57 @@ const DUMMY_SHORTS = [
 ];
 
 const VideoPostPlayer = ({
+  itemId,
   videoSource,
   isViewable,
+  isPlaying,
   isMuted,
   layoutContentWidth,
+  setIsPlaying,
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Initialize expo-video player with explicit default mute logic
   const player = useVideoPlayer(videoSource, (playerInstance) => {
     playerInstance.loop = true;
-    playerInstance.muted = true; // Muted by default layout configurations
+    playerInstance.muted = isMuted;
   });
 
-  // Track live playback duration updates from expo-video via atomic state listeners
   const { currentTime } = useEvent(player, "timeUpdate", {
     currentTime: player.currentTime,
   });
   const duration = player.duration || 0;
   const videoProgressPercentage = duration > 0 ? currentTime / duration : 0;
 
-  // Auto-play when viewable, auto-pause when scrolled away
   useEffect(() => {
-    if (player) {
-      if (isViewable) {
-        setIsPlaying(true);
-        player.play();
-      } else {
-        setIsPlaying(false);
-        player.pause();
-      }
-    }
-  }, [isViewable, player]);
+    if (!player) return;
+    player.muted = isMuted;
 
-  // Synchronize playback action when manually toggled
-  useEffect(() => {
-    if (player && isViewable) {
-      if (isPlaying) {
-        player.play();
-        // Fallback delay to guarantee playback initialization settles in native view
-        const timer = setTimeout(() => {
-          if (player) {
-            player.play();
-          }
-        }, 100);
-        return () => clearTimeout(timer);
-      } else {
-        player.pause();
-      }
+    if (isViewable && isPlaying) {
+      player.play();
+    } else {
+      player.pause();
     }
-  }, [isPlaying, isViewable, player]);
-
-  // Synchronize volume states
-  useEffect(() => {
-    if (player) {
-      player.muted = isMuted;
-    }
-  }, [isMuted, player]);
+  }, [isViewable, isPlaying, isMuted, player]);
 
   const handleRewind10 = () => {
-    if (player) {
-      const newTime = Math.max(0, player.currentTime - 10);
-      player.seekTo(newTime);
-    }
+    if (player) player.seekTo(Math.max(0, player.currentTime - 10));
   };
 
   const handleForward10 = () => {
-    if (player) {
-      const newTime = Math.min(duration, player.currentTime + 10);
-      player.seekTo(newTime);
-    }
+    if (player) player.seekTo(Math.min(duration, player.currentTime + 10));
   };
 
   const handleProgressBarPress = (event) => {
     if (player && duration > 0) {
       const touchX = event.nativeEvent.locationX;
-      const progressBarWidth = layoutContentWidth - 32; // padding left-4 (16px) and right-4 (16px)
+      const progressBarWidth = layoutContentWidth - 32;
       const percentage = Math.max(0, Math.min(1, touchX / progressBarWidth));
-      const seekTime = percentage * duration;
-      player.seekTo(seekTime);
+      player.seekTo(percentage * duration);
     }
-  };
-
-  const onTogglePlayback = () => {
-    setIsPlaying(!isPlaying);
   };
 
   return (
     <TouchableOpacity
       activeOpacity={1}
-      onPress={onTogglePlayback}
+      onPress={() => setIsPlaying(itemId, !isPlaying)}
       style={{ width: "100%", height: "100%" }}
     >
       <VideoView
@@ -188,7 +149,6 @@ const VideoPostPlayer = ({
         nativeControls={false}
       />
 
-      {/* Modern Live Video Duration Line Handler with tap-to-seek functionality */}
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={handleProgressBarPress}
@@ -202,39 +162,36 @@ const VideoPostPlayer = ({
         </View>
       </TouchableOpacity>
 
-      {/* Primary Video Playback Action Trigger Button Overlay */}
-      <View className="absolute inset-0 flex-row items-center justify-center gap-6 z-20">
-        {/* Seek Backward 10s Button */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleRewind10}
-          className="w-12 h-12 rounded-full bg-black/40 items-center justify-center backdrop-blur-sm border border-white/10"
+      {!isPlaying && (
+        <View
+          className="absolute inset-0 flex-row items-center justify-center gap-6 z-20"
+          pointerEvents="box-none"
         >
-          <MaterialIcons name="replay-10" size={26} color="white" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleRewind10}
+            className="w-12 h-12 rounded-full bg-black/40 items-center justify-center backdrop-blur-sm border border-white/10"
+          >
+            <MaterialIcons name="replay-10" size={26} color="white" />
+          </TouchableOpacity>
 
-        {/* Center Play/Pause Button */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={onTogglePlayback}
-          className="w-16 h-16 rounded-full bg-black/40 items-center justify-center backdrop-blur-sm border border-white/10"
-        >
-          <Ionicons
-            name={isPlaying ? "pause" : "play"}
-            size={32}
-            color="white"
-          />
-        </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setIsPlaying(itemId, true)}
+            className="w-16 h-16 rounded-full bg-black/40 items-center justify-center backdrop-blur-sm border border-white/10"
+          >
+            <Ionicons name="play" size={32} color="white" />
+          </TouchableOpacity>
 
-        {/* Seek Forward 10s Button */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleForward10}
-          className="w-12 h-12 rounded-full bg-black/40 items-center justify-center backdrop-blur-sm border border-white/10"
-        >
-          <MaterialIcons name="forward-10" size={26} color="white" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleForward10}
+            className="w-12 h-12 rounded-full bg-black/40 items-center justify-center backdrop-blur-sm border border-white/10"
+          >
+            <MaterialIcons name="forward-10" size={26} color="white" />
+          </TouchableOpacity>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
@@ -248,12 +205,13 @@ const ShortMediaLoader = ({
   setCurrentMediaIndex,
   progress,
   setProgress,
+  isPlaying,
+  setIsPlaying,
   isMuted,
   isViewable,
 }) => {
   const progressInterval = useRef(null);
 
-  // Manage Image carousel step transitions
   useEffect(() => {
     if (progressInterval.current) clearInterval(progressInterval.current);
     setProgress(0);
@@ -323,10 +281,13 @@ const ShortMediaLoader = ({
         />
       ) : item.type === "video" ? (
         <VideoPostPlayer
+          itemId={item.id}
           videoSource={item.videoUrl}
-          isViewable={isViewable && !activeCommentsPost && !activeSharePost}
+          isViewable={isViewable}
+          isPlaying={isPlaying && !activeCommentsPost && !activeSharePost}
           isMuted={isMuted}
           layoutContentWidth={layoutContentWidth}
+          setIsPlaying={setIsPlaying}
         />
       ) : (
         <Image
@@ -341,7 +302,6 @@ const ShortMediaLoader = ({
         pointerEvents="none"
       />
 
-      {/* Multi-Image Navigation Layer Handles */}
       {item.type === "images" && (
         <View className="absolute inset-x-0 top-20 bottom-24 flex-row z-20">
           <TouchableOpacity
@@ -367,29 +327,47 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
   const [activeCommentsPost, setActiveCommentsPost] = useState(null);
   const [activeSharePost, setActiveSharePost] = useState(null);
   const [likedPosts, setLikedPosts] = useState({});
-
-  // Track viewport presence for scroll index checks
   const [viewablePostId, setViewablePostId] = useState(null);
-  const [isMuted, setIsMuted] = useState(true); // Default status structure muted
+
+  const [videoPlaybackStates, setVideoPlaybackStates] = useState({});
+  const [videoMuteStates, setVideoMuteStates] = useState({});
+
+  // Track YouTube style expandable status map per item ID
+  const [expandedFacts, setExpandedFacts] = useState({});
 
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false); // Do not start playing by default anywhere until viewed
 
   const flatListRef = useRef(null);
   const isLargeScreen = windowWidth >= 768;
   const layoutContentWidth = isLargeScreen ? 420 : windowWidth;
 
   const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50, // More forgiving threshold to handle layouts/safe-areas reliably
+    itemVisiblePercentThreshold: 50,
   }).current;
+
+  const setItemPlaying = (id, playState) => {
+    setVideoPlaybackStates((prev) => ({ ...prev, [id]: playState }));
+  };
+
+  const setItemMuted = (id, muteState) => {
+    setVideoMuteStates((prev) => ({ ...prev, [id]: muteState }));
+  };
+
+  const toggleFactExpanded = (id) => {
+    setExpandedFacts((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems && viewableItems.length > 0) {
       const activeId = viewableItems[0].item.id;
       setViewablePostId(activeId);
 
-      // Reset media index and progress for image carousels, keeping playback state persistent
+      setVideoPlaybackStates((prev) => ({
+        ...prev,
+        [activeId]: true,
+      }));
+
       setCurrentMediaIndex(0);
       setProgress(0);
     }
@@ -409,8 +387,9 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
         }, 120);
       }
     } else if (DUMMY_SHORTS.length > 0) {
-      // Handle visibility configuration assignments for default zero state
-      setViewablePostId(DUMMY_SHORTS[0].id);
+      const firstId = DUMMY_SHORTS[0].id;
+      setViewablePostId(firstId);
+      setItemPlaying(firstId, true);
     }
   }, [initialPostId, windowHeight]);
 
@@ -433,12 +412,15 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
     const isLiked = likedPosts[item.id];
     const isViewable = item.id === viewablePostId;
 
+    const itemIsPlaying = videoPlaybackStates[item.id] ?? false;
+    const itemIsMuted = videoMuteStates[item.id] ?? true;
+    const isExpanded = expandedFacts[item.id] ?? false;
+
     return (
       <View
         style={{ height: windowHeight, width: layoutContentWidth }}
         className="relative bg-black overflow-hidden self-center"
       >
-        {/* Images Timeline Indicator bars */}
         {item.type === "images" && (
           <View className="absolute top-4 left-4 right-4 flex-row gap-1.5 z-50 h-6 items-center">
             {item.mediaUrls.map((_, index) => {
@@ -474,19 +456,21 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
           setCurrentMediaIndex={setCurrentMediaIndex}
           progress={progress}
           setProgress={setProgress}
-          isPlaying={isPlaying}
-          setIsPlaying={setIsPlaying}
-          isMuted={isMuted}
+          isPlaying={itemIsPlaying}
+          setIsPlaying={setItemPlaying}
+          isMuted={itemIsMuted}
           isViewable={isViewable}
         />
 
-        {/* UI Overlay Controls */}
         <View
-          className="flex-1 justify-between pt-16 pb-24 px-4 relative z-30"
+          className="flex-1 justify-between pt-16 pb-20 px-4 relative z-30"
           pointerEvents="box-none"
         >
-          {/* Header Row Content */}
-          <View className="flex-row items-center justify-between gap-3">
+          {/* Header Bar Container */}
+          <View
+            className="flex-row items-center justify-between gap-3"
+            pointerEvents="box-none"
+          >
             <View className="flex-row items-center gap-3 flex-1">
               <Image
                 source={{ uri: item.authorImage }}
@@ -505,15 +489,14 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
               </View>
             </View>
 
-            {/* Custom Interactive Mute Action Trigger Overlay Button */}
             {item.type === "video" && (
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => setIsMuted(!isMuted)}
+                onPress={() => setItemMuted(item.id, !itemIsMuted)}
                 className="w-10 h-10 rounded-full bg-black/40 items-center justify-center border border-white/20 z-50 backdrop-blur-md"
               >
                 <Ionicons
-                  name={isMuted ? "volume-mute" : "volume-high"}
+                  name={itemIsMuted ? "volume-mute" : "volume-high"}
                   size={18}
                   color="white"
                 />
@@ -521,20 +504,8 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
             )}
           </View>
 
-          {/* Fact Block Card */}
-          <View
-            className="items-center justify-center px-4"
-            pointerEvents="box-none"
-          >
-            <View className="bg-black/50 border border-white/10 rounded-2xl p-5 backdrop-blur-md w-full max-w-[290px]">
-              <Text className="text-white text-sm font-semibold text-center leading-6 tracking-wide">
-                {item.factText}
-              </Text>
-            </View>
-          </View>
-
-          {/* Right Action Menu Stack */}
-          <View className="absolute right-4 top-1/2 -translate-y-1/2 items-center gap-4 z-50">
+          {/* Action Columns Panel */}
+          <View className="absolute right-4 top-1/3 -translate-y-1/2 items-center gap-4 z-50">
             <View className="items-center gap-1">
               <TouchableOpacity
                 onPress={() => toggleLike(item.id)}
@@ -574,36 +545,61 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
             </View>
           </View>
 
-          {/* Bottom Interactions and Entry Panel */}
-          <View className="absolute bottom-6 left-4 right-16">
-            <View className="flex-row items-center gap-2 mb-3">
+          {/* YouTube-Style Bottom Expandable Metadata and Engagement Block */}
+          <View className="absolute bottom-6 left-4 right-16 z-40 bg-black/25 rounded-2xl p-2.5 backdrop-blur-xs border border-white/5">
+            <View className="flex-row items-center gap-2 mb-2">
               <View className="flex-row">
                 <Image
                   source={{
                     uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=40&q=80",
                   }}
-                  className="w-6 h-6 rounded-full border border-white -mr-2"
+                  className="w-5 h-5 rounded-full border border-white -mr-1.5"
                 />
                 <Image
                   source={{
                     uri: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=40&q=80",
                   }}
-                  className="w-6 h-6 rounded-full border border-white"
+                  className="w-5 h-5 rounded-full border border-white"
                 />
               </View>
-              <Text className="text-white text-xs font-bold tracking-wide">
+              <Text className="text-white text-[11px] font-bold tracking-wide">
                 {item.views}
               </Text>
             </View>
 
+            {/* YouTube Style Expandable Text Area */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => toggleFactExpanded(item.id)}
+              className="mb-3"
+            >
+              <Text
+                numberOfLines={isExpanded ? undefined : 2}
+                className="text-white text-xs leading-5 font-normal"
+              >
+                {item.factText}
+                {!isExpanded && (
+                  <Text className="text-teal-400 text-xs font-bold">
+                    {" "}
+                    ...read more
+                  </Text>
+                )}
+              </Text>
+              {isExpanded && (
+                <Text className="text-white/50 text-[10px] font-bold mt-1">
+                  Show less
+                </Text>
+              )}
+            </TouchableOpacity>
+
             <TouchableOpacity
               onPress={() => setActiveCommentsPost(item)}
-              className="flex-row flex-1 items-center justify-between rounded-full bg-white/15 border border-white/20 py-3 px-4 backdrop-blur-md"
+              className="flex-row items-center justify-between rounded-full bg-white/10 border border-white/10 py-2.5 px-4"
             >
-              <Text className="text-white/60 text-xs font-medium">
+              <Text className="text-white/60 text-[11px] font-medium">
                 Reply to {item.authorName.split(" ")[0]}…
               </Text>
-              <FontAwesome name="send" size={14} color="white" />
+              <FontAwesome name="send" size={12} color="white" />
             </TouchableOpacity>
           </View>
         </View>
