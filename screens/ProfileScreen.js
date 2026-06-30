@@ -15,11 +15,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
 export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogout }) {
-  const { theme, themeMode, toggleTheme } = useTheme();
+  const { theme, themeMode, setThemeMode, toggleTheme } = useTheme();
   const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= 768;
   const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
   return (
     <View style={styles.container}>
@@ -106,23 +107,66 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogo
 
           <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Settings</Text>
           <View style={styles.settingsCard}>
-            <View style={styles.settingItem}>
-              <View style={styles.settingLeft}>
+            <View style={styles.settingItemCol}>
+              <View style={[styles.settingLeft, { marginBottom: 12 }]}>
                 <MaterialIcons 
-                  name={themeMode === 'dark' ? 'dark-mode' : 'light-mode'} 
+                  name="color-lens" 
                   size={24} 
                   color={theme.textSecondary} 
                 />
-                <Text style={styles.settingLabel}>
-                  {themeMode === 'dark' ? 'Dark Mode' : 'Light Mode'}
-                </Text>
+                <Text style={styles.settingLabel}>App Theme</Text>
               </View>
-              <Switch
-                value={themeMode === 'dark'}
-                onValueChange={toggleTheme}
-                trackColor={{ false: '#D1D5DB', true: theme.primary }}
-                thumbColor="#FFFFFF"
-              />
+              <View style={{ zIndex: 100, position: 'relative' }}>
+                <TouchableOpacity
+                  onPress={() => setDropdownOpen(!dropdownOpen)}
+                  style={[styles.dropdownHeader, { borderColor: theme.border, backgroundColor: theme.surface }]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.dropdownHeaderText, { color: theme.text }]}>
+                    {themeMode === 'system' ? 'System Default' : themeMode === 'light' ? 'Light' : 'Dark'}
+                  </Text>
+                  <MaterialIcons 
+                    name={dropdownOpen ? "arrow-drop-up" : "arrow-drop-down"} 
+                    size={24} 
+                    color={theme.textSecondary} 
+                  />
+                </TouchableOpacity>
+
+                {dropdownOpen && (
+                  <View style={[styles.dropdownMenu, { borderColor: theme.border, backgroundColor: theme.surface }]}>
+                    {['system', 'light', 'dark'].map((mode) => {
+                      const isActive = themeMode === mode;
+                      return (
+                        <TouchableOpacity
+                          key={mode}
+                          onPress={() => {
+                            setThemeMode(mode);
+                            setDropdownOpen(false);
+                          }}
+                          style={[
+                            styles.dropdownItem,
+                            isActive && { backgroundColor: theme.surfaceSubtle }
+                          ]}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.dropdownItemText,
+                              { color: theme.text },
+                              isActive && { fontWeight: '600', color: theme.primary }
+                            ]}
+                          >
+                            {mode === 'system' ? 'System Default' : mode === 'light' ? 'Light' : 'Dark'}
+                          </Text>
+                          {isActive && (
+                            <MaterialIcons name="check" size={18} color={theme.primary} />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
             </View>
           </View>
         </View>
@@ -885,5 +929,46 @@ const createStyles = (theme) => StyleSheet.create({
     fontSize: 15,
     color: theme.text,
     fontWeight: '500',
+  },
+  settingItemCol: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
+  dropdownHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dropdownHeaderText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 52,
+    left: 0,
+    right: 0,
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dropdownItemText: {
+    fontSize: 14,
   },
 });

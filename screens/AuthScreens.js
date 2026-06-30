@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 import {
   View,
   Text,
@@ -25,6 +26,8 @@ import { validate } from '../utils/validator';
 import { loginSchema, registerSchema } from '../constants/schemas';
 
 function AppHeaderTitle() {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <View style={styles.appHeaderContainer}>
       <Image 
@@ -37,6 +40,8 @@ function AppHeaderTitle() {
 }
 
 function PrimaryButton({ label, onPress, disabled }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <TouchableOpacity 
       activeOpacity={0.9} 
@@ -54,6 +59,8 @@ function PrimaryButton({ label, onPress, disabled }) {
 }
 
 function TextField({ label, placeholder, value, onChangeText, secureTextEntry, error, rightIcon, onRightIconPress }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <View style={styles.fieldContainer}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -78,6 +85,8 @@ function TextField({ label, placeholder, value, onChangeText, secureTextEntry, e
 }
 
 function CodeInputRow({ length, values, onChange }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const inputs = useRef([]);
   const [focusedIndex, setFocusedIndex] = useState(null);
 
@@ -134,6 +143,8 @@ function CodeInputRow({ length, values, onChange }) {
 }
 
 function StepHeader({ stepIndex, totalSteps, title, showSkip, onBack, onSkip }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const progress = (stepIndex / totalSteps) * 100;
 
   return (
@@ -173,6 +184,8 @@ function showAlert(title, message, onDismiss = null) {
 }
 
 export function LoginScreen({ onSignUp, onLoginSuccess, onEmailVerifyNeeded }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginMethod, setLoginMethod] = useState('email');
@@ -394,6 +407,8 @@ export function LoginScreen({ onSignUp, onLoginSuccess, onEmailVerifyNeeded }) {
 }
 
 export function EmailVerifyScreen({ email, onBack, onVerified }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -476,6 +491,8 @@ export function EmailVerifyScreen({ email, onBack, onVerified }) {
 }
 
 export function PhoneVerifyScreen({ onBack, onVerified }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [code, setCode] = useState(['', '', '', '', '', '']);
 
   return (
@@ -518,6 +535,8 @@ export function PhoneVerifyScreen({ onBack, onVerified }) {
 }
 
 export function VerificationChoiceScreen({ onBack, onChooseEmail, onChoosePhone }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.onboardingContent}>
@@ -574,6 +593,8 @@ export function VerificationChoiceScreen({ onBack, onChooseEmail, onChoosePhone 
 }
 
 export function NameStepScreen({ onBack, onNext, onSkip }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -626,6 +647,8 @@ export function NameStepScreen({ onBack, onNext, onSkip }) {
 }
 
 export function ContactStepScreen({ onBack, onNext, onSkip }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -671,6 +694,8 @@ export function ContactStepScreen({ onBack, onNext, onSkip }) {
 }
 
 export function LocationStepScreen({ onBack, onComplete }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [address, setAddress] = useState('');
 
   return (
@@ -718,6 +743,8 @@ export function LocationStepScreen({ onBack, onComplete }) {
 }
 
 export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('patient'); // 'patient' or 'doctor'
   const [gender, setGender] = useState('female');
@@ -946,6 +973,8 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
 }
 
 export function ProfileCustomizeScreen({ onBack, onNext, onSkip }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [bio, setBio] = useState('');
 
   return (
@@ -995,6 +1024,8 @@ export function ProfileCustomizeScreen({ onBack, onNext, onSkip }) {
 }
 
 export function SuccessScreen({ onGetStarted, role }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const isDoctor = role === 'doctor';
 
   return (
@@ -1024,10 +1055,10 @@ export function SuccessScreen({ onGetStarted, role }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -1067,7 +1098,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
+    color: theme.text,
   },
   loginCard: {
     marginTop: 24,
@@ -1075,12 +1106,12 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#000000',
+    color: theme.text,
     marginBottom: 8,
   },
   screenSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginBottom: 24,
   },
   topBar: {
@@ -1093,31 +1124,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     borderRadius: 999,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   languageText: {
     fontSize: 13,
-    color: '#111827',
+    color: theme.text,
     fontWeight: '500',
   },
   languageChevron: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginLeft: 6,
   },
   welcomeTitle: {
     fontSize: 34,
     fontWeight: '800',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 6,
   },
   welcomeSubtitle: {
     fontSize: 15,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginBottom: 28,
   },
   loginMethodTabs: {
@@ -1129,22 +1160,22 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     paddingVertical: 14,
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.surfaceSubtle,
   },
   loginMethodTabActive: {
-    backgroundColor: '#000000',
-    borderColor: '#000000',
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
   loginMethodLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
+    color: theme.textSecondary,
   },
   loginMethodLabelActive: {
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
   },
   inputRow: {
     flexDirection: 'row',
@@ -1162,7 +1193,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     fontSize: 18,
-    color: '#6B7280',
+    color: theme.textSecondary,
   },
   staySignedInRow: {
     flexDirection: 'row',
@@ -1178,11 +1209,11 @@ const styles = StyleSheet.create({
   staySignedInLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.text,
   },
   staySignedInHint: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginTop: 2,
   },
   fingerprintButton: {
@@ -1190,16 +1221,16 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
     alignSelf: 'center',
     marginBottom: 24,
   },
   fingerprintIcon: {
     fontSize: 32,
-    color: '#111827',
+    color: theme.text,
   },
   createAccountRow: {
     flexDirection: 'row',
@@ -1211,24 +1242,24 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 13,
-    color: '#374151',
+    color: theme.textSecondary,
     marginBottom: 6,
   },
   otpHelpText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     marginTop: 8,
     textAlign: 'center',
   },
   textInput: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
-    color: '#111827',
-    backgroundColor: '#F9FAFB',
+    color: theme.text,
+    backgroundColor: theme.surfaceSubtle,
   },
   forgotPasswordRow: {
     alignItems: 'flex-end',
@@ -1239,7 +1270,7 @@ const styles = StyleSheet.create({
     color: '#F97316',
   },
   primaryButton: {
-    backgroundColor: '#000000',
+    backgroundColor: theme.primary,
     paddingVertical: 14,
     borderRadius: 999,
     alignItems: 'center',
@@ -1248,18 +1279,18 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   primaryButtonLabel: {
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
   buttonDisabled: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: theme.border,
   },
   inputError: {
-    borderColor: '#EF4444',
+    borderColor: theme.error,
   },
   errorText: {
-    color: '#EF4444',
+    color: theme.error,
     fontSize: 12,
     marginTop: 4,
   },
@@ -1271,12 +1302,12 @@ const styles = StyleSheet.create({
   orDivider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.border,
   },
   orText: {
     marginHorizontal: 8,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     letterSpacing: 1,
   },
   socialRow: {
@@ -1290,14 +1321,14 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   socialButtonLabel: {
     fontSize: 22,
-    color: '#111827',
+    color: theme.text,
   },
   footerRow: {
     flexDirection: 'row',
@@ -1306,12 +1337,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginRight: 4,
   },
   footerLink: {
     fontSize: 13,
-    color: '#000000',
+    color: theme.text,
     fontWeight: '600',
   },
   stepHeaderContainer: {
@@ -1325,21 +1356,21 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 20,
-    color: '#111827',
+    color: theme.text,
   },
   stepHeaderStepText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: theme.textSecondary,
   },
   skipText: {
     fontSize: 14,
-    color: '#000000',
+    color: theme.text,
     fontWeight: '500',
   },
   progressTrack: {
     height: 4,
     borderRadius: 999,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.border,
     overflow: 'hidden',
   },
   progressFill: {
@@ -1353,20 +1384,20 @@ const styles = StyleSheet.create({
   termsText: {
     marginTop: 12,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     textAlign: 'center',
   },
   locationCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     padding: 16,
     marginBottom: 16,
   },
   locationPlaceholder: {
     height: 160,
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -1376,26 +1407,26 @@ const styles = StyleSheet.create({
   },
   orManualText: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     textAlign: 'center',
     marginVertical: 8,
     letterSpacing: 1,
   },
   privacyCard: {
     borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.surfaceSubtle,
     padding: 16,
     marginTop: 16,
   },
   privacyTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 4,
   },
   privacyText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.textSecondary,
   },
   successContainer: {
     flex: 1,
@@ -1407,25 +1438,25 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#000000',
+    backgroundColor: theme.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   successCheck: {
     fontSize: 48,
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
   },
   successTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: theme.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   successSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginBottom: 24,
     textAlign: 'center',
   },
@@ -1440,12 +1471,12 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     textAlign: 'center',
     fontSize: 24,
     fontWeight: '600',
-    color: '#111827',
-    backgroundColor: '#FFFFFF',
+    color: theme.text,
+    backgroundColor: theme.background,
     ...Platform.select({
       web: {
         outlineStyle: 'none',
@@ -1453,11 +1484,11 @@ const styles = StyleSheet.create({
     }),
   },
   codeBoxFilled: {
-    borderColor: '#000000',
+    borderColor: theme.primary,
   },
   codeBoxFocused: {
-    borderColor: '#000000',
-    backgroundColor: '#F3F4F6',
+    borderColor: theme.primary,
+    backgroundColor: theme.surfaceSubtle,
     borderWidth: 2,
   },
   verificationIconWrapper: {
@@ -1468,19 +1499,19 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: theme.mode === 'dark' ? '#1E1B4B' : '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   phoneIconCircle: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: theme.mode === 'dark' ? '#78350F' : '#FEF3C7',
   },
   verificationIconEmoji: {
     fontSize: 40,
   },
   didntReceiveText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginTop: 8,
   },
   resendLink: {
@@ -1490,16 +1521,16 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   linkInfoBox: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.surfaceSubtle,
     padding: 16,
     borderRadius: 12,
     marginVertical: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#000000',
+    borderLeftColor: theme.primary,
   },
   linkInfoText: {
     fontSize: 14,
-    color: '#4B5563',
+    color: theme.textSecondary,
     lineHeight: 20,
   },
   didntReceiveContainer: {
@@ -1513,7 +1544,7 @@ const styles = StyleSheet.create({
   },
   didntReceivePrefix: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginRight: 4,
   },
   resendLinkInline: {
@@ -1523,7 +1554,7 @@ const styles = StyleSheet.create({
   },
   resendTimerText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     marginTop: 4,
   },
   genderRow: {
@@ -1536,19 +1567,19 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     paddingVertical: 12,
     marginHorizontal: 4,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   genderOptionSelected: {
-    borderColor: '#000000',
-    backgroundColor: '#F3F4F6',
+    borderColor: theme.primary,
+    backgroundColor: theme.surfaceSubtle,
   },
   genderOptionLabel: {
     fontSize: 14,
-    color: '#111827',
+    color: theme.text,
     fontWeight: '500',
   },
   passwordStrengthRow: {
@@ -1563,12 +1594,12 @@ const styles = StyleSheet.create({
   },
   passwordStrengthCount: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: theme.textMuted,
   },
   passwordStrengthTrack: {
     height: 4,
     borderRadius: 999,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.border,
     marginTop: 6,
   },
   passwordStrengthFill: {
@@ -1585,7 +1616,7 @@ const styles = StyleSheet.create({
     width: 112,
     height: 112,
     borderRadius: 56,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1599,53 +1630,53 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#000000',
+    backgroundColor: theme.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   profileAvatarPlusText: {
     fontSize: 24,
-    color: '#FFFFFF',
+    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
     marginTop: -2,
   },
   bioInput: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
-    color: '#111827',
-    backgroundColor: '#F9FAFB',
+    color: theme.text,
+    backgroundColor: theme.surfaceSubtle,
     minHeight: 96,
     textAlignVertical: 'top',
   },
   bioCounter: {
     alignSelf: 'flex-end',
     fontSize: 11,
-    color: '#9CA3AF',
+    color: theme.textMuted,
     marginTop: 4,
   },
   skipForNowText: {
     marginTop: 12,
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.textSecondary,
     textAlign: 'center',
   },
   methodCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.border,
   },
   methodIconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -1659,17 +1690,17 @@ const styles = StyleSheet.create({
   methodTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: theme.text,
     marginBottom: 2,
   },
   methodDescription: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.textSecondary,
     lineHeight: 16,
   },
   methodArrow: {
     fontSize: 20,
-    color: '#D1D5DB',
+    color: theme.border,
     marginLeft: 8,
   },
 });

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme as useDeviceColorScheme } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import { getTheme, saveTheme } from '../utils/storage';
 
 export const lightTheme = {
@@ -49,33 +50,46 @@ export const darkTheme = {
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeMode] = useState('light');
+  const deviceColorScheme = useDeviceColorScheme();
+  const { colorScheme, setColorScheme } = useColorScheme();
+  const [themeMode, setThemeModeState] = useState('system'); // 'system', 'light', 'dark'
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const loadTheme = async () => {
       const savedTheme = await getTheme();
-      if (savedTheme) {
-        setThemeMode(savedTheme);
-      } else if (systemColorScheme) {
-        setThemeMode(systemColorScheme);
+      if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
+        setThemeModeState(savedTheme);
+        setColorScheme(savedTheme);
+      } else {
+        setThemeModeState('system');
+        setColorScheme('system');
       }
       setIsInitialized(true);
     };
     loadTheme();
-  }, [systemColorScheme]);
+  }, [setColorScheme]);
 
-  const toggleTheme = async () => {
-    const newMode = themeMode === 'light' ? 'dark' : 'light';
-    setThemeMode(newMode);
-    await saveTheme(newMode);
+  const setThemeMode = async (mode) => {
+    if (mode === 'light' || mode === 'dark' || mode === 'system') {
+      setThemeModeState(mode);
+      setColorScheme(mode);
+      await saveTheme(mode);
+    }
   };
 
-  const theme = themeMode === 'dark' ? darkTheme : lightTheme;
+  const toggleTheme = async () => {
+    const activeScheme = colorScheme || deviceColorScheme || 'light';
+    const newMode = activeScheme === 'dark' ? 'light' : 'dark';
+    await setThemeMode(newMode);
+  };
+
+  // Determine active colors based on resolved NativeWind colorScheme
+  const activeScheme = colorScheme || deviceColorScheme || 'light';
+  const theme = activeScheme === 'dark' ? darkTheme : lightTheme;
 
   return (
-    <ThemeContext.Provider value={{ theme, themeMode, toggleTheme, isInitialized }}>
+    <ThemeContext.Provider value={{ theme, themeMode, setThemeMode, toggleTheme, isInitialized }}>
       {children}
     </ThemeContext.Provider>
   );
