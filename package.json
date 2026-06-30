@@ -24,6 +24,8 @@
   "private": true,
   "devDependencies": {
     "babel-preset-expo": "~54.0.10",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "prettier-plugin-tailwindcss": "0.5.11",
     "tailwindcss": "3.4.17"
   }

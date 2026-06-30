@@ -10,24 +10,31 @@ const DEV_URLS = {
   web: "localhost",
 };
 
-const getAndroidHost = () => {
-  // Use Expo debugger host when available (in dev mode).
-  const debuggerHost = Constants.manifest?.debuggerHost;
-  if (debuggerHost) {
-    return debuggerHost.split(":")[0];
-  }
-
-  // Fallback to Android emulator host. Override this value if using a physical device.
-  return DEV_URLS.androidEmulator;
-};
-
 const getHost = () => {
   if (Platform.OS === "web") return DEV_URLS.web;
-  if (Platform.OS === "android") return getAndroidHost();
+  
+  if (Platform.OS === "android") {
+    // Use Expo debugger host when available (in dev mode).
+    const debuggerHost = Constants.manifest?.debuggerHost;
+    if (debuggerHost) {
+      const host = debuggerHost.split(":")[0];
+      // If it's localhost or 10.0.2.2, it's emulator. Otherwise, it's physical device IP.
+      if (host === "localhost" || host === "10.0.2.2" || host === "127.0.0.1") {
+        return DEV_URLS.androidEmulator;
+      }
+      return host;
+    }
+    
+    // If no debugger host, check if we can detect physical device?
+    // For now, let's use androidPhysical as default for physical devices
+    // In a real scenario, you might need a way to choose, but let's update to use physical IP
+    return DEV_URLS.androidPhysical;
+  }
+  
   return DEV_URLS.ios;
 };
 
-const API_BASE_URL = `http://${getHost()}:3001/api/v1`;
+const API_BASE_URL = `http://${getHost()}:3000/api/v1`;
 console.log("---- url ----", API_BASE_URL);
 
 const apiClient = async (endpoint, options = {}) => {
@@ -38,6 +45,7 @@ const apiClient = async (endpoint, options = {}) => {
     credentials: "include", // 🔑 Include cookies in requests and responses
     headers: {
       "Content-Type": "application/json",
+      "X-App-Type": Platform.OS === "web" ? "web" : "mobile",
       ...headers,
     },
     ...rest,
