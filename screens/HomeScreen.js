@@ -28,6 +28,8 @@ export function HomeScreen({
   onConsult,
   onOpenGroups,
   onOpenPlace,
+  onOpenPost,
+  onOpenCreatePost,
 }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
@@ -182,7 +184,7 @@ export function HomeScreen({
             <TouchableOpacity
               activeOpacity={0.8}
               className="items-center w-16 md:w-20"
-              onPress={onOpenProfile}
+              onPress={onOpenCreatePost}
             >
               <View
                 style={{ backgroundColor: theme.border }}
@@ -223,7 +225,8 @@ export function HomeScreen({
                 key={item.id}
                 activeOpacity={0.8}
                 className="items-center w-16 md:w-20 relative"
-                onPress={onOpenPlace}
+                // 2. Updated to fire onOpenPost with current item.id context target
+                onPress={() => onOpenPost && onOpenPost(item.id)}
               >
                 <View className="w-16 h-16 md:w-20 md:h-20 items-center justify-center relative">
                   {/* Native SVG Vector Gradient Layout Ring */}
@@ -241,10 +244,8 @@ export function HomeScreen({
                           x2="100%"
                           y2="0%"
                         >
-                          <Stop offset="0%" stopColor="#F58529" />
-                          <Stop offset="25%" stopColor="#DD2A7B" />
-                          <Stop offset="60%" stopColor="#8134AF" />
-                          <Stop offset="100%" stopColor="#515BD4" />
+                          <Stop offset="0%" stopColor="#00C9A7" />
+                          <Stop offset="100%" stopColor="#007AFF" />
                         </LinearGradient>
                       </Defs>
                       <Circle

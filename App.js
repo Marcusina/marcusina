@@ -29,6 +29,7 @@ import {
   ContactStepScreen,
   LocationStepScreen,
   SuccessScreen,
+  WelcomeScreen,
 } from "./screens/AuthScreens";
 import { HomeScreen } from "./screens/HomeScreen";
 import {
@@ -38,6 +39,8 @@ import {
 } from "./screens/ProfileScreen";
 import { GroupsScreen } from "./screens/GroupsScreen";
 import { PlaceScreen } from "./screens/PlaceScreen";
+import { PostScreen } from "./screens/PostScreen";
+import { CreatePostScreen } from "./screens/CreatePostScreen";
 import {
   ConsultBookingScreen,
   ConsultConfirmScreen,
@@ -45,7 +48,8 @@ import {
 import { Layout } from "./components/Layout";
 
 export default function App() {
-  const [screen, setScreen] = useState("login");
+  const [selectedPostId, setSelectedPostId] = useState("short-2");
+  const [screen, setScreen] = useState("splash");
   const [verificationSource, setVerificationSource] = useState("registration"); // 'registration' or 'login'
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
@@ -124,7 +128,7 @@ export default function App() {
       setToken(null);
       setUser(null);
       await removeToken();
-      setScreen("login");
+      setScreen("splash");
     } catch (e) {
       console.error("Logout error:", e);
     }
@@ -234,7 +238,14 @@ export default function App() {
 
   let content = null;
 
-  if (screen === "login") {
+  if (screen === "splash") {
+    content = (
+      <WelcomeScreen
+        onCreateAccount={() => setScreen("profileBasics")}
+        onSignIn={() => setScreen("login")}
+      />
+    );
+  } else if (screen === "login") {
     content = (
       <LoginScreen
         onSignUp={() => setScreen("profileBasics")}
@@ -244,19 +255,20 @@ export default function App() {
           setVerificationSource("login");
           setScreen("emailVerify");
         }}
+        onBack={() => setScreen("splash")}
       />
     );
   } else if (screen === "profileBasics") {
     content = (
       <ProfileBasicsScreen
-        onBack={() => setScreen("login")}
+        onBack={() => setScreen("splash")}
         onRegisterSuccess={(data) => {
           setRegEmail(data.email);
           setVerificationSource("registration");
           const updated = { ...profile, ...data };
           setProfile(updated);
           saveProfile(updated);
-          setScreen("verificationChoice");
+          setScreen("emailVerify");
         }}
       />
     );
@@ -274,7 +286,7 @@ export default function App() {
         email={regEmail}
         onBack={() =>
           setScreen(
-            verificationSource === "login" ? "login" : "verificationChoice",
+            verificationSource === "login" ? "login" : "profileBasics",
           )
         }
         onVerified={() => {
@@ -375,6 +387,11 @@ export default function App() {
         onOpenGroups={() => setScreen("groups")}
         onConsult={() => setScreen("consultBook")}
         onOpenPlace={() => setScreen("place")}
+        onOpenPost={(id) => {
+          setSelectedPostId(id); // Save targeted item index cleanly
+          setScreen("post"); // Fire screen switch routing state update
+        }}
+        onOpenCreatePost={() => setScreen("createPost")}
       />
     );
   } else if (screen === "profileHealth") {
@@ -447,6 +464,25 @@ export default function App() {
         onOpenProfile={() => setScreen("profileHealth")}
       />
     );
+  } else if (screen === "post") {
+    content = (
+      <PostScreen
+        initialPostId={selectedPostId}
+        onBackHome={() => setScreen("home")}
+        onOpenConsult={() => setScreen("consultBook")}
+        onOpenGroups={() => setScreen("groups")}
+        onOpenProfile={() => setScreen("profileHealth")}
+      />
+    );
+  } else if (screen === "createPost") {
+    content = (
+      <CreatePostScreen
+        onBackHome={() => setScreen("home")}
+        onOpenConsult={() => setScreen("consultBook")}
+        onOpenGroups={() => setScreen("groups")}
+        onOpenProfile={() => setScreen("profileHealth")}
+      />
+    );
   }
 
   const authenticatedScreens = [
@@ -458,6 +494,8 @@ export default function App() {
     "consultConfirm",
     "groups",
     "place",
+    "post",
+    "createPost",
   ];
 
   const isAuthScreen = authenticatedScreens.includes(screen);
