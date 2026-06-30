@@ -244,10 +244,8 @@ export function HomeScreen({
                           x2="100%"
                           y2="0%"
                         >
-                          <Stop offset="0%" stopColor="#F58529" />
-                          <Stop offset="25%" stopColor="#DD2A7B" />
-                          <Stop offset="60%" stopColor="#8134AF" />
-                          <Stop offset="100%" stopColor="#515BD4" />
+                          <Stop offset="0%" stopColor="#00C9A7" />
+                          <Stop offset="100%" stopColor="#007AFF" />
                         </LinearGradient>
                       </Defs>
                       <Circle

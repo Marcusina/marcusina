@@ -29,6 +29,7 @@ import {
   ContactStepScreen,
   LocationStepScreen,
   SuccessScreen,
+  WelcomeScreen,
 } from "./screens/AuthScreens";
 import { HomeScreen } from "./screens/HomeScreen";
 import {
@@ -48,7 +49,7 @@ import { Layout } from "./components/Layout";
 
 export default function App() {
   const [selectedPostId, setSelectedPostId] = useState("short-2");
-  const [screen, setScreen] = useState("login");
+  const [screen, setScreen] = useState("splash");
   const [verificationSource, setVerificationSource] = useState("registration"); // 'registration' or 'login'
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
@@ -127,7 +128,7 @@ export default function App() {
       setToken(null);
       setUser(null);
       await removeToken();
-      setScreen("login");
+      setScreen("splash");
     } catch (e) {
       console.error("Logout error:", e);
     }
@@ -237,7 +238,14 @@ export default function App() {
 
   let content = null;
 
-  if (screen === "login") {
+  if (screen === "splash") {
+    content = (
+      <WelcomeScreen
+        onCreateAccount={() => setScreen("profileBasics")}
+        onSignIn={() => setScreen("login")}
+      />
+    );
+  } else if (screen === "login") {
     content = (
       <LoginScreen
         onSignUp={() => setScreen("profileBasics")}
@@ -247,19 +255,20 @@ export default function App() {
           setVerificationSource("login");
           setScreen("emailVerify");
         }}
+        onBack={() => setScreen("splash")}
       />
     );
   } else if (screen === "profileBasics") {
     content = (
       <ProfileBasicsScreen
-        onBack={() => setScreen("login")}
+        onBack={() => setScreen("splash")}
         onRegisterSuccess={(data) => {
           setRegEmail(data.email);
           setVerificationSource("registration");
           const updated = { ...profile, ...data };
           setProfile(updated);
           saveProfile(updated);
-          setScreen("verificationChoice");
+          setScreen("emailVerify");
         }}
       />
     );
@@ -277,7 +286,7 @@ export default function App() {
         email={regEmail}
         onBack={() =>
           setScreen(
-            verificationSource === "login" ? "login" : "verificationChoice",
+            verificationSource === "login" ? "login" : "profileBasics",
           )
         }
         onVerified={() => {
