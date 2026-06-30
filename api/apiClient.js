@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import config from "../utils/config";
+import config from "../configs"; // Adjust paths accordingly to your file hierarchy
 
 const API_BASE_URL = config.API_BASE_URL;
 console.log("---- url ----", API_BASE_URL);
