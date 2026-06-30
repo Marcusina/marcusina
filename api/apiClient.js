@@ -1,39 +1,13 @@
-// api/apiClient.js
 import { Platform } from "react-native";
-import Constants from "expo-constants";
+import config from "../utils/config";
 
-const DEV_URLS = {
-  ios: "192.168.1.52", // Local IP for physical iOS devices
-  androidEmulator: "10.0.2.2", // Android emulator default
-  androidGenymotion: "10.0.3.2", // Genymotion emulator
-  androidPhysical: "192.168.1.52", // Local IP for physical Android devices
-  web: "localhost",
-};
-
-const getAndroidHost = () => {
-  // Use Expo debugger host when available (in dev mode).
-  const debuggerHost = Constants.manifest?.debuggerHost;
-  if (debuggerHost) {
-    return debuggerHost.split(":")[0];
-  }
-
-  // Fallback to Android emulator host. Override this value if using a physical device.
-  return DEV_URLS.androidEmulator;
-};
-
-const getHost = () => {
-  if (Platform.OS === "web") return DEV_URLS.web;
-  if (Platform.OS === "android") return getAndroidHost();
-  return DEV_URLS.ios;
-};
-
-const API_BASE_URL = `http://${getHost()}:3001/api/v1`;
+const API_BASE_URL = config.API_BASE_URL;
 console.log("---- url ----", API_BASE_URL);
 
 const apiClient = async (endpoint, options = {}) => {
   const { method = "GET", body, headers = {}, ...rest } = options;
 
-  const config = {
+  const requestConfig = {
     method,
     credentials: "include", // 🔑 Include cookies in requests and responses
     headers: {
@@ -44,8 +18,8 @@ const apiClient = async (endpoint, options = {}) => {
   };
 
   if (body) {
-    config.body = JSON.stringify(body);
-    console.log("[API Request Body]", config.body);
+    requestConfig.body = JSON.stringify(body);
+    console.log("[API Request Body]", requestConfig.body);
   }
 
   try {
@@ -53,7 +27,7 @@ const apiClient = async (endpoint, options = {}) => {
     console.log(`[API Request] ${method} ${url}`);
     console.log(`[API Platform] ${Platform.OS}`);
 
-    const response = await fetch(url, config);
+    const response = await fetch(url, requestConfig);
     const textResponse = await response.text();
     console.log("[API Raw Response]", textResponse);
     console.log("[API Response Status]", response.status, response.statusText);
@@ -81,7 +55,6 @@ const apiClient = async (endpoint, options = {}) => {
         data.details ||
         `Error ${response.status}: ${textResponse}`;
 
-      // Only log full error response if it's NOT a "must create profile" message
       if (!errorMsg.includes("create a profile")) {
         console.error(
           "[API Full Error Response]",
@@ -100,12 +73,12 @@ const apiClient = async (endpoint, options = {}) => {
       error.message === "Failed to fetch"
     ) {
       const errorDetails = `
-[Network Error] API request failed to reach the server at ${API_BASE_URL}.
-Platform: ${Platform.OS}
-Possible solutions:
-1. Ensure the backend server is running on port 3001.
-2. Check browser console for CORS errors.
-3. If using a physical device, ensure it's on the same Wi-Fi and use your machine's local IP address.
+        [Network Error] API request failed to reach the server at ${API_BASE_URL}.
+        Platform: ${Platform.OS}
+        Possible solutions:
+        1. Ensure the backend server is running on the correct port.
+        2. Check browser console for CORS errors.
+        3. If using a physical device, ensure it's on the same Wi-Fi subnet.
       `;
       console.error(errorDetails);
       throw new Error(errorDetails);
