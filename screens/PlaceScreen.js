@@ -97,32 +97,6 @@ export function PlaceScreen({ onOpenCart, onPharmacyShop }) {
         <Text className="text-xl font-extrabold" style={{ color: theme.text }}>
           Health Market
         </Text>
-
-        <View className="flex-row gap-3 md:hidden">
-          <TouchableOpacity
-            onPress={onOpenCart}
-            className="p-2 rounded-full relative"
-            style={{ backgroundColor: theme.surfaceSubtle }}
-          >
-            <Ionicons name="heart" size={22} color={theme.text} />
-            <View
-              className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border"
-              style={{ borderColor: theme.surfaceSubtle }}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onOpenCart}
-            className="p-2 rounded-full relative"
-            style={{ backgroundColor: theme.surfaceSubtle }}
-          >
-            <Ionicons name="cart-outline" size={22} color={theme.text} />
-            <View
-              className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border"
-              style={{ borderColor: theme.surfaceSubtle }}
-            />
-          </TouchableOpacity>
-        </View>
       </View>
 
       <ScrollView

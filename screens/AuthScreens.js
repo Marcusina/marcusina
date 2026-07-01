@@ -2,6 +2,8 @@ import { useState, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import { toast } from "../context/ToastContext";
+import Logo from "../components/Logo";
 import Svg, { Rect, Path } from "react-native-svg";
 import {
   View,
@@ -11,7 +13,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Image,
   Platform,
   Switch,
@@ -32,11 +33,7 @@ function AppHeaderTitle() {
   const styles = createStyles(theme);
   return (
     <View style={styles.appHeaderContainer}>
-      <Image
-        source={require("../assets/logo.png")}
-        style={styles.appLogo}
-        resizeMode="contain"
-      />
+      <Logo width={60} height={60} />
     </View>
   );
 }
@@ -44,7 +41,7 @@ function AppHeaderTitle() {
 export function WelcomeScreen({ onCreateAccount, onSignIn }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -142,22 +139,7 @@ export function WelcomeScreen({ onCreateAccount, onSignIn }) {
                 elevation: 5,
               }}
             >
-              <Svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                <Rect
-                  width="80"
-                  height="80"
-                  rx="22"
-                  fill={theme.dark ? "#FFFFFF" : "#0A0A0A"}
-                />
-                <Path
-                  d="M14 62 L19 32 L30 52 L40 14 L50 52 L61 32"
-                  stroke={theme.dark ? "#0A0A0A" : "#FFFFFF"}
-                  strokeWidth="7"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
+              <Logo width={80} height={80} />
             </View>
 
             {/* Wordmark & Tagline */}
@@ -425,7 +407,7 @@ function TextField({
             onPress={onRightIconPress}
             activeOpacity={0.8}
           >
-            {typeof rightIcon === 'string' ? (
+            {typeof rightIcon === "string" ? (
               <Text style={styles.inputIcon}>{rightIcon}</Text>
             ) : (
               rightIcon
@@ -536,17 +518,27 @@ function StepHeader({
 
 // Helper function for showing alerts on both web and mobile
 function showAlert(title, message, onDismiss = null) {
-  if (Platform.OS === "web") {
-    // For web, use a modal-like alert
-    alert(`${title}\n\n${message}`);
-    if (onDismiss && typeof onDismiss === "function") {
-      onDismiss();
-    }
+  let type = "info";
+  const titleLower = title ? title.toLowerCase() : "";
+  if (titleLower.includes("success") || titleLower.includes("complete")) {
+    type = "success";
+  } else if (titleLower.includes("error") || titleLower.includes("fail") || titleLower.includes("invalid") || titleLower.includes("denied")) {
+    type = "error";
+  } else if (titleLower.includes("warning") || titleLower.includes("caution")) {
+    type = "warning";
+  }
+
+  let toastMessage = message;
+  if (title && titleLower !== "success" && titleLower !== "error") {
+    toastMessage = message ? `${title}: ${message}` : title;
   } else {
-    const buttons = onDismiss
-      ? [{ text: "OK", onPress: onDismiss }]
-      : [{ text: "OK" }];
-    Alert.alert(title, message, buttons);
+    toastMessage = message || title;
+  }
+
+  toast.show(toastMessage, type);
+
+  if (onDismiss && typeof onDismiss === "function") {
+    onDismiss();
   }
 }
 
@@ -562,7 +554,6 @@ export function LoginScreen({
   const [password, setPassword] = useState("");
   const [loginMethod, setLoginMethod] = useState("email");
   const [showPassword, setShowPassword] = useState(false);
-  const [staySignedIn, setStaySignedIn] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [otpMode, setOtpMode] = useState(false);
@@ -767,24 +758,17 @@ export function LoginScreen({
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
-              rightIcon={<MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={22} color={theme.textMuted} />}
+              rightIcon={
+                <MaterialIcons
+                  name={showPassword ? "visibility-off" : "visibility"}
+                  size={22}
+                  color={theme.textMuted}
+                />
+              }
               onRightIconPress={() => setShowPassword((prev) => !prev)}
               error={errors.password}
             />
-            <View style={styles.staySignedInRow}>
-              <View style={styles.staySignedInInfo}>
-                <Text style={styles.staySignedInLabel}>Stay signed in</Text>
-                <Text style={styles.staySignedInHint}>
-                  Keep me signed in on this device.
-                </Text>
-              </View>
-              <Switch
-                value={staySignedIn}
-                onValueChange={setStaySignedIn}
-                thumbColor={staySignedIn ? theme.primary : "#FFFFFF"}
-                trackColor={{ false: "#D1D5DB", true: theme.primary }}
-              />
-            </View>
+
             <PrimaryButton
               label={loading ? <ActivityIndicator color="#FFF" /> : "Sign In"}
               onPress={handleLogin}
@@ -812,7 +796,11 @@ export function LoginScreen({
               activeOpacity={0.8}
             >
               <Ionicons name="logo-google" size={18} color={theme.text} />
-              <Text style={{ fontSize: 14, fontWeight: "600", color: theme.text }}>Continue with Google</Text>
+              <Text
+                style={{ fontSize: 14, fontWeight: "600", color: theme.text }}
+              >
+                Continue with Google
+              </Text>
             </TouchableOpacity>
             <View style={styles.createAccountRow}>
               <Text style={styles.footerText}>New to Medgram?</Text>
@@ -1218,7 +1206,9 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
   const styles = createStyles(theme);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -1228,8 +1218,15 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
       { email, password },
     );
 
-    if (!isValid) {
-      setErrors(validationErrors);
+    const customErrors = { ...validationErrors };
+    if (!confirmPassword) {
+      customErrors.confirmPassword = "Confirm password is required";
+    } else if (password !== confirmPassword) {
+      customErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (Object.keys(customErrors).length > 0) {
+      setErrors(customErrors);
       return;
     }
     setErrors({});
@@ -1304,9 +1301,32 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
-              rightIcon={<MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={22} color={theme.textMuted} />}
+              rightIcon={
+                <MaterialIcons
+                  name={showPassword ? "visibility-off" : "visibility"}
+                  size={22}
+                  color={theme.textMuted}
+                />
+              }
               onRightIconPress={() => setShowPassword((prev) => !prev)}
               error={errors.password}
+            />
+
+            <TextField
+              label="Confirm Password"
+              placeholder="●●●●●●●●"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              rightIcon={
+                <MaterialIcons
+                  name={showConfirmPassword ? "visibility-off" : "visibility"}
+                  size={22}
+                  color={theme.textMuted}
+                />
+              }
+              onRightIconPress={() => setShowConfirmPassword((prev) => !prev)}
+              error={errors.confirmPassword}
             />
             <View style={styles.passwordStrengthRow}>
               <Text style={styles.passwordStrengthLabel}>
@@ -1352,7 +1372,11 @@ export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
             activeOpacity={0.8}
           >
             <Ionicons name="logo-google" size={18} color={theme.text} />
-            <Text style={{ fontSize: 14, fontWeight: "600", color: theme.text }}>Continue with Google</Text>
+            <Text
+              style={{ fontSize: 14, fontWeight: "600", color: theme.text }}
+            >
+              Continue with Google
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -1584,27 +1608,7 @@ const createStyles = (theme) =>
       fontSize: 18,
       color: theme.textSecondary,
     },
-    staySignedInRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 24,
-      paddingVertical: 6,
-    },
-    staySignedInInfo: {
-      flex: 1,
-      marginRight: 12,
-    },
-    staySignedInLabel: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: theme.text,
-    },
-    staySignedInHint: {
-      fontSize: 12,
-      color: theme.textSecondary,
-      marginTop: 2,
-    },
+
     fingerprintButton: {
       width: 72,
       height: 72,
@@ -1641,7 +1645,7 @@ const createStyles = (theme) =>
       textAlign: "center",
     },
     textInput: {
-      width: '100%',
+      width: "100%",
       borderRadius: 12,
       borderWidth: 1,
       borderColor: theme.border,

@@ -5,6 +5,7 @@ import { getTheme, saveTheme } from '../utils/storage';
 
 export const lightTheme = {
   mode: 'light',
+  dark: false,
   background: '#FFFFFF',
   surface: '#FFFFFF',
   surfaceSubtle: '#F7F7F5',
@@ -27,6 +28,7 @@ export const lightTheme = {
 
 export const darkTheme = {
   mode: 'dark',
+  dark: true,
   background: '#0A0A0A',
   surface: '#141414',
   surfaceSubtle: '#1E1E1C',

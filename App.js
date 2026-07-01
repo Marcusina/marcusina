@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "./context/ThemeContext";
+import { ToastProvider, toast } from "./context/ToastContext";
 import {
   getCurrentUser,
   updateProfile,
@@ -426,7 +427,7 @@ export default function App() {
             setScreen("profilePublic");
           } catch (error) {
             console.error("Failed to update profile:", error);
-            // Handle error (e.g., show an alert)
+            toast.error(error.message || "Failed to update profile");
           }
         }}
       />
@@ -503,37 +504,39 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        {isLoading ? (
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <ActivityIndicator size="large" color="#000000" />
-            <Text style={{ marginTop: 12, color: "#6B7280" }}>
-              Initializing...
-            </Text>
-          </View>
-        ) : isAuthScreen ? (
-          <Layout
-            currentScreen={screen}
-            onNavigate={(target) => setScreen(target)}
-            userProfile={profile}
-            onLogout={handleLogout}
-          >
-            {content}
-          </Layout>
-        ) : (
-          content || (
+        <ToastProvider>
+          {isLoading ? (
             <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
+              style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
             >
-              <Text>Loading App...</Text>
+              <ActivityIndicator size="large" color="#000000" />
+              <Text style={{ marginTop: 12, color: "#6B7280" }}>
+                Initializing...
+              </Text>
             </View>
-          )
-        )}
+          ) : isAuthScreen ? (
+            <Layout
+              currentScreen={screen}
+              onNavigate={(target) => setScreen(target)}
+              userProfile={profile}
+              onLogout={handleLogout}
+            >
+              {content}
+            </Layout>
+          ) : (
+            content || (
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text>Loading App...</Text>
+              </View>
+            )
+          )}
+        </ToastProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

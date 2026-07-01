@@ -8,7 +8,6 @@ import {
   Platform,
   useWindowDimensions,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Svg, {
@@ -20,6 +19,7 @@ import Svg, {
 } from "react-native-svg";
 import { getMedications, getCart, addToCart } from "../api/meds.api";
 import { useTheme } from "../context/ThemeContext";
+import { toast } from "../context/ToastContext";
 
 export function HomeScreen({
   user,
@@ -33,7 +33,11 @@ export function HomeScreen({
 }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web" && width >= 768;
+
+  // Responsive Breakpoints
+  const isTablet = width >= 600 && width < 1024;
+  const isDesktop = width >= 1024;
+  const isWebOrLarge = (Platform.OS === "web" && width >= 768) || isDesktop;
 
   const [medications, setMedications] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,16 +45,29 @@ export function HomeScreen({
   const [cartCount, setCartCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Crucial variable declaration to prevent the ReferenceError
   const brandPrimaryColor = theme.primary || "#3B82F6";
 
-  // Responsive Sizing Values for the Feed Circles
-  // Small Screens: 64px (w-16) | Tablet/Desktop: 80px (md:w-20)
-  const isLargeScreen = width >= 768;
-  const avatarSize = isLargeScreen ? 80 : 64;
+  // Responsive sizing for user avatars/stories
+  const avatarSize = isWebOrLarge || isTablet ? 80 : 64;
   const strokeWidth = 2.5;
   const radius = (avatarSize - strokeWidth) / 2;
   const center = avatarSize / 2;
+
+  // Dynamically calculate grid layouts for products
+  const getGridConfig = () => {
+    let numColumns = 2;
+    if (isDesktop) numColumns = 4;
+    else if (isTablet || width >= 768) numColumns = 3;
+
+    const totalPadding = isWebOrLarge ? 0 : 40; // horizontal layout space padding
+    const gap = 16;
+    const availableWidth = width - totalPadding - gap * (numColumns - 1);
+    const cardWidth = availableWidth / numColumns;
+
+    return { cardWidth, gap };
+  };
+
+  const { cardWidth, gap: gridGap } = getGridConfig();
 
   const fetchMedications = useCallback(
     async (search = "", category = null) => {
@@ -97,23 +114,20 @@ export function HomeScreen({
 
   const handleAddToCart = async (medicationId) => {
     if (!token) {
-      Alert.alert("Error", "You must be logged in to add items to cart");
+      toast.error("You must be logged in to add items to cart");
       return;
     }
     try {
       await addToCart(token, medicationId, 1);
       fetchCartCount();
-      Alert.alert("Success", "Item added to cart");
+      toast.success("Item added to cart");
     } catch (error) {
-      Alert.alert("Error", error.message || "Failed to add item to cart");
+      toast.error(error.message || "Failed to add item to cart");
     }
   };
 
   const handleUploadPrescription = () => {
-    Alert.alert(
-      "Coming Soon",
-      "Prescription upload will be available in the next update.",
-    );
+    toast.info("Prescription upload will be available in the next update.");
   };
 
   const activeFeedUsers = [
@@ -164,73 +178,116 @@ export function HomeScreen({
   ];
 
   return (
-    <View style={{ backgroundColor: theme.background }} className="flex-1">
+    <View style={{ backgroundColor: theme.background, flex: 1 }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: isWeb ? 40 : 24 }}
+        contentContainerStyle={{ paddingBottom: isWebOrLarge ? 40 : 24 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className={`pt-4 ${isWeb ? "px-0" : "px-5"}`}>
+        <View
+          style={{ paddingTop: 16, paddingHorizontal: isWebOrLarge ? 0 : 20 }}
+        >
+          {/* Stories Horizontal Row */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ borderBottomColor: theme.border }}
-            className="flex-row py-4 mb-4 border-b"
+            style={{ borderBottomColor: theme.border, borderBottomWidth: 1 }}
             contentContainerStyle={{
-              gap: isLargeScreen ? 24 : 16,
+              flexDirection: "row",
+              paddingVertical: 16,
+              marginBottom: 16,
+              gap: isWebOrLarge || isTablet ? 24 : 16,
               paddingRight: 16,
             }}
           >
-            {/* 1st Item: Signed-In User Profile, patients cannot make posts */}
+            {/* Create Post Action Avatar */}
             <TouchableOpacity
               activeOpacity={0.8}
-              className="items-center w-16 md:w-20"
+              style={{ itemsCenter: "center", width: avatarSize }}
               onPress={onOpenCreatePost}
             >
               <View
-                style={{ backgroundColor: theme.border }}
-                className="w-16 h-16 md:w-20 md:h-20 rounded-full items-center justify-center relative"
+                style={{
+                  backgroundColor: theme.border,
+                  width: avatarSize,
+                  height: avatarSize,
+                  borderRadius: avatarSize / 2,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                }}
               >
                 <Image
                   source={{
                     uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
                   }}
-                  className="w-full h-full rounded-full"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: avatarSize / 2,
+                  }}
                 />
                 <View
                   style={{
                     backgroundColor: theme.text,
                     borderColor: theme.background,
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    width: isWebOrLarge || isTablet ? 24 : 20,
+                    height: isWebOrLarge || isTablet ? 24 : 20,
+                    borderRadius: 12,
+                    borderWidth: 2,
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                  className="absolute bottom-0 right-0 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 items-center justify-center"
                 >
                   <MaterialIcons
                     name="add"
-                    size={isLargeScreen ? 14 : 12}
+                    size={isWebOrLarge || isTablet ? 14 : 12}
                     color={theme.background}
                   />
                 </View>
               </View>
               <Text
                 numberOfLines={1}
-                style={{ color: theme.textSecondary }}
-                className="text-[11px] md:text-xs font-medium mt-2 text-center w-full"
+                style={{
+                  color: theme.textSecondary,
+                  fontSize: isWebOrLarge || isTablet ? 12 : 11,
+                  fontWeight: "500",
+                  marginTop: 8,
+                  textAlign: "center",
+                }}
               >
                 You
               </Text>
             </TouchableOpacity>
 
-            {/* Other Profiles with SVG Linear Gradient Rings */}
+            {/* Stories List mapping */}
             {activeFeedUsers.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 activeOpacity={0.8}
-                className="items-center w-16 md:w-20 relative"
-                // 2. Updated to fire onOpenPost with current item.id context target
+                style={{ alignItems: "center", width: avatarSize }}
                 onPress={() => onOpenPost && onOpenPost(item.id)}
               >
-                <View className="w-16 h-16 md:w-20 md:h-20 items-center justify-center relative">
-                  {/* Native SVG Vector Gradient Layout Ring */}
-                  <View className="absolute inset-0">
+                <View
+                  style={{
+                    width: avatarSize,
+                    height: avatarSize,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                  }}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                  >
                     <Svg
                       width={avatarSize}
                       height={avatarSize}
@@ -258,32 +315,41 @@ export function HomeScreen({
                       />
                     </Svg>
                   </View>
-
-                  {/* Inner Content Avatar Mask */}
-                  <View className="w-[88%] h-[88%] rounded-full overflow-hidden items-center justify-center bg-transparent">
+                  <View
+                    style={{
+                      width: "86%",
+                      height: "86%",
+                      borderRadius: avatarSize / 2,
+                      overflow: "hidden",
+                    }}
+                  >
                     <Image
                       source={{ uri: item.avatar }}
-                      className="w-full h-full rounded-full"
+                      style={{ width: "100%", height: "100%" }}
                     />
                   </View>
                 </View>
-
                 <Text
                   numberOfLines={1}
-                  style={{ color: theme.text }}
-                  className="text-[11px] md:text-xs font-medium mt-2 text-center w-full"
+                  style={{
+                    color: theme.text,
+                    fontSize: isWebOrLarge || isTablet ? 12 : 11,
+                    fontWeight: "500",
+                    marginTop: 8,
+                    textAlign: "center",
+                    width: "100%",
+                  }}
                 >
                   {item.name}
                 </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
-          {/* ======================================================= */}
 
-          {/* ─── HEALTH PULSE WIDGET (FULLY SYSTEM THEME ISOLATED) ─── */}
+          {/* Health Pulse Widget */}
           <View
             style={{
-              backgroundColor: theme.surface, // Kept as theme.surface for both modes
+              backgroundColor: theme.surface,
               borderRadius: 16,
               padding: 18,
               marginBottom: 14,
@@ -304,7 +370,6 @@ export function HomeScreen({
                   style={{
                     fontSize: 9,
                     letterSpacing: 1.2,
-                    // Dynamically shifts text color based on surface mode
                     color: theme.dark ? theme.textSecondary : theme.textMuted,
                     marginBottom: 4,
                     fontWeight: "600",
@@ -316,7 +381,6 @@ export function HomeScreen({
                   style={{
                     fontSize: 16,
                     fontWeight: "800",
-                    // Uses the theme text color to automatically swap black/white text correctly
                     color: theme.text,
                     letterSpacing: -0.2,
                   }}
@@ -324,8 +388,6 @@ export function HomeScreen({
                   Good morning, Amara 👋
                 </Text>
               </View>
-
-              {/* Live Pill Badge */}
               <View
                 style={{
                   flexDirection: "row",
@@ -343,7 +405,7 @@ export function HomeScreen({
                     width: 6,
                     height: 6,
                     borderRadius: 3,
-                    backgroundColor: brandPrimaryColor, // Keeps branding primary color visible
+                    backgroundColor: brandPrimaryColor,
                     marginRight: 4,
                   }}
                 />
@@ -359,7 +421,6 @@ export function HomeScreen({
               </View>
             </View>
 
-            {/* Stats Horizontal Grid */}
             <View
               style={{
                 flexDirection: "row",
@@ -371,7 +432,6 @@ export function HomeScreen({
               <View
                 style={{
                   flex: 1,
-                  // Uses high contrast, low-opacity background boxes depending on light/dark modes
                   backgroundColor: theme.dark
                     ? "rgba(255,255,255,0.04)"
                     : "rgba(0,0,0,0.03)",
@@ -390,11 +450,7 @@ export function HomeScreen({
                   72
                 </Text>
                 <Text
-                  style={{
-                    fontSize: 10,
-                    color: theme.text,
-                    fontWeight: "500",
-                  }}
+                  style={{ fontSize: 10, color: theme.text, fontWeight: "500" }}
                 >
                   BPM
                 </Text>
@@ -408,8 +464,7 @@ export function HomeScreen({
                   Heart Rate
                 </Text>
               </View>
-
-              {/* Blood Pressure */}
+              {/* BP */}
               <View
                 style={{
                   flex: 1,
@@ -423,7 +478,7 @@ export function HomeScreen({
               >
                 <Text
                   style={{
-                    color: theme.dark ? "#FFB800" : "#D97706", // Darker amber/orange text in light mode for proper contrast
+                    color: theme.dark ? "#FFB800" : "#D97706",
                     fontSize: 17,
                     fontWeight: "800",
                   }}
@@ -431,11 +486,7 @@ export function HomeScreen({
                   120/80
                 </Text>
                 <Text
-                  style={{
-                    fontSize: 10,
-                    color: theme.text,
-                    fontWeight: "500",
-                  }}
+                  style={{ fontSize: 10, color: theme.text, fontWeight: "500" }}
                 >
                   mmHg
                 </Text>
@@ -449,7 +500,6 @@ export function HomeScreen({
                   Blood Pressure
                 </Text>
               </View>
-
               {/* Oxygen */}
               <View
                 style={{
@@ -464,7 +514,7 @@ export function HomeScreen({
               >
                 <Text
                   style={{
-                    color: theme.dark ? "#34C759" : "#16A34A", // Darker emerald green in light mode for visibility
+                    color: theme.dark ? "#34C759" : "#16A34A",
                     fontSize: 18,
                     fontWeight: "800",
                   }}
@@ -472,11 +522,7 @@ export function HomeScreen({
                   98%
                 </Text>
                 <Text
-                  style={{
-                    fontSize: 10,
-                    color: theme.text,
-                    fontWeight: "500",
-                  }}
+                  style={{ fontSize: 10, color: theme.text, fontWeight: "500" }}
                 >
                   SpO₂
                 </Text>
@@ -493,7 +539,7 @@ export function HomeScreen({
             </View>
           </View>
 
-          {/* ─── UPCOMING APPOINTMENT MINI-BANNER ─── */}
+          {/* Upcoming Appointment Banner */}
           <View
             style={{
               flexDirection: "row",
@@ -580,7 +626,7 @@ export function HomeScreen({
             </TouchableOpacity>
           </View>
 
-          {/* ─── POST 1: IMAGE COMPONENT ─── */}
+          {/* Post 1 - Enhanced Responsive Image Aspect Ratio */}
           <View
             style={{
               backgroundColor: theme.surface,
@@ -633,15 +679,7 @@ export function HomeScreen({
                   Cardiologist · Lagos · 2h ago
                 </Text>
               </View>
-              <TouchableOpacity style={{ padding: 4 }}>
-                <Svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <Circle cx="9" cy="4.5" r="1.4" fill="#9A9A9A" />
-                  <Circle cx="9" cy="9" r="1.4" fill="#9A9A9A" />
-                  <Circle cx="9" cy="13.5" r="1.4" fill="#9A9A9A" />
-                </Svg>
-              </TouchableOpacity>
             </View>
-
             <Text
               style={{
                 color: theme.text,
@@ -651,27 +689,25 @@ export function HomeScreen({
               }}
             >
               High blood pressure is Africa's silent killer. Early detection and
-              consistent management saves lives. Get screened at a
-              Medgram-verified clinic near you. 🩺
+              management saves lives. 🩺
               <Text style={{ color: brandPrimaryColor, fontWeight: "500" }}>
                 {" "}
-                #HeartHealth #MedGram #CardioNG
+                #HeartHealth #MedGram
               </Text>
             </Text>
-
             <Image
               source={{
                 uri: "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=700&q=80",
               }}
               style={{
                 width: "100%",
-                height: 196,
+                aspectRatio: 16 / 9,
                 borderRadius: 12,
                 marginBottom: 12,
               }}
               resizeMode="cover"
             />
-
+            {/* Post Interaction Row */}
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
             >
@@ -683,7 +719,6 @@ export function HomeScreen({
                     d="M9.5 16.5S2 12 2 6.8C2 4.7 3.9 3 6.2 3 7.5 3 8.7 3.58 9.5 4.52 10.3 3.58 11.5 3 12.8 3 15.1 3 17 4.7 17 6.8c0 5.2-7.5 9.7-7.5 9.7Z"
                     stroke={theme.textSecondary}
                     strokeWidth="1.5"
-                    strokeLinejoin="round"
                   />
                 </Svg>
                 <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
@@ -698,62 +733,16 @@ export function HomeScreen({
                     d="M16.5 10C16.5 13.6 13.4 16.5 9.5 16.5c-.88 0-1.72-.16-2.5-.46L3 17l.97-3.85C3.36 12.3 3 11.2 3 10 3 6.4 5.9 3.5 9.5 3.5S17 6.4 17 10Z"
                     stroke={theme.textSecondary}
                     strokeWidth="1.5"
-                    strokeLinejoin="round"
                   />
                 </Svg>
                 <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
                   84
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-              >
-                <Svg width="18" height="18" viewBox="0 0 19 19" fill="none">
-                  <Circle
-                    cx="15"
-                    cy="4.5"
-                    r="2"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                  />
-                  <Circle
-                    cx="15"
-                    cy="14.5"
-                    r="2"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                  />
-                  <Circle
-                    cx="4.5"
-                    cy="9.5"
-                    r="2"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                  />
-                  <Path
-                    d="M13 5.3L6.5 8.8M6.5 10.2L13 13.7"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                  />
-                </Svg>
-                <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
-                  Share
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={{ marginLeft: "auto" }}>
-                <Svg width="18" height="18" viewBox="0 0 19 19" fill="none">
-                  <Path
-                    d="M5 2h9a2 2 0 012 2v13l-6.5-3.5L3 17V4a2 2 0 012-2Z"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              </TouchableOpacity>
             </View>
           </View>
 
-          {/* ─── POST 2: POLL COMPONENT ─── */}
+          {/* Post 2 - Poll Component */}
           <View
             style={{
               backgroundColor: theme.surface,
@@ -797,8 +786,6 @@ export function HomeScreen({
                       d="M4.5 7.5L6.5 9.5L10.5 5.5"
                       stroke="white"
                       strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
                     />
                   </Svg>
                 </View>
@@ -807,7 +794,6 @@ export function HomeScreen({
                 </Text>
               </View>
             </View>
-
             <Text
               style={{
                 color: theme.text,
@@ -818,8 +804,6 @@ export function HomeScreen({
             >
               How often do you get a routine health checkup?
             </Text>
-
-            {/* Poll Rows */}
             {[
               { label: "Every 6 months", pct: "38%", color: "#0e3054" },
               { label: "Once a year", pct: "32%", color: "#007AFF" },
@@ -830,8 +814,9 @@ export function HomeScreen({
                 <View
                   style={{
                     flexDirection: "row",
-                    justifyContent: "space-between",
+                    justifyBetween: "space-between",
                     marginBottom: 4,
+                    justifyContent: "space-between",
                   }}
                 >
                   <Text
@@ -872,18 +857,9 @@ export function HomeScreen({
                 </View>
               </View>
             ))}
-            <Text
-              style={{
-                fontSize: 10.5,
-                color: theme.textSecondary,
-                marginTop: 6,
-              }}
-            >
-              4,209 votes · 18 hours left
-            </Text>
           </View>
 
-          {/* ─── POST 3: SURGEON POST COMPONENT ─── */}
+          {/* Post 3 - Surgeon Card */}
           <View
             style={{
               backgroundColor: theme.surface,
@@ -927,8 +903,6 @@ export function HomeScreen({
                       d="M4.5 7.5L6.5 9.5L10.5 5.5"
                       stroke="white"
                       strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
                     />
                   </Svg>
                 </View>
@@ -937,7 +911,6 @@ export function HomeScreen({
                 </Text>
               </View>
             </View>
-
             <Text
               style={{
                 color: theme.text,
@@ -947,95 +920,23 @@ export function HomeScreen({
               }}
             >
               Successfully completed our 200th minimally invasive procedure at
-              National Hospital Abuja. Proud of this extraordinary team. African
-              healthcare is ascending. 🌍
+              National Hospital Abuja. 🌍
             </Text>
-
             <Image
               source={{
                 uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?auto=format&fit=crop&w=700&q=80",
               }}
               style={{
                 width: "100%",
-                height: 200,
+                aspectRatio: 4 / 3,
                 borderRadius: 12,
                 marginBottom: 12,
               }}
               resizeMode="cover"
             />
-
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
-            >
-              <TouchableOpacity
-                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-              >
-                <Svg width="18" height="18" viewBox="0 0 19 19" fill="none">
-                  <Path
-                    d="M9.5 16.5S2 12 2 6.8C2 4.7 3.9 3 6.2 3 7.5 3 8.7 3.58 9.5 4.52 10.3 3.58 11.5 3 12.8 3 15.1 3 17 4.7 17 6.8c0 5.2-7.5 9.7-7.5 9.7Z"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-                <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
-                  3.4k
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-              >
-                <Svg width="18" height="18" viewBox="0 0 19 19" fill="none">
-                  <Path
-                    d="M16.5 10C16.5 13.6 13.4 16.5 9.5 16.5c-.88 0-1.72-.16-2.5-.46L3 17l.97-3.85C3.36 12.3 3 11.2 3 10 3 6.4 5.9 3.5 9.5 3.5S17 6.4 17 10Z"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-                <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
-                  211
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-              >
-                <Svg width="18" height="18" viewBox="0 0 19 19" fill="none">
-                  <Circle
-                    cx="15"
-                    cy="4.5"
-                    r="2"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                  />
-                  <Circle
-                    cx="15"
-                    cy="14.5"
-                    r="2"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                  />
-                  <Circle
-                    cx="4.5"
-                    cy="9.5"
-                    r="2"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                  />
-                  <Path
-                    d="M13 5.3L6.5 8.8M6.5 10.2L13 13.7"
-                    stroke={theme.textSecondary}
-                    strokeWidth="1.5"
-                  />
-                </Svg>
-                <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
-                  Share
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
-          {/* ─── TRENDING IN HEALTH SECTION ─── */}
+          {/* Trending Section */}
           <View style={{ paddingVertical: 18 }}>
             <Text
               style={{
@@ -1048,7 +949,6 @@ export function HomeScreen({
             >
               TRENDING IN HEALTH
             </Text>
-
             {[
               { tag: "#WorldHealthDay", posts: "12,400 posts" },
               { tag: "#MalariaFree2026", posts: "8,200 posts" },
@@ -1111,26 +1011,28 @@ export function HomeScreen({
             ))}
           </View>
 
-          {/* HERO PROMO BANNER (FULLY SYSTEM THEME RESPONSIVE) */}
-          <View className={`mb-6 ${isWeb ? "flex-row gap-5" : "flex-col"}`}>
+          {/* Hero Promo Banner (Flex Row Container on Large Wide Displays) */}
+          <View
+            style={{
+              flexDirection: isWebOrLarge ? "row" : "column",
+              gap: 16,
+              marginBottom: 24,
+            }}
+          >
             <View
               style={{
-                backgroundColor: theme.surface, // Dynamic card surface color (typically gray/dark-gray in dark mode)
+                backgroundColor: theme.surface,
                 borderWidth: 1,
-                borderColor: theme.border, // Dynamic border styling
+                borderColor: theme.border,
                 borderRadius: 16,
                 padding: 24,
-                position: "relative",
-                overflow: "hidden",
                 flex: 1,
-                flexGrow: isWeb ? 2 : 1,
               }}
             >
-              {/* Small Tag Pill Badge */}
               <View
                 style={{
                   backgroundColor:
-                    theme.primaryLight || "rgba(59, 130, 246, 0.1)", // Subtle dynamic theme tint
+                    theme.primaryLight || "rgba(59, 130, 246, 0.1)",
                   paddingHorizontal: 12,
                   paddingVertical: 6,
                   borderRadius: 9999,
@@ -1148,8 +1050,6 @@ export function HomeScreen({
                   QuickProcess
                 </Text>
               </View>
-
-              {/* Main Card Title Heading */}
               <Text
                 style={{
                   color: theme.text,
@@ -1160,36 +1060,31 @@ export function HomeScreen({
               >
                 Upload Prescription
               </Text>
-
-              {/* Subtitle Body Description Text */}
               <Text
                 style={{
                   color: theme.textSecondary,
                   fontSize: 14,
                   marginBottom: 20,
-                  maxWidth: isWeb ? "70%" : "85%",
                 }}
               >
                 Quick processing & home delivery within 2 hours.
               </Text>
-
-              {/* Interactive Button */}
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={{
-                  backgroundColor: theme.dark ? brandPrimaryColor : "#FFFFFF", // Flips button background color dynamically
+                  backgroundColor: theme.dark ? brandPrimaryColor : "#FFFFFF",
                   paddingHorizontal: 20,
                   paddingVertical: 10,
                   borderRadius: 12,
                   alignSelf: "flex-start",
-                  borderWidth: 1, // Defines the border thickness
-                  borderColor: "#000000", // Forces a solid black border line
+                  borderWidth: 1,
+                  borderColor: "#000000",
                 }}
                 onPress={handleUploadPrescription}
               >
                 <Text
                   style={{
-                    color: theme.dark ? "#FFFFFF" : "#111827", // Forces dark text on dark theme, white text on light theme
+                    color: theme.dark ? "#FFFFFF" : "#111827",
                     fontWeight: "600",
                     fontSize: 14,
                   }}
@@ -1199,14 +1094,19 @@ export function HomeScreen({
               </TouchableOpacity>
             </View>
 
-            {isWeb && (
-              <View className="flex-1 gap-4">
+            {isWebOrLarge && (
+              <View style={{ flex: 1, flexDirection: "row", gap: 16 }}>
                 <View
                   style={{
                     backgroundColor: theme.surface,
                     borderColor: theme.border,
+                    borderWidth: 1,
+                    flex: 1,
+                    borderRadius: 16,
+                    padding: 16,
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                  className="flex-1 rounded-2xl p-4 items-center justify-center border"
                 >
                   <MaterialIcons
                     name="local-shipping"
@@ -1214,15 +1114,16 @@ export function HomeScreen({
                     color={brandPrimaryColor}
                   />
                   <Text
-                    style={{ color: theme.text }}
-                    className="text-2xl font-bold mt-2"
+                    style={{
+                      color: theme.text,
+                      fontSize: 24,
+                      fontWeight: "bold",
+                      marginTop: 8,
+                    }}
                   >
                     2hr
                   </Text>
-                  <Text
-                    style={{ color: theme.textSecondary }}
-                    className="text-xs mt-0.5"
-                  >
+                  <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
                     Express Delivery
                   </Text>
                 </View>
@@ -1230,8 +1131,13 @@ export function HomeScreen({
                   style={{
                     backgroundColor: theme.surface,
                     borderColor: theme.border,
+                    borderWidth: 1,
+                    flex: 1,
+                    borderRadius: 16,
+                    padding: 16,
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                  className="flex-1 rounded-2xl p-4 items-center justify-center border"
                 >
                   <MaterialIcons
                     name="verified"
@@ -1239,15 +1145,16 @@ export function HomeScreen({
                     color={brandPrimaryColor}
                   />
                   <Text
-                    style={{ color: theme.text }}
-                    className="text-2xl font-bold mt-2"
+                    style={{
+                      color: theme.text,
+                      fontSize: 24,
+                      fontWeight: "bold",
+                      marginTop: 8,
+                    }}
                   >
                     100%
                   </Text>
-                  <Text
-                    style={{ color: theme.textSecondary }}
-                    className="text-xs mt-0.5"
-                  >
+                  <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
                     Genuine Meds
                   </Text>
                 </View>
@@ -1256,33 +1163,44 @@ export function HomeScreen({
           </View>
 
           {/* Shop Categories Header */}
-          <View className="flex-row justify-between items-center mb-4">
-            <Text style={{ color: theme.text }} className="text-lg font-bold">
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={{ color: theme.text, fontSize: 18, fontWeight: "bold" }}
+            >
               Shop by Category
             </Text>
             <TouchableOpacity onPress={() => handleCategorySelect(null)}>
               <Text
-                style={{ color: theme.primary }}
-                className="text-sm font-semibold"
+                style={{
+                  color: theme.primary,
+                  fontSize: 14,
+                  fontWeight: "600",
+                }}
               >
                 See all
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Categories Slider Row */}
+          {/* Categories Slider */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            className="flex-row mb-6"
-            contentContainerStyle={{ gap: 20, paddingBottom: 8 }}
+            contentContainerStyle={{ gap: 20, paddingBottom: 16 }}
           >
             {categories.map((item) => {
               const isActive = selectedCategory === item.value;
               return (
                 <TouchableOpacity
                   key={item.label}
-                  className="items-center"
+                  style={{ alignItems: "center" }}
                   onPress={() => handleCategorySelect(item.value)}
                 >
                   <View
@@ -1290,8 +1208,13 @@ export function HomeScreen({
                       backgroundColor: isActive
                         ? theme.primary
                         : theme.primaryLight,
+                      width: 64,
+                      height: 64,
+                      borderRadius: 32,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 8,
                     }}
-                    className="w-16 h-16 rounded-full items-center justify-center mb-2"
                   >
                     <MaterialIcons
                       name={item.icon || "category"}
@@ -1302,8 +1225,9 @@ export function HomeScreen({
                   <Text
                     style={{
                       color: isActive ? theme.primary : theme.textSecondary,
+                      fontSize: 14,
+                      fontWeight: isActive ? "700" : "500",
                     }}
-                    className={`text-sm font-medium ${isActive ? "font-bold" : ""}`}
                   >
                     {item.label}
                   </Text>
@@ -1312,10 +1236,14 @@ export function HomeScreen({
             })}
           </ScrollView>
 
-          {/* Products Grid Title */}
+          {/* Products Dynamic Responsive Grid */}
           <Text
-            style={{ color: theme.text }}
-            className="text-lg font-bold mb-4"
+            style={{
+              color: theme.text,
+              fontSize: 18,
+              fontWeight: "bold",
+              marginBottom: 16,
+            }}
           >
             {selectedCategory
               ? `${selectedCategory} Products`
@@ -1324,32 +1252,45 @@ export function HomeScreen({
                 : "Popular Products"}
           </Text>
 
-          {/* Products Dynamic Grid Section */}
           {isLoading ? (
             <ActivityIndicator
               size="large"
               color={theme.primary}
-              className="mt-5"
+              style={{ marginTop: 20 }}
             />
           ) : medications.length > 0 ? (
-            <View className="flex-row flex-wrap justify-between mt-2">
+            <View
+              style={{ flexDirection: "row", flexWrap: "wrap", gap: gridGap }}
+            >
               {medications.map((item) => (
                 <View
                   key={item._id}
                   style={{
                     backgroundColor: theme.surface,
                     borderColor: theme.border,
+                    borderWidth: 1,
+                    borderRadius: 16,
+                    padding: 12,
+                    marginBottom: 4,
+                    width: cardWidth,
                   }}
-                  className={`border rounded-2xl p-3 mb-4 ${isWeb ? "w-[23%]" : "w-[48%]"}`}
                 >
                   <View
-                    style={{ backgroundColor: theme.background }}
-                    className="aspect-square rounded-xl mb-3 items-center justify-center relative overflow-hidden"
+                    style={{
+                      backgroundColor: theme.background,
+                      aspectRatio: 1,
+                      borderRadius: 12,
+                      marginBottom: 12,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      position: "relative",
+                    }}
                   >
                     {item.image_url && item.image_url.length > 0 ? (
                       <Image
                         source={{ uri: item.image_url[0].url }}
-                        className="w-full h-full"
+                        style={{ width: "100%", height: "100%" }}
                         resizeMode="cover"
                       />
                     ) : (
@@ -1360,41 +1301,69 @@ export function HomeScreen({
                       />
                     )}
                   </View>
-                  <View className="absolute top-5 left-5">
+                  <View style={{ position: "absolute", top: 18, left: 18 }}>
                     <Text
                       style={{
                         color: theme.primary,
                         backgroundColor: theme.primaryLight,
+                        fontSize: 10,
+                        fontWeight: "bold",
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        overflow: "hidden",
                       }}
-                      className="text-[10px] font-bold px-2 py-1 rounded-md overflow-hidden"
                     >
                       {item.requires_prescription ? "Prescription Req." : "OTC"}
                     </Text>
                   </View>
                   <Text
-                    style={{ color: theme.text }}
-                    className="text-sm font-semibold mb-1 h-10"
+                    style={{
+                      color: theme.text,
+                      fontSize: 14,
+                      fontWeight: "600",
+                      marginBottom: 4,
+                    }}
                     numberOfLines={2}
                   >
                     {item.medication_name}
                   </Text>
                   <Text
-                    style={{ color: theme.textMuted || "#9CA3AF" }}
-                    className="text-xs mb-3"
+                    style={{
+                      color: theme.textMuted || "#9CA3AF",
+                      fontSize: 12,
+                      marginBottom: 12,
+                    }}
                     numberOfLines={1}
                   >
                     {item.generic_name}
                   </Text>
-                  <View className="flex-row justify-between items-center mt-auto">
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: "auto",
+                    }}
+                  >
                     <Text
-                      style={{ color: theme.text }}
-                      className="text-base font-bold"
+                      style={{
+                        color: theme.text,
+                        fontSize: 16,
+                        fontWeight: "bold",
+                      }}
                     >
                       $10.00
                     </Text>
                     <TouchableOpacity
-                      style={{ backgroundColor: theme.primary }}
-                      className="w-8 h-8 rounded-lg items-center justify-center"
+                      style={{
+                        backgroundColor: theme.primary,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
                       onPress={() => handleAddToCart(item._id)}
                     >
                       <MaterialIcons name="add" size={20} color="#FFFFFF" />
@@ -1404,15 +1373,25 @@ export function HomeScreen({
               ))}
             </View>
           ) : (
-            <View className="items-center justify-center py-10 w-full">
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 40,
+                width: "100%",
+              }}
+            >
               <MaterialIcons
                 name="search-off"
                 size={64}
                 color={theme.textMuted || "#D1D5DB"}
               />
               <Text
-                style={{ color: theme.textSecondary }}
-                className="mt-3 text-base"
+                style={{
+                  color: theme.textSecondary,
+                  marginTop: 12,
+                  fontSize: 16,
+                }}
               >
                 No medications found.
               </Text>

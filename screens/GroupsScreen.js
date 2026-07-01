@@ -9,7 +9,6 @@ import {
   useWindowDimensions,
   ActivityIndicator,
   TextInput,
-  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
@@ -18,6 +17,7 @@ import {
   joinCommunity,
 } from "../api/community.api";
 import { useTheme } from "../context/ThemeContext";
+import { useToast } from "../context/ToastContext";
 
 export function GroupsScreen({
   token,
@@ -26,6 +26,7 @@ export function GroupsScreen({
   onOpenProfile,
 }) {
   const { theme, themeMode } = useTheme();
+  const { showToast } = useToast();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width >= 768;
 
@@ -116,18 +117,15 @@ export function GroupsScreen({
   const handleJoinGroup = async (communityId) => {
     try {
       await joinCommunity(token, communityId);
-      Alert.alert("Success", "Joined group successfully!");
+      showToast("Joined group successfully!", "success");
       fetchCommunities();
     } catch (error) {
-      Alert.alert("Error", error.message || "Failed to join group");
+      showToast(error.message || "Failed to join group", "error");
     }
   };
 
   const handleCreateGroup = () => {
-    Alert.alert(
-      "Coming Soon",
-      "Group creation will be available in the next update.",
-    );
+    showToast("Group creation will be available in the next update.", "info");
   };
 
   return (
@@ -141,36 +139,6 @@ export function GroupsScreen({
           >
             Groups
           </Text>
-          <View className="flex-row items-center space-x-3">
-            <TouchableOpacity
-              className="p-2 rounded-xl"
-              style={{ backgroundColor: theme.surfaceSubtle }}
-              onPress={onOpenProfile}
-            >
-              <MaterialIcons
-                name="person-outline"
-                size={24}
-                color={theme.textSecondary}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="p-2 rounded-xl relative"
-              style={{ backgroundColor: theme.surfaceSubtle }}
-            >
-              <MaterialIcons
-                name="notifications-none"
-                size={24}
-                color={theme.textSecondary}
-              />
-              <View
-                className="absolute top-2 right-2 w-2 height-2 rounded-full border-2"
-                style={{
-                  backgroundColor: theme.error,
-                  borderColor: theme.surfaceSubtle,
-                }}
-              />
-            </TouchableOpacity>
-          </View>
         </View>
       )}
 

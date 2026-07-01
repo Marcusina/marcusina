@@ -8,10 +8,12 @@ import {
   Platform,
   ScrollView,
   Image,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import Logo from "./Logo";
 
 const SIDEBAR_WIDTH = 230;
 const MOBILE_BREAKPOINT = 768;
@@ -38,15 +40,15 @@ function createStyles(theme) {
     sidebarHeaderContent: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: 1,
     },
     sidebarLogo: {
-      width: 140,
+      width: 70,
       height: 40,
       paddingLeft: 1,
     },
     sidebarLogoText: {
-      fontSize: 10,
+      fontSize: 20,
 
       fontWeight: "800",
       color: theme.text,
@@ -549,6 +551,113 @@ function createStyles(theme) {
       fontSize: 10,
       fontWeight: "700",
     },
+    themeContainer: {
+      flexDirection: "row",
+      backgroundColor: theme.surfaceSubtle,
+      borderRadius: 12,
+      padding: 4,
+      marginHorizontal: 20,
+      marginVertical: 10,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    themeOption: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 8,
+      borderRadius: 8,
+      gap: 6,
+    },
+    themeOptionActive: {
+      backgroundColor: theme.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+      borderWidth: 0.5,
+      borderColor: theme.border,
+    },
+    themeOptionText: {
+      fontSize: 12,
+      fontWeight: "500",
+    },
+    themeOptionTextActive: {
+      fontWeight: "700",
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContent: {
+      width: "85%",
+      maxWidth: 360,
+      backgroundColor: theme.surface,
+      borderRadius: 24,
+      padding: 24,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: theme.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    modalIconWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme.errorLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 16,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: "800",
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    modalDescription: {
+      fontSize: 14,
+      textAlign: "center",
+      lineHeight: 20,
+      marginBottom: 24,
+    },
+    modalActions: {
+      flexDirection: "row",
+      width: "100%",
+      gap: 12,
+    },
+    modalBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    modalBtnCancel: {
+      backgroundColor: theme.surfaceSubtle,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    modalBtnConfirm: {
+      backgroundColor: theme.error,
+    },
+    modalBtnTextCancel: {
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    modalBtnTextConfirm: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: "#FFFFFF",
+    },
   });
 }
 
@@ -559,7 +668,7 @@ export function Layout({
   userProfile,
   onLogout,
 }) {
-  const { theme } = useTheme();
+  const { theme, themeMode, setThemeMode } = useTheme();
   const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= MOBILE_BREAKPOINT;
@@ -587,11 +696,7 @@ export function Layout({
     <View style={styles.sidebar}>
       <View style={styles.sidebarHeader}>
         <View style={styles.sidebarHeaderContent}>
-          <Image
-            source={require("../assets/logo.png")}
-            style={styles.sidebarLogo}
-            resizeMode="contain"
-          />
+          <Logo width={40} height={40} style={{ marginRight: 6 }} />
           <Text style={styles.sidebarLogoText}>MEDGRAM</Text>
         </View>
       </View>
@@ -643,7 +748,10 @@ export function Layout({
             </Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutItem} onPress={onLogout}>
+        <TouchableOpacity
+          style={styles.logoutItem}
+          onPress={() => setShowLogoutConfirm(true)}
+        >
           <MaterialIcons name="logout" size={20} color="#EF4444" />
           <Text style={styles.logoutLabel}>Logout</Text>
         </TouchableOpacity>
@@ -660,7 +768,13 @@ export function Layout({
               <View key={item.id} style={styles.navFabWrap}>
                 <TouchableOpacity
                   onPress={() => setFabOpen(true)}
-                  style={[styles.navFab, { backgroundColor: theme.primary }]}
+                  style={[
+                    styles.navFab,
+                    {
+                      backgroundColor:
+                        theme.mode === "dark" ? theme.primary : "#000000",
+                    },
+                  ]}
                   activeOpacity={0.8}
                 >
                   <MaterialIcons
@@ -709,11 +823,7 @@ export function Layout({
           <SafeAreaView edges={["top"]} style={styles.safeHeader}>
             <View style={styles.mobileHeader}>
               <View style={styles.mobileHeaderContent}>
-                <Image
-                  source={require("../assets/logo.png")}
-                  style={styles.mobileLogo}
-                  resizeMode="contain"
-                />
+                <Logo width={30} height={30} style={{ marginRight: 6 }} />
                 <Text style={styles.mobileLogoText}>MEDGRAM</Text>
               </View>
               {/* Actions row: notifications, wishlist, cart, and drawer toggle */}
@@ -1212,6 +1322,59 @@ export function Layout({
               <Text
                 style={[styles.drawerSectionTitle, { color: theme.textMuted }]}
               >
+                APPEARANCE
+              </Text>
+
+              <View style={styles.themeContainer}>
+                {[
+                  { mode: "light", label: "Light", icon: "wb-sunny" },
+                  { mode: "dark", label: "Dark", icon: "nights-stay" },
+                  { mode: "system", label: "System", icon: "brightness-auto" },
+                ].map((item) => {
+                  const isActive = themeMode === item.mode;
+                  return (
+                    <TouchableOpacity
+                      key={item.mode}
+                      style={[
+                        styles.themeOption,
+                        isActive && styles.themeOptionActive,
+                      ]}
+                      onPress={() => setThemeMode(item.mode)}
+                      activeOpacity={0.8}
+                    >
+                      <MaterialIcons
+                        name={item.icon}
+                        size={16}
+                        color={isActive ? theme.primary : theme.textSecondary}
+                      />
+                      <Text
+                        style={[
+                          styles.themeOptionText,
+                          {
+                            color: isActive
+                              ? theme.primary
+                              : theme.textSecondary,
+                          },
+                          isActive && styles.themeOptionTextActive,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
+
+              <Text
+                style={[styles.drawerSectionTitle, { color: theme.textMuted }]}
+              >
                 INTEGRATIONS
               </Text>
 
@@ -1406,7 +1569,7 @@ export function Layout({
               <TouchableOpacity
                 onPress={() => {
                   setDrawerOpen(false);
-                  onLogout();
+                  setShowLogoutConfirm(true);
                 }}
                 activeOpacity={0.7}
                 style={[styles.drawerItem, { marginTop: 24, marginBottom: 40 }]}
@@ -1440,6 +1603,57 @@ export function Layout({
           </View>
         </View>
       )}
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showLogoutConfirm}
+        onRequestClose={() => setShowLogoutConfirm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconWrap}>
+              <MaterialIcons name="logout" size={28} color={theme.error} />
+            </View>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>
+              Log Out
+            </Text>
+            <Text
+              style={[styles.modalDescription, { color: theme.textSecondary }]}
+            >
+              Are you sure you want to log out of Medgram? You will need to sign
+              back in to access your health dashboard.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={() => setShowLogoutConfirm(false)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.modalBtnTextCancel,
+                    { color: theme.textSecondary },
+                  ]}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnConfirm]}
+                onPress={() => {
+                  setShowLogoutConfirm(false);
+                  onLogout();
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalBtnTextConfirm}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
