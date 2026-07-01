@@ -46,9 +46,19 @@ const API_BASE_URL = isDev
   ? `http://${getHost()}:${DEV_PORT}/api/v1`
   : FALLBACK_URL;
 
+const FRONTEND_WEB_URL = Platform.OS === "web"
+  ? (typeof window !== "undefined" ? window.location.origin : "http://localhost:8081")
+  : `http://${getHost()}:8081`;
+
+const DEEP_LINK_SCHEME = Platform.OS === "web"
+  ? ""
+  : `exp://${getHost()}:8081`;
+
 const config = {
   NODE_ENV: process.env.NODE_ENV || "development",
   API_BASE_URL,
+  FRONTEND_WEB_URL,
+  DEEP_LINK_SCHEME,
 
   //   // App Services
   //   VIDEOCALL_SERVICE_URL: requireEnv("EXPO_PUBLIC_VIDEOCALL_SERVICE_URL"),
@@ -60,7 +70,7 @@ const config = {
   //   FLW_PUBLIC_KEY: requireEnv("EXPO_PUBLIC_FLW_PUBLIC_KEY"),
 
   // Socials
-  //   GOOGLE_CLIENT_ID: requireEnv("EXPO_PUBLIC_GOOGLE_CLIENT_ID"),
+  GOOGLE_CLIENT_ID: requireEnv("EXPO_PUBLIC_GOOGLE_CLIENT_ID"),
 };
 
 export default config;

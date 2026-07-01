@@ -1,6 +1,6 @@
 import "./global.css";
 import { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, Platform, Linking } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider, toast } from "./context/ToastContext";
@@ -11,6 +11,8 @@ import {
   getPatientProfile,
   getUserPrescriptions,
   getUserCommunities,
+  googleLogin,
+  logout,
 } from "./api/auth.api";
 import {
   getToken,
@@ -99,6 +101,94 @@ export default function App() {
     loadSavedData();
   }, []);
 
+  // Handle Google Redirect on Web
+  useEffect(() => {
+    if (Platform.OS === "web" && window.location.hash) {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const idToken = params.get("id_token");
+      const state = params.get("state");
+      if (idToken) {
+        // Clear hash from URL for clean appearance
+        window.location.hash = "";
+        
+        // If the state parameter is a deep link (originating from mobile app),
+        // redirect back to mobile with the parsed id_token
+        if (state && (state.startsWith("exp://") || state.startsWith("medgram://"))) {
+          console.log("[Google Auth] Redirecting back to mobile app:", state);
+          window.location.href = `${state}?id_token=${idToken}`;
+          return;
+        }
+
+        const performGoogleLogin = async () => {
+          setIsLoading(true);
+          try {
+            console.log("[Google Auth] Found id_token in redirect URL");
+            const response = await googleLogin(idToken);
+            const userData = response.user || response.data?.user;
+            const userToken = response.token || response.data?.token;
+            
+            // Web gets a cookie set by backend, so token will be dummy-token or userToken
+            const finalToken = userToken || "dummy-token";
+            handleLoginSuccess(userData || { email: "google-user@example.com" }, finalToken);
+          } catch (error) {
+            console.error("Google login from redirect failed:", error);
+            toast.error(error.message || "Google authentication failed");
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        performGoogleLogin();
+      }
+    }
+  }, []);
+
+  // Handle incoming deep links (Mobile)
+  useEffect(() => {
+    if (Platform.OS !== "web") {
+      const handleDeepLink = (event) => {
+        if (event.url) {
+          console.log("[Deep Link Received]", event.url);
+          const match = event.url.match(/[?&]id_token=([^&]+)/);
+          if (match && match[1]) {
+            const idToken = match[1];
+            
+            const performGoogleLogin = async () => {
+              setIsLoading(true);
+              try {
+                console.log("[Google Auth] Performing deep link Google login");
+                const response = await googleLogin(idToken);
+                const userData = response.user || response.data?.user;
+                const userToken = response.token || response.data?.token;
+                
+                handleLoginSuccess(userData, userToken);
+              } catch (error) {
+                console.error("Google login from deep link failed:", error);
+                toast.error(error.message || "Google authentication failed");
+              } finally {
+                setIsLoading(false);
+              }
+            };
+            performGoogleLogin();
+          }
+        }
+      };
+
+      const subscription = Linking.addEventListener("url", handleDeepLink);
+
+      // Check if the app was opened from a deep link
+      Linking.getInitialURL().then((url) => {
+        if (url) {
+          handleDeepLink({ url });
+        }
+      });
+
+      return () => {
+        subscription.remove();
+      };
+    }
+  }, []);
+
   const handleLoginSuccess = async (userData, userToken) => {
     setUser(userData);
     setToken(userToken);
@@ -126,12 +216,19 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      setToken(null);
-      setUser(null);
-      await removeToken();
-      setScreen("splash");
+      // Always call the backend logout endpoint (cookies on Web, headers on Mobile)
+      await logout(token);
     } catch (e) {
-      console.error("Logout error:", e);
+      console.error("Backend logout error:", e);
+    } finally {
+      try {
+        setToken(null);
+        setUser(null);
+        await removeToken();
+        setScreen("splash");
+      } catch (e) {
+        console.error("Logout error:", e);
+      }
     }
   };
 
@@ -271,6 +368,7 @@ export default function App() {
           saveProfile(updated);
           setScreen("emailVerify");
         }}
+        onLoginSuccess={handleLoginSuccess}
       />
     );
   } else if (screen === "verificationChoice") {

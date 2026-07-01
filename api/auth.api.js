@@ -49,6 +49,13 @@ export const verifyIdentityByOtp = async (email, otp) => {
   });
 };
 
+export const googleLogin = async (idToken) => {
+  return await apiClient("/auth/google", {
+    method: "POST",
+    body: { id_token: idToken },
+  });
+};
+
 export const logout = async (token) => {
   return await apiClient("/auth/logout", {
     method: "POST",

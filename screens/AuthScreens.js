@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { toast } from "../context/ToastContext";
 import Logo from "../components/Logo";
 import Svg, { Rect, Path } from "react-native-svg";
+import config from "../utils/config";
 import {
   View,
   Text,
@@ -16,6 +17,8 @@ import {
   Image,
   Platform,
   Switch,
+  Modal,
+  Linking,
 } from "react-native";
 import {
   login as loginApi,
@@ -24,6 +27,7 @@ import {
   verifyEmailOtp as verifyEmailOtpApi,
   resendVerificationEmail,
   verifyIdentityByOtp,
+  googleLogin as googleLoginApi,
 } from "../api/auth.api";
 import { validate } from "../utils/validator";
 import { loginSchema, registerSchema } from "../constants/schemas";
@@ -522,7 +526,12 @@ function showAlert(title, message, onDismiss = null) {
   const titleLower = title ? title.toLowerCase() : "";
   if (titleLower.includes("success") || titleLower.includes("complete")) {
     type = "success";
-  } else if (titleLower.includes("error") || titleLower.includes("fail") || titleLower.includes("invalid") || titleLower.includes("denied")) {
+  } else if (
+    titleLower.includes("error") ||
+    titleLower.includes("fail") ||
+    titleLower.includes("invalid") ||
+    titleLower.includes("denied")
+  ) {
     type = "error";
   } else if (titleLower.includes("warning") || titleLower.includes("caution")) {
     type = "warning";
@@ -552,12 +561,82 @@ export function LoginScreen({
   const styles = createStyles(theme);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loginMethod, setLoginMethod] = useState("email");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [otpMode, setOtpMode] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+
+  // 🔌 Listen for the incoming Google Redirect Token
+  useEffect(() => {
+    const handleOpenURL = async (event) => {
+      if (!event.url) return;
+      await processOAuthRedirect(event.url);
+    };
+
+    // Check if app was opened from a closed state via OAuth link
+    Linking.getInitialURL().then((url) => {
+      if (url) processOAuthRedirect(url);
+    });
+
+    // Listen for background-to-foreground URL events
+    const subscription = Linking.addEventListener("url", handleOpenURL);
+    return () => subscription.remove();
+  }, []);
+
+  const processOAuthRedirect = async (url) => {
+    try {
+      // Parse the ID token out of the redirect URL fragment or query parameter
+      const match =
+        url.match(/[#&]id_token=([^&]+)/) || url.match(/[?&]id_token=([^&]+)/);
+      if (!match) return;
+
+      const idToken = match[1];
+      setLoading(true);
+
+      console.log("[Google Auth] Forwarding token to backend...");
+      const response = await googleLoginApi(idToken);
+      console.log("[Google Auth] Backend Response:", response);
+
+      // Extract user and token from your Fastify backend payload
+      const userData = response.user;
+      const userToken = response.token; // Present on mobile responses
+
+      if (userData) {
+        // If backend tells us the role is "pending_onboarding", you can handle routing changes here
+        onLoginSuccess(userData, userToken);
+      }
+    } catch (error) {
+      console.error("[Google Auth] Backend exchange failed:", error);
+      showAlert(
+        "Authentication Error",
+        error.message || "Google Sign-In failed.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const clientId = config.GOOGLE_CLIENT_ID;
+    if (Platform.OS === "web") {
+      const redirectUri = window.location.origin;
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Math.random().toString(36)}`;
+      window.location.href = url;
+    } else {
+      // Make sure this URI matches what is registered in your Google Developer Console
+      const redirectUri = config.FRONTEND_WEB_URL;
+      const state = config.DEEP_LINK_SCHEME;
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Math.random().toString(36)}&state=${encodeURIComponent(state)}`;
+
+      try {
+        await Linking.openURL(url);
+      } catch (error) {
+        console.error("Error opening URL for Google OAuth:", error);
+        showAlert("Error", "An error occurred starting Google Sign-In.");
+      }
+    }
+  };
 
   const handleLogin = async () => {
     const { isValid, errors: validationErrors } = validate(loginSchema.body, {
@@ -573,59 +652,21 @@ export function LoginScreen({
 
     setLoading(true);
     try {
-      console.log("[Login] Sending request with:", { email, password });
       const response = await loginApi(email, password);
-      console.log("Login response:", JSON.stringify(response, null, 2));
-
-      // Extract user and token from response (handle potential nesting in 'data' field)
       const userData = response.user || response.data?.user;
       const userToken = response.token || response.data?.token;
 
       if (userToken && userData) {
         onLoginSuccess(userData, userToken);
-      } else if (
-        response.message === "Login successful" ||
-        response.status === "success"
-      ) {
-        // If the message says success but data is in an unexpected place,
-        // try to find it or at least proceed if possible
-        const fallbackUser = userData || { email };
-        const fallbackToken = userToken || "dummy-token";
-        onLoginSuccess(fallbackUser, fallbackToken);
       } else {
         showAlert("Login Failed", response.message || "Unknown error");
       }
     } catch (error) {
       console.error("Login error:", error);
-      console.error("Error stack:", error.stack);
-      // Check if email verification is needed
-      if (
-        error.message.includes("Verify your email") ||
-        error.message.includes("email verified")
-      ) {
-        if (onEmailVerifyNeeded) {
-          showAlert(
-            "Email Verification Required",
-            "Please verify your email address to continue.",
-            () => {
-              onEmailVerifyNeeded(email);
-            },
-          );
-        } else {
-          showAlert(
-            "Email Verification Required",
-            error.message || "Please verify your email address to continue.",
-          );
-        }
-      } else if (
-        error.message.includes("New device detected") ||
-        error.message.includes("verify with OTP")
-      ) {
+      if (error.message.includes("Verify your email")) {
+        onEmailVerifyNeeded?.(email);
+      } else if (error.message.includes("verify with OTP")) {
         setOtpMode(true);
-        showAlert(
-          "Verification Needed",
-          "A verification code has been sent to your email. Please enter it below.",
-        );
       } else {
         showAlert(
           "Login Error",
@@ -635,10 +676,6 @@ export function LoginScreen({
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleOtpChange = (value) => {
-    setOtp(value);
   };
 
   const handleVerifyOtp = async () => {
@@ -651,27 +688,12 @@ export function LoginScreen({
     setLoading(true);
     try {
       const response = await verifyIdentityByOtp(email, otpCode);
-      console.log(
-        "OTP verification response:",
-        JSON.stringify(response, null, 2),
-      );
-
       const userData = response.user || response.data?.user;
       const userToken = response.token || response.data?.token;
-
       if (userToken && userData) {
         onLoginSuccess(userData, userToken);
-      } else if (response.message || response.token) {
-        // Some responses might have token but in different structure
-        onLoginSuccess({ email }, response.token || "dummy-token");
-      } else {
-        showAlert(
-          "Verification Failed",
-          response.message || response.error || "Unknown error",
-        );
       }
     } catch (error) {
-      console.error("OTP verification error:", error);
       showAlert("Verification Error", error.message || "Failed to verify OTP");
     } finally {
       setLoading(false);
@@ -687,33 +709,14 @@ export function LoginScreen({
             <View style={styles.loginCard}>
               <Text style={styles.screenTitle}>Verify Your Identity</Text>
               <Text style={styles.screenSubtitle}>
-                A verification code has been sent to {email}. Please enter it
-                below.
+                A verification code has been sent to {email}.
               </Text>
-              <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>Verification Code</Text>
-                <CodeInputRow
-                  length={6}
-                  values={otp}
-                  onChange={handleOtpChange}
-                />
-                <Text style={styles.otpHelpText}>Enter the 6-digit code</Text>
-              </View>
+              <CodeInputRow length={6} values={otp} onChange={setOtp} />
               <PrimaryButton
                 label={loading ? <ActivityIndicator color="#FFF" /> : "Verify"}
                 onPress={handleVerifyOtp}
                 disabled={loading}
               />
-              <View style={styles.footerRow}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setOtpMode(false);
-                    setOtp(["", "", "", "", "", ""]);
-                  }}
-                >
-                  <Text style={styles.footerLink}>Back to Login</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </View>
         </ScrollView>
@@ -726,24 +729,18 @@ export function LoginScreen({
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.contentMaxWidth}>
           <View style={styles.topBar}>
-            {onBack ? (
-              <TouchableOpacity
-                onPress={onBack}
-                hitSlop={16}
-                style={{ padding: 4 }}
-              >
+            {onBack && (
+              <TouchableOpacity onPress={onBack} hitSlop={16}>
                 <Text style={styles.backArrow}>←</Text>
               </TouchableOpacity>
-            ) : (
-              <View />
             )}
-            <TouchableOpacity style={styles.languageButton} activeOpacity={0.8}>
-              <Text style={styles.languageText}>English</Text>
-              <Text style={styles.languageChevron}>⌄</Text>
-            </TouchableOpacity>
+            <View style={styles.languageButton}>
+              <Text style={styles.languageText}>English ⌄</Text>
+            </View>
           </View>
           <Text style={styles.welcomeTitle}>Welcome back</Text>
           <Text style={styles.welcomeSubtitle}>Sign in to Medgram</Text>
+
           <View style={styles.loginCard}>
             <TextField
               label="Email Address"
@@ -774,34 +771,37 @@ export function LoginScreen({
               onPress={handleLogin}
               disabled={loading}
             />
+
             <View style={styles.orRow}>
               <View style={styles.orDivider} />
               <Text style={styles.orText}>or continue with</Text>
               <View style={styles.orDivider} />
             </View>
+
             <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1.5,
-                borderColor: theme.border,
-                borderRadius: 12,
-                paddingVertical: 12,
-                marginTop: 12,
-                width: "100%",
-              }}
+              style={styles.googleButtonContainer}
               activeOpacity={0.8}
+              onPress={handleGoogleLogin}
+              disabled={loading}
             >
-              <Ionicons name="logo-google" size={18} color={theme.text} />
-              <Text
-                style={{ fontSize: 14, fontWeight: "600", color: theme.text }}
-              >
-                Continue with Google
-              </Text>
+              {loading ? (
+                <ActivityIndicator color={theme.text} />
+              ) : (
+                <>
+                  <Ionicons name="logo-google" size={18} color={theme.text} />
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: theme.text,
+                    }}
+                  >
+                    Continue with Google
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
+
             <View style={styles.createAccountRow}>
               <Text style={styles.footerText}>New to Medgram?</Text>
               <TouchableOpacity onPress={onSignUp}>
@@ -809,6 +809,217 @@ export function LoginScreen({
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+export function ProfileBasicsScreen({
+  onBack,
+  onRegisterSuccess,
+  onLoginSuccess,
+}) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // 🔌 Listen for the incoming Google Redirect Token during registration view
+  useEffect(() => {
+    const handleOpenURL = async (event) => {
+      if (event.url) await processOAuthRedirect(event.url);
+    };
+    Linking.getInitialURL().then((url) => {
+      if (url) processOAuthRedirect(url);
+    });
+    const subscription = Linking.addEventListener("url", handleOpenURL);
+    return () => subscription.remove();
+  }, []);
+
+  const processOAuthRedirect = async (url) => {
+    try {
+      const match =
+        url.match(/[#&]id_token=([^&]+)/) || url.match(/[?&]id_token=([^&]+)/);
+      if (!match) return;
+
+      const idToken = match[1];
+      setLoading(true);
+
+      const response = await googleLoginApi(idToken);
+      const userData = response.user;
+      const userToken = response.token;
+
+      if (userData) {
+        // Pass straight through to core app login state management
+        onLoginSuccess(userData, userToken);
+      }
+    } catch (error) {
+      showAlert(
+        "Authentication Error",
+        error.message || "Google registration failed.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const clientId = config.GOOGLE_CLIENT_ID;
+    if (Platform.OS === "web") {
+      const redirectUri = window.location.origin;
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Math.random().toString(36)}`;
+      window.location.href = url;
+    } else {
+      const redirectUri = config.FRONTEND_WEB_URL;
+      const state = config.DEEP_LINK_SCHEME;
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Math.random().toString(36)}&state=${encodeURIComponent(state)}`;
+
+      try {
+        await Linking.openURL(url);
+      } catch (error) {
+        showAlert("Error", "An error occurred starting Google Sign-In.");
+      }
+    }
+  };
+
+  const handleRegister = async () => {
+    const { isValid, errors: validationErrors } = validate(
+      registerSchema.body,
+      { email, password },
+    );
+    const customErrors = { ...validationErrors };
+
+    if (!confirmPassword)
+      customErrors.confirmPassword = "Confirm password is required";
+    else if (password !== confirmPassword)
+      customErrors.confirmPassword = "Passwords do not match";
+
+    if (Object.keys(customErrors).length > 0) {
+      setErrors(customErrors);
+      return;
+    }
+    setErrors({});
+
+    setLoading(true);
+    try {
+      await registerApi({ email, password });
+      showAlert(
+        "Success",
+        "Registration successful! Confirm code sent to email.",
+        () => {
+          onRegisterSuccess({
+            email,
+            gender: "female",
+            dob: "",
+            role: "patient",
+          });
+        },
+      );
+    } catch (error) {
+      showAlert("Registration Error", error.message || "Failed to register");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  let strengthScore = 0;
+  if (password.length >= 8) strengthScore += 1;
+  if (/[A-Z]/.test(password)) strengthScore += 1;
+  if (/[0-9]/.test(password)) strengthScore += 1;
+  if (/[^A-Za-z0-9]/.test(password)) strengthScore += 1;
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.onboardingContent}>
+        <View style={styles.contentMaxWidth}>
+          <View style={styles.stepHeaderContainer}>
+            <View style={styles.stepHeaderTopRow}>
+              <TouchableOpacity onPress={onBack} hitSlop={16}>
+                <Text style={styles.backArrow}>←</Text>
+              </TouchableOpacity>
+              <Text style={styles.stepHeaderStepText}>Sign Up</Text>
+              <View style={{ width: 40 }} />
+            </View>
+          </View>
+
+          <View style={styles.onboardingBody}>
+            <Text style={styles.screenTitle}>Create Account</Text>
+            <Text style={styles.screenSubtitle}>
+              Join us to transform your healthcare experience.
+            </Text>
+
+            <TextField
+              label="Email"
+              placeholder="hello@example.com"
+              value={email}
+              onChangeText={setEmail}
+              error={errors.email}
+            />
+            <TextField
+              label="Create Password"
+              placeholder="●●●●●●●●"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              rightIcon={
+                <MaterialIcons
+                  name={showPassword ? "visibility-off" : "visibility"}
+                  size={22}
+                  color={theme.textMuted}
+                />
+              }
+              onRightIconPress={() => setShowPassword((prev) => !prev)}
+              error={errors.password}
+            />
+            <TextField
+              label="Confirm Password"
+              placeholder="●●●●●●●●"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              rightIcon={
+                <MaterialIcons
+                  name={showConfirmPassword ? "visibility-off" : "visibility"}
+                  size={22}
+                  color={theme.textMuted}
+                />
+              }
+              onRightIconPress={() => setShowConfirmPassword((prev) => !prev)}
+              error={errors.confirmPassword}
+            />
+          </View>
+
+          <PrimaryButton
+            label={loading ? <ActivityIndicator color="#FFF" /> : "Continue"}
+            onPress={handleRegister}
+            disabled={loading}
+          />
+
+          <View style={styles.orRow}>
+            <View style={styles.orDivider} />
+            <Text style={styles.orText}>or continue with</Text>
+            <View style={styles.orDivider} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.googleButtonContainer}
+            activeOpacity={0.8}
+            onPress={handleGoogleLogin}
+            disabled={loading}
+          >
+            <Ionicons name="logo-google" size={18} color={theme.text} />
+            <Text
+              style={{ fontSize: 14, fontWeight: "600", color: theme.text }}
+            >
+              Continue with Google
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -1201,189 +1412,6 @@ export function LocationStepScreen({ onBack, onComplete }) {
   );
 }
 
-export function ProfileBasicsScreen({ onBack, onRegisterSuccess }) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const handleRegister = async () => {
-    const { isValid, errors: validationErrors } = validate(
-      registerSchema.body,
-      { email, password },
-    );
-
-    const customErrors = { ...validationErrors };
-    if (!confirmPassword) {
-      customErrors.confirmPassword = "Confirm password is required";
-    } else if (password !== confirmPassword) {
-      customErrors.confirmPassword = "Passwords do not match";
-    }
-
-    if (Object.keys(customErrors).length > 0) {
-      setErrors(customErrors);
-      return;
-    }
-    setErrors({});
-
-    setLoading(true);
-    try {
-      console.log("[Registration] Registering patient:", { email });
-      const response = await registerApi({ email, password });
-
-      console.log("[Registration] Success:", response);
-      showAlert(
-        "Success",
-        "Registration successful! Please check your email for your 6-digit verification code.",
-        () => {
-          onRegisterSuccess({
-            email,
-            gender: "female",
-            dob: "",
-            role: "patient",
-          });
-        },
-      );
-    } catch (error) {
-      console.error("[Registration] Error:", error.message);
-      const errorMessage = error.message || "Failed to register";
-      showAlert("Registration Error", errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  let strengthScore = 0;
-  if (password.length >= 8) strengthScore += 1;
-  if (/[A-Z]/.test(password)) strengthScore += 1;
-  if (/[0-9]/.test(password)) strengthScore += 1;
-  if (/[^A-Za-z0-9]/.test(password)) strengthScore += 1;
-
-  let strengthLabel = "Weak";
-  if (strengthScore >= 3) strengthLabel = "Medium";
-  if (strengthScore === 4) strengthLabel = "Strong";
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.stepHeaderContainer}>
-            <View style={styles.stepHeaderTopRow}>
-              <TouchableOpacity onPress={onBack} hitSlop={16}>
-                <Text style={styles.backArrow}>←</Text>
-              </TouchableOpacity>
-              <Text style={styles.stepHeaderStepText}>Sign Up</Text>
-              <View style={{ width: 40 }} />
-            </View>
-          </View>
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Create Account</Text>
-            <Text style={styles.screenSubtitle}>
-              Join us to transform your healthcare experience.
-            </Text>
-
-            <TextField
-              label="Email"
-              placeholder="hello@example.com"
-              value={email}
-              onChangeText={setEmail}
-              error={errors.email}
-            />
-
-            <TextField
-              label="Create Password"
-              placeholder="●●●●●●●●"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              rightIcon={
-                <MaterialIcons
-                  name={showPassword ? "visibility-off" : "visibility"}
-                  size={22}
-                  color={theme.textMuted}
-                />
-              }
-              onRightIconPress={() => setShowPassword((prev) => !prev)}
-              error={errors.password}
-            />
-
-            <TextField
-              label="Confirm Password"
-              placeholder="●●●●●●●●"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              rightIcon={
-                <MaterialIcons
-                  name={showConfirmPassword ? "visibility-off" : "visibility"}
-                  size={22}
-                  color={theme.textMuted}
-                />
-              }
-              onRightIconPress={() => setShowConfirmPassword((prev) => !prev)}
-              error={errors.confirmPassword}
-            />
-            <View style={styles.passwordStrengthRow}>
-              <Text style={styles.passwordStrengthLabel}>
-                {strengthLabel} strength
-              </Text>
-              <Text style={styles.passwordStrengthCount}>
-                {strengthScore}/4 requirements met
-              </Text>
-            </View>
-            <View style={styles.passwordStrengthTrack}>
-              <View
-                style={[
-                  styles.passwordStrengthFill,
-                  { width: `${(strengthScore / 4) * 100}%` },
-                ]}
-              />
-            </View>
-          </View>
-          <PrimaryButton
-            label={loading ? <ActivityIndicator color="#FFF" /> : "Continue"}
-            onPress={handleRegister}
-            disabled={loading}
-          />
-          <View style={styles.orRow}>
-            <View style={styles.orDivider} />
-            <Text style={styles.orText}>or continue with</Text>
-            <View style={styles.orDivider} />
-          </View>
-          <TouchableOpacity
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              backgroundColor: theme.surfaceSubtle,
-              borderWidth: 1.5,
-              borderColor: theme.border,
-              borderRadius: 12,
-              paddingVertical: 12,
-              marginTop: 12,
-              width: "100%",
-            }}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="logo-google" size={18} color={theme.text} />
-            <Text
-              style={{ fontSize: 14, fontWeight: "600", color: theme.text }}
-            >
-              Continue with Google
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
 export function ProfileCustomizeScreen({ onBack, onNext, onSkip }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -1709,6 +1737,19 @@ const createStyles = (theme) =>
       justifyContent: "center",
       gap: 16,
       marginBottom: 24,
+    },
+    googleButtonContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: theme.surfaceSubtle,
+      borderWidth: 1.5,
+      borderColor: theme.border,
+      borderRadius: 12,
+      paddingVertical: 12,
+      marginTop: 12,
+      width: "100%",
     },
     socialButton: {
       width: 56,

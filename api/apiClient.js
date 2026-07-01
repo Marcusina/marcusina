@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import config from "../utils/config"; // Adjust paths accordingly to your file hierarchy
+import { getToken } from "../utils/storage";
 
 const API_BASE_URL = config.API_BASE_URL;
 console.log("---- url ----", API_BASE_URL);
@@ -7,13 +8,37 @@ console.log("---- url ----", API_BASE_URL);
 const apiClient = async (endpoint, options = {}) => {
   const { method = "GET", body, headers = {}, ...rest } = options;
 
+  const clientHeaders = {
+    ...headers,
+  };
+
+  if (body) {
+    clientHeaders["Content-Type"] = "application/json";
+  }
+
+  // Automatically attach saved token to Authorization header if not already present
+  try {
+    const savedToken = await getToken();
+    if (
+      savedToken &&
+      !clientHeaders["Authorization"] &&
+      !clientHeaders["authorization"]
+    ) {
+      clientHeaders["Authorization"] = `Bearer ${savedToken}`;
+    }
+  } catch (error) {
+    console.warn("[apiClient] Failed to retrieve token from storage:", error);
+  }
+
+  // If on mobile, set Origin to match backend config's MOBILE_APP_URL
+  if (Platform.OS !== "web") {
+    clientHeaders["Origin"] = "http://192.168.0.0:8081";
+  }
+
   const requestConfig = {
     method,
     credentials: "include", // 🔑 Include cookies in requests and responses
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
+    headers: clientHeaders,
     ...rest,
   };
 
@@ -73,12 +98,12 @@ const apiClient = async (endpoint, options = {}) => {
       error.message === "Failed to fetch"
     ) {
       const errorDetails = `
-[Network Error] API request failed to reach the server at ${API_BASE_URL}.
-Platform: ${Platform.OS}
-Possible solutions:
-1. Ensure the backend server is running on the correct port.
-2. Check browser console for CORS errors.
-3. If using a physical device, ensure it's on the same Wi-Fi subnet.
+        [Network Error] API request failed to reach the server at ${API_BASE_URL}.
+        Platform: ${Platform.OS}
+        Possible solutions:
+        1. Ensure the backend server is running on the correct port.
+        2. Check browser console for CORS errors.
+        3. If using a physical device, ensure it's on the same Wi-Fi subnet.
       `;
       console.error(errorDetails);
       throw new Error(errorDetails);
