@@ -1,9 +1,12 @@
 import "./global.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { View, Text, ActivityIndicator, Platform, Linking } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ThemeProvider } from "./context/ThemeContext";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./api/apiClient";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { ToastProvider, toast } from "./context/ToastContext";
+import { UserProvider, useUser } from "./context/UserContext";
 import {
   getCurrentUser,
   updateProfile,
@@ -13,6 +16,9 @@ import {
   getUserCommunities,
   googleLogin,
   logout,
+  verifyEmail,
+  reactivateAccount,
+  deactivateAccount,
 } from "./api/auth.api";
 import {
   getToken,
@@ -33,7 +39,21 @@ import {
   LocationStepScreen,
   SuccessScreen,
   WelcomeScreen,
+  ForgotPasswordScreen,
+  ResetPasswordScreen,
+  VerifyDeviceScreen,
+  VerifyEmailLinkScreen,
+  ReactivateAccountScreen,
+  DeactivateAccountScreen,
 } from "./screens/AuthScreens";
+import {
+  SelectRoleScreen,
+  CreateBasicProfileScreen,
+  VerifyPhoneScreen,
+  CreateRoleSpecificProfileScreen,
+  SelectCurrencyScreen,
+} from "./screens/OnboardingScreens";
+import { SettingsScreen } from "./screens/SettingsScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import {
   HealthProfileScreen,
@@ -51,12 +71,42 @@ import {
 import { Layout } from "./components/Layout";
 
 export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <UserProvider>
+        <SafeAreaProvider>
+          <ThemeProvider>
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </UserProvider>
+    </QueryClientProvider>
+  );
+}
+
+function AppContent() {
+  const {
+    user,
+    token,
+    isLoading: userLoading,
+    onboardingStep,
+    setOnboardingStep,
+    handleLogin,
+    handleLogout,
+    refreshUser,
+    loginWithToken,
+  } = useUser();
+
+  const { theme } = useTheme();
+  const verificationStarted = useRef(false);
+
   const [selectedPostId, setSelectedPostId] = useState("short-2");
   const [screen, setScreen] = useState("splash");
   const [verificationSource, setVerificationSource] = useState("registration"); // 'registration' or 'login'
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [regEmail, setRegEmail] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState({
     name: "",
@@ -77,18 +127,11 @@ export default function App() {
     recentActivity: [],
   });
 
-  // Load saved token and profile on mount
+  // Load saved profile on mount
   useEffect(() => {
     const loadSavedData = async () => {
       try {
-        const savedToken = await getToken();
         const savedProfile = await getProfile();
-
-        if (savedToken) {
-          setToken(savedToken);
-          setScreen("home");
-        }
-
         if (savedProfile) {
           setProfile(savedProfile);
         }
@@ -101,6 +144,24 @@ export default function App() {
     loadSavedData();
   }, []);
 
+  // Synchronize profile data when user changes
+  useEffect(() => {
+    if (user) {
+      setProfile((prev) => ({
+        ...prev,
+        name:
+          `${user.profile?.first_name || ""} ${user.profile?.last_name || ""}`.trim() ||
+          user.username ||
+          "User",
+        email: user.email || prev.email,
+        phone: user.phone_number || prev.phone,
+        location: user.profile?.location_address || prev.location,
+        bio: user.profile?.bio || prev.bio,
+        role: user.role?.role_type || prev.role,
+      }));
+    }
+  }, [user]);
+
   // Handle Google Redirect on Web
   useEffect(() => {
     if (Platform.OS === "web" && window.location.hash) {
@@ -109,12 +170,12 @@ export default function App() {
       const idToken = params.get("id_token");
       const state = params.get("state");
       if (idToken) {
-        // Clear hash from URL for clean appearance
         window.location.hash = "";
-        
-        // If the state parameter is a deep link (originating from mobile app),
-        // redirect back to mobile with the parsed id_token
-        if (state && (state.startsWith("exp://") || state.startsWith("medgram://"))) {
+
+        if (
+          state &&
+          (state.startsWith("exp://") || state.startsWith("medgram://"))
+        ) {
           console.log("[Google Auth] Redirecting back to mobile app:", state);
           window.location.href = `${state}?id_token=${idToken}`;
           return;
@@ -127,10 +188,8 @@ export default function App() {
             const response = await googleLogin(idToken);
             const userData = response.user || response.data?.user;
             const userToken = response.token || response.data?.token;
-            
-            // Web gets a cookie set by backend, so token will be dummy-token or userToken
-            const finalToken = userToken || "dummy-token";
-            handleLoginSuccess(userData || { email: "google-user@example.com" }, finalToken);
+
+            await handleLoginSuccess(userData, userToken);
           } catch (error) {
             console.error("Google login from redirect failed:", error);
             toast.error(error.message || "Google authentication failed");
@@ -143,16 +202,74 @@ export default function App() {
     }
   }, []);
 
+  // Handle Email Verification, Reactivation, Deactivation & Reset Password on Web
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      if (verificationStarted.current) return;
+
+      const queryParams = new URLSearchParams(window.location.search);
+      const tokenParam = queryParams.get("token");
+      const path = window.location.pathname;
+
+      const hasVerify =
+        path.includes("verify-email") ||
+        window.location.href.includes("verify-email");
+      const hasReactivate =
+        path.includes("reactivate") ||
+        window.location.href.includes("reactivate");
+      const hasReset =
+        path.includes("reset-password") ||
+        window.location.href.includes("reset-password");
+      const hasDeactivate =
+        path.includes("deactivate-account") ||
+        window.location.href.includes("deactivate-account");
+
+      if (
+        (hasVerify || hasReactivate || hasReset || hasDeactivate) &&
+        tokenParam
+      ) {
+        verificationStarted.current = true;
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+
+        setResetToken(tokenParam);
+
+        if (hasVerify) {
+          setScreen("verifyEmailLink");
+        } else if (hasReactivate) {
+          setScreen("reactivateAccount");
+        } else if (hasDeactivate) {
+          setScreen("deactivateAccount");
+        } else if (hasReset) {
+          setScreen("resetPassword");
+        }
+      }
+    }
+  }, []);
+
   // Handle incoming deep links (Mobile)
   useEffect(() => {
     if (Platform.OS !== "web") {
       const handleDeepLink = (event) => {
         if (event.url) {
           console.log("[Deep Link Received]", event.url);
-          const match = event.url.match(/[?&]id_token=([^&]+)/);
-          if (match && match[1]) {
-            const idToken = match[1];
-            
+          const matchGoogle = event.url.match(/[?&]id_token=([^&]+)/);
+          const matchVerifyEmail =
+            event.url.match(/verify-email\?token=([^&]+)/) ||
+            event.url.match(/[?&]token=([^&]+)/);
+          const matchReactivate =
+            event.url.match(/reactivate-account\?token=([^&]+)/) ||
+            event.url.match(/reactivate\?token=([^&]+)/);
+          const matchDeactivate =
+            event.url.match(/deactivate-account\?token=([^&]+)/) ||
+            event.url.match(/deactivate\?token=([^&]+)/);
+
+          if (matchGoogle && matchGoogle[1]) {
+            const idToken = matchGoogle[1];
+
             const performGoogleLogin = async () => {
               setIsLoading(true);
               try {
@@ -160,8 +277,8 @@ export default function App() {
                 const response = await googleLogin(idToken);
                 const userData = response.user || response.data?.user;
                 const userToken = response.token || response.data?.token;
-                
-                handleLoginSuccess(userData, userToken);
+
+                await handleLoginSuccess(userData, userToken);
               } catch (error) {
                 console.error("Google login from deep link failed:", error);
                 toast.error(error.message || "Google authentication failed");
@@ -170,13 +287,42 @@ export default function App() {
               }
             };
             performGoogleLogin();
+          } else if (
+            matchVerifyEmail &&
+            matchVerifyEmail[1] &&
+            event.url.includes("verify-email")
+          ) {
+            setResetToken(matchVerifyEmail[1]);
+            setScreen("verifyEmailLink");
+          } else if (
+            matchReactivate &&
+            matchReactivate[1] &&
+            (event.url.includes("reactivate-account") ||
+              event.url.includes("reactivate"))
+          ) {
+            setResetToken(matchReactivate[1]);
+            setScreen("reactivateAccount");
+          } else if (
+            matchDeactivate &&
+            matchDeactivate[1] &&
+            (event.url.includes("deactivate-account") ||
+              event.url.includes("deactivate"))
+          ) {
+            setResetToken(matchDeactivate[1]);
+            setScreen("deactivateAccount");
+          } else if (
+            event.url.includes("reset-password") &&
+            event.url.match(/[?&]token=([^&]+)/)
+          ) {
+            const rToken = event.url.match(/[?&]token=([^&]+)/)[1];
+            setResetToken(rToken);
+            setScreen("resetPassword");
           }
         }
       };
 
       const subscription = Linking.addEventListener("url", handleDeepLink);
 
-      // Check if the app was opened from a deep link
       Linking.getInitialURL().then((url) => {
         if (url) {
           handleDeepLink({ url });
@@ -190,452 +336,367 @@ export default function App() {
   }, []);
 
   const handleLoginSuccess = async (userData, userToken) => {
-    setUser(userData);
-    setToken(userToken);
-    await saveToken(userToken);
-
-    if (userData) {
-      const updatedProfile = {
-        ...profile,
-        name: userData.name || profile.name,
-        email: userData.email || profile.email,
-        phone: userData.phone || profile.phone,
-        location: userData.location || profile.location,
-        handle: userData.handle || profile.handle,
-        bio: userData.bio || profile.bio,
-        bloodType: userData.bloodType || profile.bloodType,
-        height: userData.height || profile.height,
-        weight: userData.weight || profile.weight,
-        role: userData.role || profile.role || "patient",
-      };
-      setProfile(updatedProfile);
-      await saveProfile(updatedProfile);
-    }
+    await loginWithToken(userToken);
     setScreen("home");
   };
 
-  const handleLogout = async () => {
-    try {
-      // Always call the backend logout endpoint (cookies on Web, headers on Mobile)
-      await logout(token);
-    } catch (e) {
-      console.error("Backend logout error:", e);
-    } finally {
-      try {
-        setToken(null);
-        setUser(null);
-        await removeToken();
-        setScreen("splash");
-      } catch (e) {
-        console.error("Logout error:", e);
-      }
+  useEffect(() => {
+    if (onboardingStep === "completed") {
+      setScreen("home");
     }
-  };
-
-  console.log("[App] Rendering screen:", screen);
+  }, [onboardingStep]);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (token) {
+      if (token && user) {
         try {
-          const userData = await getCurrentUser(token);
-          setUser(userData);
+          let fullProfile = { ...profile };
 
-          if (userData && userData._id) {
-            let fullProfile = { ...profile };
-
-            // Fetch User Profile
-            try {
-              const userProfile = await getUserProfile(token, userData._id);
-              if (userProfile) {
-                fullProfile = {
-                  ...fullProfile,
-                  name: `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim(),
-                  bio: userProfile.bio || fullProfile.bio,
-                  location:
-                    userProfile.location_address || fullProfile.location,
-                  email: userData.email || fullProfile.email,
-                  phone: userData.phone_number || fullProfile.phone,
-                };
-              }
-            } catch (err) {
-              console.log("No user profile found yet or error fetching");
-            }
-
-            // Fetch Patient Profile
-            try {
-              const patientProfile = await getPatientProfile(
-                token,
-                userData._id,
-              );
-              if (patientProfile) {
-                fullProfile = {
-                  ...fullProfile,
-                  bloodType:
-                    patientProfile.blood_group || fullProfile.bloodType,
-                  height: patientProfile.height_cm
-                    ? patientProfile.height_cm.toString()
-                    : fullProfile.height,
-                  weight: patientProfile.weight_kg
-                    ? patientProfile.weight_kg.toString()
-                    : fullProfile.weight,
-                };
-              }
-            } catch (err) {
-              console.log("No patient profile found yet or error fetching");
-            }
-
-            // Fetch User Prescriptions
-            try {
-              const prescriptionsData = await getUserPrescriptions(
-                token,
-                userData._id,
-              );
+          // Fetch User Profile
+          try {
+            const userProfile = await getUserProfile(token, user._id);
+            if (userProfile) {
               fullProfile = {
                 ...fullProfile,
-                prescriptions: Array.isArray(prescriptionsData)
-                  ? prescriptionsData
-                  : [],
+                name: `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim(),
+                bio: userProfile.bio || fullProfile.bio,
+                location: userProfile.location_address || fullProfile.location,
+                email: user.email || fullProfile.email,
+                phone: user.phone_number || fullProfile.phone,
               };
-            } catch (err) {
-              console.log("No prescriptions found or error fetching");
             }
-
-            // Fetch User Communities
-            try {
-              const communitiesData = await getUserCommunities(token);
-              fullProfile = {
-                ...fullProfile,
-                communities: Array.isArray(communitiesData)
-                  ? communitiesData
-                  : [],
-              };
-            } catch (err) {
-              console.log("No communities found or error fetching");
-            }
-
-            setProfile(fullProfile);
-            await saveProfile(fullProfile);
+          } catch (err) {
+            console.log("No user profile found yet or error fetching");
           }
+
+          // Fetch Patient Profile
+          try {
+            const patientProfile = await getPatientProfile(token, user._id);
+            if (patientProfile) {
+              fullProfile = {
+                ...fullProfile,
+                bloodType: patientProfile.blood_group || fullProfile.bloodType,
+                height: patientProfile.height_cm
+                  ? patientProfile.height_cm.toString()
+                  : fullProfile.height,
+                weight: patientProfile.weight_kg
+                  ? patientProfile.weight_kg.toString()
+                  : fullProfile.weight,
+              };
+            }
+          } catch (err) {
+            console.log("No patient profile found yet or error fetching");
+          }
+
+          // Fetch User Prescriptions
+          try {
+            const prescriptionsData = await getUserPrescriptions(
+              token,
+              user._id,
+            );
+            fullProfile = {
+              ...fullProfile,
+              prescriptions: Array.isArray(prescriptionsData)
+                ? prescriptionsData
+                : [],
+            };
+          } catch (err) {
+            console.log("No prescriptions found or error fetching");
+          }
+
+          // Fetch User Communities
+          try {
+            const communitiesData = await getUserCommunities(token);
+            fullProfile = {
+              ...fullProfile,
+              communities: Array.isArray(communitiesData)
+                ? communitiesData
+                : [],
+            };
+          } catch (err) {
+            console.log("No communities found or error fetching");
+          }
+
+          setProfile(fullProfile);
+          await saveProfile(fullProfile);
         } catch (error) {
-          console.error("Failed to fetch user data:", error);
-          if (
-            error.message.includes("Unauthorized") ||
-            error.message.includes("token")
-          ) {
-            setToken(null);
-            setUser(null);
-            await removeToken();
-            setScreen("login");
-          }
+          console.error("Failed to fetch auxiliary user data:", error);
         }
       }
     };
     fetchUserData();
-  }, [token]);
+  }, [token, user]);
 
   let content = null;
 
-  if (screen === "splash") {
-    content = (
-      <WelcomeScreen
-        onCreateAccount={() => setScreen("profileBasics")}
-        onSignIn={() => setScreen("login")}
-      />
-    );
-  } else if (screen === "login") {
-    content = (
-      <LoginScreen
-        onSignUp={() => setScreen("profileBasics")}
-        onLoginSuccess={handleLoginSuccess}
-        onEmailVerifyNeeded={(email) => {
-          setRegEmail(email);
-          setVerificationSource("login");
-          setScreen("emailVerify");
-        }}
-        onBack={() => setScreen("splash")}
-      />
-    );
-  } else if (screen === "profileBasics") {
-    content = (
-      <ProfileBasicsScreen
-        onBack={() => setScreen("splash")}
-        onRegisterSuccess={(data) => {
-          setRegEmail(data.email);
-          setVerificationSource("registration");
-          const updated = { ...profile, ...data };
-          setProfile(updated);
-          saveProfile(updated);
-          setScreen("emailVerify");
-        }}
-        onLoginSuccess={handleLoginSuccess}
-      />
-    );
-  } else if (screen === "verificationChoice") {
-    content = (
-      <VerificationChoiceScreen
-        onBack={() => setScreen("profileBasics")}
-        onChooseEmail={() => setScreen("emailVerify")}
-        onChoosePhone={() => setScreen("phoneVerify")}
-      />
-    );
-  } else if (screen === "emailVerify") {
-    content = (
-      <EmailVerifyScreen
-        email={regEmail}
-        onBack={() =>
-          setScreen(
-            verificationSource === "login" ? "login" : "profileBasics",
-          )
-        }
-        onVerified={() => {
-          if (verificationSource === "login") {
-            // User came from login, go back to login to retry
-            setScreen("login");
-          } else {
-            // User came from registration, proceed to next step
-            // If doctor, skip most of the patient onboarding for now or show success
-            if (profile.role === "doctor") {
-              setScreen("success");
-            } else {
-              setScreen("profileCustomize");
+  if (onboardingStep === "completed") {
+    // Authenticated Completed flow
+    if (screen === "home" || screen === "splash") {
+      content = (
+        <HomeScreen
+          user={user}
+          token={token}
+          onOpenProfile={() => setScreen("profileHealth")}
+          onOpenGroups={() => setScreen("groups")}
+          onConsult={() => setScreen("consultBook")}
+          onOpenPlace={() => setScreen("place")}
+          onOpenPost={(id) => {
+            setSelectedPostId(id);
+            setScreen("post");
+          }}
+          onOpenCreatePost={() => setScreen("createPost")}
+        />
+      );
+    } else if (screen === "profileHealth") {
+      content = (
+        <HealthProfileScreen
+          onBackHome={() => setScreen("home")}
+          onEditProfile={() => setScreen("profileEdit")}
+          onOpenSettings={() => setScreen("settings")}
+          profile={profile}
+          onLogout={handleLogout}
+        />
+      );
+    } else if (screen === "profilePublic") {
+      content = (
+        <PublicProfileScreen
+          onBackHome={() => setScreen("home")}
+          onEditProfile={() => setScreen("profileEdit")}
+          profile={profile}
+        />
+      );
+    } else if (screen === "profileEdit") {
+      content = (
+        <ProfileScreen
+          profile={profile}
+          onCancel={() => setScreen("profilePublic")}
+          onSave={async (updated) => {
+            try {
+              if (token) {
+                await updateProfile(token, updated);
+              }
+              setProfile(updated);
+              await saveProfile(updated);
+              setScreen("profilePublic");
+            } catch (error) {
+              console.error("Failed to update profile:", error);
+              toast.error(error.message || "Failed to update profile");
             }
-          }
-        }}
-      />
-    );
-  } else if (screen === "phoneVerify") {
-    content = (
-      <PhoneVerifyScreen
-        onBack={() => setScreen("verificationChoice")}
-        onVerified={() => setScreen("profileCustomize")}
-      />
-    );
-  } else if (screen === "profileCustomize") {
-    content = (
-      <ProfileCustomizeScreen
-        onBack={() => setScreen("phoneVerify")}
-        onNext={(data) => {
-          const updated = { ...profile, ...data };
-          setProfile(updated);
-          saveProfile(updated);
-          setScreen("name");
-        }}
-        onSkip={() => setScreen("name")}
-      />
-    );
-  } else if (screen === "name") {
-    content = (
-      <NameStepScreen
-        onBack={() => setScreen("profileCustomize")}
-        onNext={(data) => {
-          const updated = { ...profile, ...data };
-          setProfile(updated);
-          saveProfile(updated);
-          setScreen("contact");
-        }}
-        onSkip={() => setScreen("success")}
-      />
-    );
-  } else if (screen === "contact") {
-    content = (
-      <ContactStepScreen
-        onBack={() => setScreen("name")}
-        onNext={(data) => {
-          const updated = { ...profile, ...data };
-          setProfile(updated);
-          saveProfile(updated);
-          setScreen("location");
-        }}
-        onSkip={() => setScreen("success")}
-      />
-    );
-  } else if (screen === "location") {
-    content = (
-      <LocationStepScreen
-        onBack={() => setScreen("contact")}
-        onComplete={async (data) => {
-          const finalProfile = { ...profile, ...data };
-          setProfile(finalProfile);
-          await saveProfile(finalProfile);
-          try {
-            // If we have a token (user is registered/logged in), save to DB
-            if (token) {
-              await updateProfile(token, finalProfile);
+          }}
+        />
+      );
+    } else if (screen === "consultBook") {
+      content = (
+        <ConsultBookingScreen
+          onBack={() => setScreen("home")}
+          onProceed={() => setScreen("consultConfirm")}
+          onGoHome={() => setScreen("home")}
+        />
+      );
+    } else if (screen === "consultConfirm") {
+      content = (
+        <ConsultConfirmScreen
+          onBack={() => setScreen("consultBook")}
+          onDone={() => setScreen("home")}
+        />
+      );
+    } else if (screen === "groups") {
+      content = (
+        <GroupsScreen
+          token={token}
+          onBackHome={() => setScreen("home")}
+          onOpenConsult={() => setScreen("consultBook")}
+          onOpenProfile={() => setScreen("profileHealth")}
+        />
+      );
+    } else if (screen === "place") {
+      content = (
+        <PlaceScreen
+          onBackHome={() => setScreen("home")}
+          onOpenConsult={() => setScreen("consultBook")}
+          onOpenGroups={() => setScreen("groups")}
+          onOpenProfile={() => setScreen("profileHealth")}
+        />
+      );
+    } else if (screen === "post") {
+      content = (
+        <PostScreen
+          initialPostId={selectedPostId}
+          onBackHome={() => setScreen("home")}
+          onOpenConsult={() => setScreen("consultBook")}
+          onOpenGroups={() => setScreen("groups")}
+          onOpenProfile={() => setScreen("profileHealth")}
+        />
+      );
+    } else if (screen === "createPost") {
+      content = (
+        <CreatePostScreen
+          onBackHome={() => setScreen("home")}
+          onOpenConsult={() => setScreen("consultBook")}
+          onOpenGroups={() => setScreen("groups")}
+          onOpenProfile={() => setScreen("profileHealth")}
+        />
+      );
+    } else if (screen === "settings") {
+      content = <SettingsScreen onBack={() => setScreen("profileHealth")} />;
+    } else if (screen === "deactivateAccount") {
+      content = (
+        <DeactivateAccountScreen
+          token={resetToken}
+          onBack={() => setScreen("settings")}
+        />
+      );
+    }
+  } else {
+    // Onboarding flow or guest/welcome flow
+    if (onboardingStep === "verify-device") {
+      content = (
+        <VerifyDeviceScreen
+          email={regEmail}
+          onBack={() => setOnboardingStep("login")}
+          onVerified={() => setOnboardingStep("completed")}
+        />
+      );
+    } else if (onboardingStep === "select-role") {
+      content = <SelectRoleScreen />;
+    } else if (onboardingStep === "create-basic-profile") {
+      content = <CreateBasicProfileScreen />;
+    } else if (onboardingStep === "verify-phone") {
+      content = <VerifyPhoneScreen />;
+    } else if (onboardingStep === "create-role-specific-profile") {
+      content = <CreateRoleSpecificProfileScreen />;
+    } else if (onboardingStep === "select-currency") {
+      content = <SelectCurrencyScreen />;
+    } else {
+      if (screen === "forgotPassword") {
+        content = <ForgotPasswordScreen onBack={() => setScreen("login")} />;
+      } else if (screen === "resetPassword") {
+        content = (
+          <ResetPasswordScreen
+            token={resetToken}
+            onBack={() => setScreen("login")}
+          />
+        );
+      } else if (screen === "verifyEmailLink") {
+        content = (
+          <VerifyEmailLinkScreen
+            token={resetToken}
+            onBack={() => setScreen("login")}
+          />
+        );
+      } else if (screen === "reactivateAccount") {
+        content = (
+          <ReactivateAccountScreen
+            token={resetToken}
+            onBack={() => setScreen("login")}
+          />
+        );
+      } else if (screen === "deactivateAccount") {
+        content = (
+          <DeactivateAccountScreen
+            token={resetToken}
+            onBack={() => setScreen("login")}
+          />
+        );
+      } else if (screen === "login") {
+        content = (
+          <LoginScreen
+            onSignUp={() => setScreen("profileBasics")}
+            onLoginSuccess={handleLoginSuccess}
+            onEmailVerifyNeeded={(email) => {
+              setRegEmail(email);
+              setVerificationSource("login");
+              setScreen("emailVerify");
+            }}
+            onDeviceVerifyNeeded={(email) => {
+              setRegEmail(email);
+              setOnboardingStep("verify-device");
+            }}
+            onForgotPassword={() => setScreen("forgotPassword")}
+            onBack={() => setScreen("splash")}
+          />
+        );
+      } else if (screen === "profileBasics") {
+        content = (
+          <ProfileBasicsScreen
+            onBack={() => setScreen("splash")}
+            onSignIn={() => setScreen("login")}
+            onRegisterSuccess={(data) => {
+              setRegEmail(data.email);
+              setVerificationSource("registration");
+              const updated = { ...profile, ...data };
+              setProfile(updated);
+              saveProfile(updated);
+              setScreen("emailVerify");
+            }}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        );
+      } else if (screen === "emailVerify") {
+        content = (
+          <EmailVerifyScreen
+            email={regEmail}
+            onBack={() =>
+              setScreen(
+                verificationSource === "login" ? "login" : "profileBasics",
+              )
             }
-          } catch (error) {
-            console.error("Failed to save onboarding data:", error);
-          }
-          setScreen("success");
-        }}
-      />
-    );
-  } else if (screen === "success") {
-    content = (
-      <SuccessScreen
-        onGetStarted={() => setScreen("home")}
-        role={profile.role}
-      />
-    );
-  } else if (screen === "home") {
-    content = (
-      <HomeScreen
-        user={user}
-        token={token}
-        onOpenProfile={() => setScreen("profileHealth")}
-        onOpenGroups={() => setScreen("groups")}
-        onConsult={() => setScreen("consultBook")}
-        onOpenPlace={() => setScreen("place")}
-        onOpenPost={(id) => {
-          setSelectedPostId(id); // Save targeted item index cleanly
-          setScreen("post"); // Fire screen switch routing state update
-        }}
-        onOpenCreatePost={() => setScreen("createPost")}
-      />
-    );
-  } else if (screen === "profileHealth") {
-    content = (
-      <HealthProfileScreen
-        onBackHome={() => setScreen("home")}
-        onEditProfile={() => setScreen("profileEdit")}
-        profile={profile}
-        onLogout={handleLogout}
-      />
-    );
-  } else if (screen === "profilePublic") {
-    content = (
-      <PublicProfileScreen
-        onBackHome={() => setScreen("home")}
-        onEditProfile={() => setScreen("profileEdit")}
-        profile={profile}
-      />
-    );
-  } else if (screen === "profileEdit") {
-    content = (
-      <ProfileScreen
-        profile={profile}
-        onCancel={() => setScreen("profilePublic")}
-        onSave={async (updated) => {
-          try {
-            if (token) {
-              await updateProfile(token, updated);
-            }
-            setProfile(updated);
-            await saveProfile(updated);
-            setScreen("profilePublic");
-          } catch (error) {
-            console.error("Failed to update profile:", error);
-            toast.error(error.message || "Failed to update profile");
-          }
-        }}
-      />
-    );
-  } else if (screen === "consultBook") {
-    content = (
-      <ConsultBookingScreen
-        onBack={() => setScreen("home")}
-        onProceed={() => setScreen("consultConfirm")}
-        onGoHome={() => setScreen("home")}
-      />
-    );
-  } else if (screen === "consultConfirm") {
-    content = (
-      <ConsultConfirmScreen
-        onBack={() => setScreen("consultBook")}
-        onDone={() => setScreen("home")}
-      />
-    );
-  } else if (screen === "groups") {
-    content = (
-      <GroupsScreen
-        token={token}
-        onBackHome={() => setScreen("home")}
-        onOpenConsult={() => setScreen("consultBook")}
-        onOpenProfile={() => setScreen("profileHealth")}
-      />
-    );
-  } else if (screen === "place") {
-    content = (
-      <PlaceScreen
-        onBackHome={() => setScreen("home")}
-        onOpenConsult={() => setScreen("consultBook")}
-        onOpenGroups={() => setScreen("groups")}
-        onOpenProfile={() => setScreen("profileHealth")}
-      />
-    );
-  } else if (screen === "post") {
-    content = (
-      <PostScreen
-        initialPostId={selectedPostId}
-        onBackHome={() => setScreen("home")}
-        onOpenConsult={() => setScreen("consultBook")}
-        onOpenGroups={() => setScreen("groups")}
-        onOpenProfile={() => setScreen("profileHealth")}
-      />
-    );
-  } else if (screen === "createPost") {
-    content = (
-      <CreatePostScreen
-        onBackHome={() => setScreen("home")}
-        onOpenConsult={() => setScreen("consultBook")}
-        onOpenGroups={() => setScreen("groups")}
-        onOpenProfile={() => setScreen("profileHealth")}
-      />
-    );
+            onVerified={() => {
+              setScreen("login");
+            }}
+          />
+        );
+      } else {
+        content = (
+          <WelcomeScreen
+            onCreateAccount={() => setScreen("profileBasics")}
+            onSignIn={() => setScreen("login")}
+          />
+        );
+      }
+    }
   }
 
-  const authenticatedScreens = [
-    "home",
-    "profileHealth",
-    "profilePublic",
-    "profileEdit",
-    "consultBook",
-    "consultConfirm",
-    "groups",
-    "place",
-    "post",
-    "createPost",
-  ];
-
-  const isAuthScreen = authenticatedScreens.includes(screen);
+  const isAuthScreen = onboardingStep !== "completed";
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <ToastProvider>
-          {isLoading ? (
-            <View
-              style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-            >
-              <ActivityIndicator size="large" color="#000000" />
-              <Text style={{ marginTop: 12, color: "#6B7280" }}>
-                Initializing...
-              </Text>
-            </View>
-          ) : isAuthScreen ? (
-            <Layout
-              currentScreen={screen}
-              onNavigate={(target) => setScreen(target)}
-              userProfile={profile}
-              onLogout={handleLogout}
-            >
-              {content}
-            </Layout>
-          ) : (
-            content || (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text>Loading App...</Text>
-              </View>
-            )
-          )}
-        </ToastProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <>
+      {userLoading || isLoading ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: theme.background,
+          }}
+        >
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={{ marginTop: 12, color: theme.textSecondary }}>
+            Initializing...
+          </Text>
+        </View>
+      ) : !isAuthScreen ? (
+        <Layout
+          currentScreen={screen === "splash" ? "home" : screen}
+          onNavigate={(target) => setScreen(target)}
+          userProfile={profile}
+          onLogout={handleLogout}
+        >
+          {content}
+        </Layout>
+      ) : (
+        content || (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text>Loading App...</Text>
+          </View>
+        )
+      )}
+    </>
   );
 }

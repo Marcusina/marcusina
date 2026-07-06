@@ -46,13 +46,14 @@ const API_BASE_URL = isDev
   ? `http://${getHost()}:${DEV_PORT}/api/v1`
   : FALLBACK_URL;
 
-const FRONTEND_WEB_URL = Platform.OS === "web"
-  ? (typeof window !== "undefined" ? window.location.origin : "http://localhost:8081")
-  : `http://${getHost()}:8081`;
+const FRONTEND_WEB_URL =
+  Platform.OS === "web"
+    ? typeof window !== "undefined"
+      ? window.location.origin
+      : "http://localhost:8081"
+    : `http://${getHost()}:8081`;
 
-const DEEP_LINK_SCHEME = Platform.OS === "web"
-  ? ""
-  : `exp://${getHost()}:8081`;
+const DEEP_LINK_SCHEME = Platform.OS === "web" ? "" : `exp://${getHost()}:8081`;
 
 const config = {
   NODE_ENV: process.env.NODE_ENV || "development",

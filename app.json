@@ -28,6 +28,9 @@
       "bundler": "metro",
       "favicon": "./assets/logo.png"
     },
-    "plugins": ["expo-video"]
+    "plugins": [
+      "expo-video",
+      "expo-secure-store"
+    ]
   }
 }

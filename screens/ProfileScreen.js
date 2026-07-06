@@ -14,7 +14,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "../components/Logo";
 
-export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
+export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings, profile, onLogout }) {
   const { theme, themeMode, setThemeMode } = useTheme();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width >= 768;
@@ -240,6 +240,32 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile }) {
             className="rounded-2xl p-5 border mt-4"
           >
             <View className="flex-col items-stretch">
+              {/* Account Settings Link */}
+              <TouchableOpacity
+                onPress={onOpenSettings}
+                className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                style={{ borderBottomColor: theme.border }}
+              >
+                <View className="flex-row items-center gap-3">
+                  <MaterialIcons
+                    name="settings"
+                    size={24}
+                    color={theme.textSecondary}
+                  />
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-[15px] font-medium"
+                  >
+                    Account Settings
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={theme.textSecondary}
+                />
+              </TouchableOpacity>
+
               <View className="flex-row items-center gap-3 mb-3">
                 <MaterialIcons
                   name="color-lens"

@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { QueryClient } from "@tanstack/react-query";
 import config from "../utils/config"; // Adjust paths accordingly to your file hierarchy
 import { getToken } from "../utils/storage";
 
@@ -12,7 +13,9 @@ const apiClient = async (endpoint, options = {}) => {
     ...headers,
   };
 
-  if (body) {
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
+  if (body && !isFormData) {
     clientHeaders["Content-Type"] = "application/json";
   }
 
@@ -43,8 +46,13 @@ const apiClient = async (endpoint, options = {}) => {
   };
 
   if (body) {
-    requestConfig.body = JSON.stringify(body);
-    console.log("[API Request Body]", requestConfig.body);
+    if (isFormData) {
+      requestConfig.body = body;
+      console.log("[API Request Body] FormData payload");
+    } else {
+      requestConfig.body = JSON.stringify(body);
+      console.log("[API Request Body]", requestConfig.body);
+    }
   }
 
   try {
@@ -116,5 +124,14 @@ const apiClient = async (endpoint, options = {}) => {
   }
 };
 
-export { API_BASE_URL };
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+export { API_BASE_URL, queryClient };
 export default apiClient;
