@@ -12,12 +12,12 @@ import {
   Modal,
   useWindowDimensions,
   Clipboard,
-  Alert,
 } from "react-native";
 import { MaterialIcons, Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useEvent } from "expo";
 import { useTheme } from "../context/ThemeContext";
+import { toast } from "../context/ToastContext";
 
 const testVideoUrl = require("../assets/videos/test.mp4");
 
@@ -440,7 +440,7 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
 
   const handleCopyLink = (url) => {
     Clipboard.setString(url);
-    Alert.alert("Link Copied", "Link copied to clipboard successfully!");
+    toast.success("Link copied to clipboard successfully!");
     setActiveSharePost(null);
   };
 
@@ -817,7 +817,7 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
                 <TouchableOpacity
                   className="items-center w-20"
                   onPress={() => {
-                    Alert.alert("Share", "Posted to community successfully!");
+                    toast.success("Posted to community successfully!");
                     setActiveSharePost(null);
                   }}
                 >
@@ -836,7 +836,7 @@ export function PostScreen({ initialPostId, brandPrimaryColor = "#00C9A7" }) {
                 <TouchableOpacity
                   className="items-center w-20"
                   onPress={() => {
-                    Alert.alert("Share", "Posted to feed timeline!");
+                    toast.success("Posted to feed timeline!");
                     setActiveSharePost(null);
                   }}
                 >

@@ -1,140 +1,323 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   TextInput,
   Image,
   Platform,
   useWindowDimensions,
   Switch,
-} from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useTheme } from '../context/ThemeContext';
+} from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
+import Logo from "../components/Logo";
 
-export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogout }) {
-  const { theme, themeMode, setThemeMode, toggleTheme } = useTheme();
-  const styles = createStyles(theme);
+export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings, profile, onLogout }) {
+  const { theme, themeMode, setThemeMode } = useTheme();
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web' && width >= 768;
-  const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
+  const isWeb = Platform.OS === "web" && width >= 768;
+  const avatarInitial = profile.name
+    ? profile.name.charAt(0).toUpperCase()
+    : "?";
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  
+
   return (
-    <View style={styles.container}>
-      {!isWeb && (
-        <View style={styles.headerActionsRow}>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={onLogout}>
-            <MaterialIcons name="logout" size={24} color={theme.error} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIconBtn}>
-            <MaterialIcons name="settings" size={24} color={theme.textSecondary} />
-          </TouchableOpacity>
-        </View>
-      )}
-      
-      <ScrollView 
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWeb && styles.webScrollContent
-        ]}
+    <View className="flex-1 bg-transparent">
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 40,
+          paddingTop: isWeb ? 20 : 0,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[
-          styles.contentMaxWidth,
-          isWeb && styles.webContentMaxWidth
-        ]}>
-          <View style={[styles.profileHeader, isWeb && styles.webProfileHeader]}>
-            <View style={styles.avatarWrapper}>
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarInitial}>{avatarInitial}</Text>
+        <View className={isWeb ? "px-0" : "px-5"}>
+          {/* Profile Header */}
+          <View
+            className={`items-center mt-5 mb-8 ${isWeb ? "flex-row justify-start mt-0" : ""}`}
+          >
+            <View className="relative mb-4 md:mb-0">
+              <View
+                style={{
+                  backgroundColor: theme.primaryLight,
+                  borderColor: theme.surface,
+                }}
+                className="w-[100px] h-[100px] rounded-full alignItems-center justify-center border-4"
+              >
+                <Text
+                  style={{ color: theme.primary }}
+                  className="text-[40px] font-bold"
+                >
+                  {avatarInitial}
+                </Text>
               </View>
-              <View style={styles.premiumBadge}>
-                <Text style={styles.premiumText}>PREMIUM</Text>
+              <View
+                style={{ backgroundColor: theme.primary }}
+                className="absolute -bottom-1 px-2.5 py-1 rounded-xl align-self-center"
+              >
+                <Text className="color-white text-[10px] font-extrabold">
+                  PREMIUM
+                </Text>
               </View>
             </View>
-            
-            <View style={[styles.profileInfo, isWeb && styles.webProfileInfo]}>
-              <Text style={styles.profileName}>{profile.name || 'User'}</Text>
-              <Text style={styles.profileType}>Personal Health Account</Text>
-              <TouchableOpacity style={styles.editButton} onPress={onEditProfile}>
-                <MaterialIcons name="edit" size={18} color={theme.primary} style={{ marginRight: 6 }} />
-                <Text style={styles.editButtonText}>Edit Health Profile</Text>
+
+            <View
+              className={`items-center ${isWeb ? "items-start ml-8 flex-1" : ""}`}
+            >
+              <Text
+                style={{ color: theme.text }}
+                className="text-2xl font-bold mb-1"
+              >
+                {profile.name || "User"}
+              </Text>
+              <Text style={{ color: theme.textMuted }} className="text-sm mb-4">
+                Personal Health Account
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: theme.primaryLight,
+                  borderColor: theme.primaryLight,
+                }}
+                className="flex-row items-center px-4 py-2.5 rounded-xl border"
+                onPress={onEditProfile}
+              >
+                <MaterialIcons
+                  name="edit"
+                  size={18}
+                  color={theme.primary}
+                  className="mr-1.5"
+                />
+                <Text
+                  style={{ color: theme.primary }}
+                  className="font-semibold text-sm"
+                >
+                  Edit Health Profile
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <View style={[styles.statsRow, isWeb && styles.webStatsRow]}>
-            <StatCard icon="water_drop" value={profile.bloodType || '—'} label="Blood Type" isWeb={isWeb} />
-            <StatCard icon="straighten" value={profile.height || '—'} label="Height (cm)" isWeb={isWeb} />
-            <StatCard icon="monitor_weight" value={profile.weight || '—'} label="Weight (kg)" isWeb={isWeb} />
-            {isWeb && <StatCard icon="calendar_today" value="28y" label="Age" isWeb={isWeb} />}
+          {/* Stats Grid */}
+          <View
+            className={`flex-row justify-between gap-3 mb-8 ${isWeb ? "justify-start gap-5" : ""}`}
+          >
+            <StatCard
+              icon="water_drop"
+              value={profile.bloodType || "—"}
+              label="Blood Type"
+              isWeb={isWeb}
+            />
+            <StatCard
+              icon="straighten"
+              value={profile.height || "—"}
+              label="Height (cm)"
+              isWeb={isWeb}
+            />
+            <StatCard
+              icon="monitor_weight"
+              value={profile.weight || "—"}
+              label="Weight (kg)"
+              isWeb={isWeb}
+            />
+            {isWeb && (
+              <StatCard
+                icon="calendar_today"
+                value="28y"
+                label="Age"
+                isWeb={isWeb}
+              />
+            )}
           </View>
 
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Medical Records</Text>
+          {/* Medical Records Section Header */}
+          <View className="flex-row justify-between items-center mb-4">
+            <Text style={{ color: theme.text }} className="text-xl font-bold">
+              Medical Records
+            </Text>
             <TouchableOpacity>
-              <Text style={styles.viewAllText}>View All</Text>
+              <Text
+                style={{ color: theme.primary }}
+                className="text-sm font-semibold"
+              >
+                View All
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.recordsGrid, isWeb && styles.webRecordsGrid]}>
-            <RecordCard icon="description" title="Medical History" subtitle="No recent entries" isWeb={isWeb} />
-            <RecordCard icon="medication" title="Prescriptions" subtitle={`${profile.prescriptions?.length || 0} active scripts`} isWeb={isWeb} />
-            <RecordCard icon="science" title="Lab Results" subtitle="1 new result" isWeb={isWeb} />
-            <RecordCard icon="vaccines" title="Vaccinations" subtitle="Up to date" isWeb={isWeb} />
+          {/* Records Grid */}
+          <View
+            className={`gap-3 mb-8 ${isWeb ? "flex-row flex-wrap gap-4" : ""}`}
+          >
+            <RecordCard
+              icon="description"
+              title="Medical History"
+              subtitle="No recent entries"
+              isWeb={isWeb}
+            />
+            <RecordCard
+              icon="medication"
+              title="Prescriptions"
+              subtitle={`${profile.prescriptions?.length || 0} active scripts`}
+              isWeb={isWeb}
+            />
+            <RecordCard
+              icon="science"
+              title="Lab Results"
+              subtitle="1 new result"
+              isWeb={isWeb}
+            />
+            <RecordCard
+              icon="vaccines"
+              title="Vaccinations"
+              subtitle="Up to date"
+              isWeb={isWeb}
+            />
           </View>
 
-          <Text style={styles.sectionTitle}>Recent Health Activity</Text>
-          <View style={styles.activityList}>
+          {/* Recent Health Activity */}
+          <Text
+            style={{ color: theme.text }}
+            className="text-xl font-bold mb-4"
+          >
+            Recent Health Activity
+          </Text>
+          <View
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            }}
+            className="rounded-2xl p-8 border items-center"
+          >
             {profile.recentActivity?.length > 0 ? (
               profile.recentActivity.map((activity, idx) => (
-                <View key={idx} style={styles.activityItem}>
-                  <MaterialIcons name="check-circle" size={20} color="#10B981" />
-                  <Text style={styles.activityText}>{activity.title}</Text>
-                  <Text style={styles.activityDate}>{activity.date}</Text>
+                <View
+                  key={idx}
+                  style={{ backgroundColor: theme.background }}
+                  className="flex-row items-center p-3 rounded-xl mb-3 w-full"
+                >
+                  <MaterialIcons
+                    name="check-circle"
+                    size={20}
+                    color="#10B981"
+                  />
+                  <Text
+                    style={{ color: theme.text }}
+                    className="flex-1 text-sm font-medium ml-3"
+                  >
+                    {activity.title}
+                  </Text>
+                  <Text style={{ color: theme.textMuted }} className="text-xs">
+                    {activity.date}
+                  </Text>
                 </View>
               ))
             ) : (
-              <View style={styles.emptyActivity}>
+              <View className="items-center">
                 <MaterialIcons name="history" size={40} color="#E5E7EB" />
-                <Text style={styles.emptyActivityText}>No recent health activity found.</Text>
+                <Text
+                  style={{ color: theme.textMuted }}
+                  className="mt-3 text-sm"
+                >
+                  No recent health activity found.
+                </Text>
               </View>
             )}
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Settings</Text>
-          <View style={styles.settingsCard}>
-            <View style={styles.settingItemCol}>
-              <View style={[styles.settingLeft, { marginBottom: 12 }]}>
-                <MaterialIcons 
-                  name="color-lens" 
-                  size={24} 
-                  color={theme.textSecondary} 
+          {/* Settings Card */}
+          <Text
+            style={{ color: theme.text }}
+            className="text-xl font-bold mt-8 mb-4"
+          >
+            Settings
+          </Text>
+          <View
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            }}
+            className="rounded-2xl p-5 border mt-4"
+          >
+            <View className="flex-col items-stretch">
+              {/* Account Settings Link */}
+              <TouchableOpacity
+                onPress={onOpenSettings}
+                className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                style={{ borderBottomColor: theme.border }}
+              >
+                <View className="flex-row items-center gap-3">
+                  <MaterialIcons
+                    name="settings"
+                    size={24}
+                    color={theme.textSecondary}
+                  />
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-[15px] font-medium"
+                  >
+                    Account Settings
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={theme.textSecondary}
                 />
-                <Text style={styles.settingLabel}>App Theme</Text>
+              </TouchableOpacity>
+
+              <View className="flex-row items-center gap-3 mb-3">
+                <MaterialIcons
+                  name="color-lens"
+                  size={24}
+                  color={theme.textSecondary}
+                />
+                <Text
+                  style={{ color: theme.text }}
+                  className="text-[15px] font-medium"
+                >
+                  App Theme
+                </Text>
               </View>
-              <View style={{ zIndex: 100, position: 'relative' }}>
+              <View className="relative z-50">
                 <TouchableOpacity
                   onPress={() => setDropdownOpen(!dropdownOpen)}
-                  style={[styles.dropdownHeader, { borderColor: theme.border, backgroundColor: theme.surface }]}
+                  style={{
+                    borderColor: theme.border,
+                    backgroundColor: theme.surface,
+                  }}
+                  className="flex-row items-center justify-between border rounded-xl px-4 py-3"
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.dropdownHeaderText, { color: theme.text }]}>
-                    {themeMode === 'system' ? 'System Default' : themeMode === 'light' ? 'Light' : 'Dark'}
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-[15px] font-medium"
+                  >
+                    {themeMode === "system"
+                      ? "System Default"
+                      : themeMode === "light"
+                        ? "Light"
+                        : "Dark"}
                   </Text>
-                  <MaterialIcons 
-                    name={dropdownOpen ? "arrow-drop-up" : "arrow-drop-down"} 
-                    size={24} 
-                    color={theme.textSecondary} 
+                  <MaterialIcons
+                    name={dropdownOpen ? "arrow-drop-up" : "arrow-drop-down"}
+                    size={24}
+                    color={theme.textSecondary}
                   />
                 </TouchableOpacity>
 
                 {dropdownOpen && (
-                  <View style={[styles.dropdownMenu, { borderColor: theme.border, backgroundColor: theme.surface }]}>
-                    {['system', 'light', 'dark'].map((mode) => {
+                  <View
+                    style={{
+                      borderColor: theme.border,
+                      backgroundColor: theme.surface,
+                      ...Platform.select({
+                        web: { boxShadow: "0 2px 4px rgba(0,0,0,0.1)" },
+                      }),
+                    }}
+                    className="absolute top-[52px] left-0 right-0 border rounded-xl overflow-hidden z-50"
+                  >
+                    {["system", "light", "dark"].map((mode) => {
                       const isActive = themeMode === mode;
                       return (
                         <TouchableOpacity
@@ -143,23 +326,33 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogo
                             setThemeMode(mode);
                             setDropdownOpen(false);
                           }}
-                          style={[
-                            styles.dropdownItem,
-                            isActive && { backgroundColor: theme.surfaceSubtle }
-                          ]}
+                          style={{
+                            backgroundColor: isActive
+                              ? theme.surfaceSubtle
+                              : "transparent",
+                          }}
+                          className="flex-row items-center justify-between px-4 py-3"
                           activeOpacity={0.7}
                         >
                           <Text
-                            style={[
-                              styles.dropdownItemText,
-                              { color: theme.text },
-                              isActive && { fontWeight: '600', color: theme.primary }
-                            ]}
+                            style={{
+                              color: theme.text,
+                              fontWeight: isActive ? "600" : "400",
+                            }}
+                            className={isActive ? "color-primary" : "text-sm"}
                           >
-                            {mode === 'system' ? 'System Default' : mode === 'light' ? 'Light' : 'Dark'}
+                            {mode === "system"
+                              ? "System Default"
+                              : mode === "light"
+                                ? "Light"
+                                : "Dark"}
                           </Text>
                           {isActive && (
-                            <MaterialIcons name="check" size={18} color={theme.primary} />
+                            <MaterialIcons
+                              name="check"
+                              size={18}
+                              color={theme.primary}
+                            />
                           )}
                         </TouchableOpacity>
                       );
@@ -177,29 +370,53 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, profile, onLogo
 
 function StatCard({ icon, value, label, isWeb }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   return (
-    <View style={[styles.statCard, isWeb && styles.webStatCard]}>
-      <View style={styles.statIconCircle}>
+    <View
+      style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+      className={`flex-1 rounded-2xl p-4 items-center border ${isWeb ? "flex-none min-w-[140px]" : ""}`}
+    >
+      <View
+        style={{ backgroundColor: theme.background }}
+        className="w-11 h-11 rounded-xl items-center justify-center mb-3"
+      >
         <MaterialIcons name={icon} size={24} color={theme.primary} />
       </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={{ color: theme.text }} className="text-xl font-bold mb-0.5">
+        {value}
+      </Text>
+      <Text
+        style={{ color: theme.textMuted }}
+        className="text-[11px] font-medium"
+      >
+        {label}
+      </Text>
     </View>
   );
 }
 
 function RecordCard({ icon, title, subtitle, isWeb }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   return (
-    <TouchableOpacity style={[styles.recordCard, isWeb && styles.webRecordCard]}>
-      <View style={styles.recordIconBox}>
+    <TouchableOpacity
+      style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+      className={`flex-row items-center rounded-2xl p-4 border ${isWeb ? "w-[48.5%]" : "w-full"}`}
+    >
+      <View
+        style={{ backgroundColor: theme.primaryLight }}
+        className="w-12 h-12 rounded-xl items-center justify-center mr-4"
+      >
         <MaterialIcons name={icon} size={28} color={theme.primary} />
       </View>
-      <View style={styles.recordInfo}>
-        <Text style={styles.recordTitle}>{title}</Text>
-        <Text style={styles.recordSubtitle}>{subtitle}</Text>
+      <View className="flex-1">
+        <Text
+          style={{ color: theme.text }}
+          className="text-[15px] font-semibold mb-0.5"
+        >
+          {title}
+        </Text>
+        <Text style={{ color: theme.textMuted }} className="text-xs">
+          {subtitle}
+        </Text>
       </View>
       <MaterialIcons name="chevron-right" size={20} color="#9CA3AF" />
     </TouchableOpacity>
@@ -208,96 +425,218 @@ function RecordCard({ icon, title, subtitle, isWeb }) {
 
 export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web' && width >= 768;
-  const avatarInitial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
+  const isWeb = Platform.OS === "web" && width >= 768;
+  const avatarInitial = profile.name
+    ? profile.name.charAt(0).toUpperCase()
+    : "?";
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-transparent">
       {!isWeb && (
-        <View style={styles.headerRow}>
-          <Image 
-            source={require('../assets/logo.png')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <TouchableOpacity style={styles.headerIconBtn}>
+        <View className="flex-row justify-between items-center px-4 py-3">
+          <Logo width={36} height={36} />
+          <TouchableOpacity
+            style={{ backgroundColor: theme.surfaceSubtle }}
+            className="ml-4 p-2 rounded-xl"
+          >
             <MaterialIcons name="more-vert" size={24} color="#4B5563" />
           </TouchableOpacity>
         </View>
       )}
-      
-      <ScrollView 
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWeb && styles.webScrollContent
-        ]}
+
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 40,
+          paddingTop: isWeb ? 20 : 0,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[
-          styles.contentMaxWidth,
-          isWeb && styles.webContentMaxWidth
-        ]}>
-          <View style={[styles.profileHeader, isWeb && styles.webProfileHeader]}>
-            <View style={styles.avatarWrapper}>
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarInitial}>{avatarInitial}</Text>
+        <View className={isWeb ? "px-0" : "px-5"}>
+          {/* Profile Header Block */}
+          <View
+            className={`items-center mt-5 mb-8 ${isWeb ? "flex-row justify-start mt-0" : ""}`}
+          >
+            <View className="relative mb-4 md:mb-0">
+              <View
+                style={{
+                  backgroundColor: theme.primaryLight,
+                  borderColor: theme.surface,
+                }}
+                className="w-[100px] h-[100px] rounded-full items-center justify-center border-4"
+              >
+                <Text
+                  style={{ color: theme.primary }}
+                  className="text-[40px] font-bold"
+                >
+                  {avatarInitial}
+                </Text>
               </View>
-              <View style={styles.verifiedBadge}>
+              <View
+                style={{
+                  backgroundColor: theme.primary,
+                  borderColor: theme.surface,
+                }}
+                className="absolute bottom-1 right-1 w-6 h-6 rounded-full items-center justify-center border-[3px]"
+              >
                 <MaterialIcons name="check" size={12} color="#FFFFFF" />
               </View>
             </View>
-            
-            <View style={[styles.profileInfo, isWeb && styles.webProfileInfo]}>
-              <Text style={styles.profileName}>{profile.name || 'User'}</Text>
-              <Text style={styles.profileHandle}>{profile.handle || '@user_handle'}</Text>
-              <Text style={styles.profileBio}>{profile.bio || 'No bio provided yet.'}</Text>
-              
-              <View style={styles.actionButtonsRow}>
-                <TouchableOpacity style={styles.followButton}>
-                  <Text style={styles.followButtonText}>Follow</Text>
+
+            <View
+              className={`items-center ${isWeb ? "items-start ml-8 flex-1" : ""}`}
+            >
+              <Text
+                style={{ color: theme.text }}
+                className="text-2xl font-bold mb-1"
+              >
+                {profile.name || "User"}
+              </Text>
+              <Text
+                style={{ color: theme.primary }}
+                className="text-16 font-semibold mb-2"
+              >
+                {profile.handle || "@user_handle"}
+              </Text>
+              <Text
+                style={{ color: theme.textSecondary }}
+                className="text-sm text-center md:text-left mb-5 max-w-[400px] leading-5"
+              >
+                {profile.bio || "No bio provided yet."}
+              </Text>
+
+              <View className="flex-row gap-3 mb-6">
+                <TouchableOpacity
+                  style={{ backgroundColor: theme.primary }}
+                  className="px-8 py-3 rounded-xl"
+                >
+                  <Text
+                    style={{
+                      color: theme.mode === "dark" ? "#000000" : "#FFFFFF",
+                    }}
+                    className="font-bold text-[15px]"
+                  >
+                    Follow
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.messageButton}>
-                  <Text style={styles.messageButtonText}>Message</Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: theme.surface,
+                    borderColor: theme.border,
+                  }}
+                  className="px-8 py-3 rounded-xl border"
+                >
+                  <Text
+                    style={{ color: theme.text }}
+                    className="font-semibold text-[15px]"
+                  >
+                    Message
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
 
-          <View style={styles.socialStatsRow}>
-            <View style={styles.socialStatItem}>
-              <Text style={styles.socialStatValue}>{profile.followers || 0}</Text>
-              <Text style={styles.socialStatLabel}>FOLLOWERS</Text>
+          {/* Social Count Row */}
+          <View
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            }}
+            className="flex-row justify-around py-5 rounded-2xl mb-8 border"
+          >
+            <View className="items-center">
+              <Text
+                style={{ color: theme.text }}
+                className="text-2xl font-bold"
+              >
+                {profile.followers || 0}
+              </Text>
+              <Text
+                style={{ color: theme.textMuted }}
+                className="text-[10px] font-bold tracking-widest mt-1"
+              >
+                FOLLOWERS
+              </Text>
             </View>
-            <View style={styles.socialStatItem}>
-              <Text style={styles.socialStatValue}>{profile.following || 0}</Text>
-              <Text style={styles.socialStatLabel}>FOLLOWING</Text>
+            <View className="items-center">
+              <Text
+                style={{ color: theme.text }}
+                className="text-2xl font-bold"
+              >
+                {profile.following || 0}
+              </Text>
+              <Text
+                style={{ color: theme.textMuted }}
+                className="text-[10px] font-bold tracking-widest mt-1"
+              >
+                FOLLOWING
+              </Text>
             </View>
-            <View style={styles.socialStatItem}>
-              <Text style={styles.socialStatValue}>{profile.posts || 0}</Text>
-              <Text style={styles.socialStatLabel}>POSTS</Text>
+            <View className="items-center">
+              <Text
+                style={{ color: theme.text }}
+                className="text-2xl font-bold"
+              >
+                {profile.posts || 0}
+              </Text>
+              <Text
+                style={{ color: theme.textMuted }}
+                className="text-[10px] font-bold tracking-widest mt-1"
+              >
+                POSTS
+              </Text>
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>Communities</Text>
+          {/* Communities Slider */}
+          <Text
+            style={{ color: theme.text }}
+            className="text-xl font-bold mb-4"
+          >
+            Communities
+          </Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.communitiesScroll}
+            contentContainerStyle={{ gap: 12, paddingBottom: 8 }}
           >
             {profile.communities && profile.communities.length > 0 ? (
               profile.communities.map((community, i) => (
-                <View key={community._id || i} style={styles.communityThumb}>
-                  <Text style={styles.communityThumbText}>{community.name?.charAt(0) || 'C'}</Text>
+                <View
+                  key={community._id || i}
+                  style={{
+                    backgroundColor: theme.primaryLight,
+                    borderColor: theme.primaryLight,
+                  }}
+                  className="w-15 h-15 rounded-full items-center justify-center border"
+                >
+                  <Text
+                    style={{ color: theme.primary }}
+                    className="text-16 font-bold"
+                  >
+                    {community.name?.charAt(0) || "C"}
+                  </Text>
                 </View>
               ))
             ) : (
-              <View style={styles.communityThumb}>
+              <View
+                style={{
+                  backgroundColor: theme.primaryLight,
+                  borderColor: theme.primaryLight,
+                }}
+                className="w-15 h-15 rounded-full items-center justify-center border"
+              >
                 <MaterialIcons name="groups" size={24} color={theme.primary} />
               </View>
             )}
-            <TouchableOpacity style={styles.joinMoreBtn}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: theme.background,
+                borderColor: theme.border,
+              }}
+              className="w-15 h-15 rounded-full items-center justify-center border border-dashed"
+            >
               <MaterialIcons name="add" size={24} color="#9CA3AF" />
             </TouchableOpacity>
           </ScrollView>
@@ -309,666 +648,247 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
 
 export function ProfileScreen({ profile, onCancel, onSave }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const [edited, setEdited] = useState({ ...profile });
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web' && width >= 768;
+  const isWeb = Platform.OS === "web" && width >= 768;
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-transparent">
       {!isWeb && (
-        <View style={styles.headerRow}>
+        <View className="flex-row justify-between items-center px-5 py-3">
           <TouchableOpacity onPress={onCancel}>
             <MaterialIcons name="close" size={24} color="#4B5563" />
           </TouchableOpacity>
-          <Text style={styles.editHeaderTitle}>Edit Profile</Text>
+          <Text style={{ color: theme.text }} className="text-lg font-bold">
+            Edit Profile
+          </Text>
           <TouchableOpacity onPress={() => onSave(edited)}>
-            <Text style={styles.saveText}>Save</Text>
+            <Text
+              style={{ color: theme.primary }}
+              className="text-16 font-bold"
+            >
+              Save
+            </Text>
           </TouchableOpacity>
         </View>
       )}
 
-      <ScrollView 
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWeb && styles.webScrollContent
-        ]}
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 40,
+          paddingTop: isWeb ? 20 : 0,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[
-          styles.contentMaxWidth,
-          isWeb && styles.webContentMaxWidth
-        ]}>
+        <View className={isWeb ? "px-0" : "px-5"}>
+          {/* Web Custom Header Header */}
           {isWeb && (
-            <View style={styles.webEditHeader}>
-              <Text style={styles.webEditTitle}>Edit Profile Settings</Text>
-              <View style={styles.webEditActions}>
-                <TouchableOpacity style={styles.webCancelBtn} onPress={onCancel}>
-                  <Text style={styles.webCancelText}>Cancel</Text>
+            <View className="flex-row justify-between items-center mb-8">
+              <Text
+                style={{ color: theme.text }}
+                className="text-2xl font-extrabold"
+              >
+                Edit Profile Settings
+              </Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: theme.background,
+                    borderColor: theme.border,
+                  }}
+                  className="px-5 py-2.5 rounded-xl border"
+                  onPress={onCancel}
+                >
+                  <Text
+                    style={{ color: theme.textSecondary }}
+                    className="font-semibold"
+                  >
+                    Cancel
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.webSaveBtn} onPress={() => onSave(edited)}>
-                  <Text style={styles.webSaveText}>Save Changes</Text>
+                <TouchableOpacity
+                  style={{ backgroundColor: theme.primary }}
+                  className="px-5 py-2.5 rounded-xl"
+                  onPress={() => onSave(edited)}
+                >
+                  <Text
+                    style={{
+                      color: theme.mode === "dark" ? "#000000" : "#FFFFFF",
+                    }}
+                    className="font-bold"
+                  >
+                    Save Changes
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           )}
 
-            <View style={[styles.editSection, isWeb && styles.webEditGrid]}>
-              <View style={[styles.inputGroup, isWeb && styles.webInputHalf]}>
-                <Text style={styles.inputLabel}>Full Name</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={edited.name}
-                  onChangeText={(t) => setEdited({ ...edited, name: t })}
-                  placeholder="Enter your name"
-                />
-              </View>
-              <View style={[styles.inputGroup, isWeb && styles.webInputHalf]}>
-                <Text style={styles.inputLabel}>Username Handle</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={edited.handle}
-                  onChangeText={(t) => setEdited({ ...edited, handle: t })}
-                  placeholder="@username"
-                />
-              </View>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Bio</Text>
-                <TextInput
-                  style={[styles.textInput, styles.textArea]}
-                  value={edited.bio}
-                  onChangeText={(t) => setEdited({ ...edited, bio: t })}
-                  placeholder="Tell us about yourself"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-              
-              <View style={styles.divider} />
-              <Text style={styles.formSubTitle}>Health Information</Text>
-              
-              <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
-                <Text style={styles.inputLabel}>Blood Type</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={edited.bloodType}
-                  onChangeText={(t) => setEdited({ ...edited, bloodType: t })}
-                  placeholder="e.g. O+"
-                />
-              </View>
-              <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
-                <Text style={styles.inputLabel}>Height (cm)</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={edited.height}
-                  onChangeText={(t) => setEdited({ ...edited, height: t })}
-                  placeholder="e.g. 175"
-                  keyboardType="numeric"
-                />
-              </View>
-              <View style={[styles.inputGroup, isWeb && styles.webInputThird]}>
-                <Text style={styles.inputLabel}>Weight (kg)</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={edited.weight}
-                  onChangeText={(t) => setEdited({ ...edited, weight: t })}
-                  placeholder="e.g. 70"
-                  keyboardType="numeric"
-                />
-              </View>
+          {/* Form Content Block */}
+          <View
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            }}
+            className={`rounded-2xl p-6 border ${isWeb ? "flex-row flex-wrap gap-5" : ""}`}
+          >
+            <View className={`mb-5 ${isWeb ? "w-[48.5%]" : "w-full"}`}>
+              <Text
+                style={{ color: theme.textSecondary }}
+                className="text-sm font-semibold mb-2"
+              >
+                Full Name
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: theme.background,
+                  borderColor: theme.border,
+                  color: theme.text,
+                }}
+                className="rounded-xl px-4 py-3 border text-[15px]"
+                value={edited.name}
+                onChangeText={(t) => setEdited({ ...edited, name: t })}
+                placeholder="Enter your name"
+              />
             </View>
 
-            {!isWeb && (
-              <View style={styles.mobileEditFooter}>
-                <TouchableOpacity style={styles.mobileSaveBtn} onPress={() => onSave(edited)}>
-                  <Text style={styles.mobileSaveText}>Save Changes</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            <View className={`mb-5 ${isWeb ? "w-[48.5%]" : "w-full"}`}>
+              <Text
+                style={{ color: theme.textSecondary }}
+                className="text-sm font-semibold mb-2"
+              >
+                Username Handle
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: theme.background,
+                  borderColor: theme.border,
+                  color: theme.text,
+                }}
+                className="rounded-xl px-4 py-3 border text-[15px]"
+                value={edited.handle}
+                onChangeText={(t) => setEdited({ ...edited, handle: t })}
+                placeholder="@username"
+              />
+            </View>
+
+            <View className="w-full mb-5">
+              <Text
+                style={{ color: theme.textSecondary }}
+                className="text-sm font-semibold mb-2"
+              >
+                Bio
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: theme.background,
+                  borderColor: theme.border,
+                  color: theme.text,
+                }}
+                className="rounded-xl px-4 py-3 border text-[15px] h-[100px] h-24 align-top"
+                value={edited.bio}
+                onChangeText={(t) => setEdited({ ...edited, bio: t })}
+                placeholder="Tell us about yourself"
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+
+            <View
+              style={{ backgroundColor: theme.border }}
+              className="w-full h-[1px] my-3"
+            />
+            <Text
+              style={{ color: theme.text }}
+              className="w-full text-16 font-bold mb-4 mt-2"
+            >
+              Health Information
+            </Text>
+
+            <View className={`mb-5 ${isWeb ? "w-[31%]" : "w-full"}`}>
+              <Text
+                style={{ color: theme.textSecondary }}
+                className="text-sm font-semibold mb-2"
+              >
+                Blood Type
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: theme.background,
+                  borderColor: theme.border,
+                  color: theme.text,
+                }}
+                className="rounded-xl px-4 py-3 border text-[15px]"
+                value={edited.bloodType}
+                onChangeText={(t) => setEdited({ ...edited, bloodType: t })}
+                placeholder="e.g. O+"
+              />
+            </View>
+
+            <View className={`mb-5 ${isWeb ? "w-[31%]" : "w-full"}`}>
+              <Text
+                style={{ color: theme.textSecondary }}
+                className="text-sm font-semibold mb-2"
+              >
+                Height (cm)
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: theme.background,
+                  borderColor: theme.border,
+                  color: theme.text,
+                }}
+                className="rounded-xl px-4 py-3 border text-[15px]"
+                value={edited.height}
+                onChangeText={(t) => setEdited({ ...edited, height: t })}
+                placeholder="e.g. 175"
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View className={`mb-5 ${isWeb ? "w-[31%]" : "w-full"}`}>
+              <Text
+                style={{ color: theme.textSecondary }}
+                className="text-sm font-semibold mb-2"
+              >
+                Weight (kg)
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: theme.background,
+                  borderColor: theme.border,
+                  color: theme.text,
+                }}
+                className="rounded-xl px-4 py-3 border text-[15px]"
+                value={edited.weight}
+                onChangeText={(t) => setEdited({ ...edited, weight: t })}
+                placeholder="e.g. 70"
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          {/* Mobile Footer */}
+          {!isWeb && (
+            <View className="mt-6 mb-8">
+              <TouchableOpacity
+                style={{ backgroundColor: theme.primary }}
+                className="py-3.5 rounded-xl items-center justify-center"
+                onPress={() => onSave(edited)}
+              >
+                <Text
+                  style={{
+                    color: theme.mode === "dark" ? "#000000" : "#FFFFFF",
+                  }}
+                  className="text-16 font-bold"
+                >
+                  Save Changes
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
   );
 }
-
-const createStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  headerActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerIconBtn: {
-    marginLeft: 16,
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: theme.surfaceSubtle,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  webScrollContent: {
-    paddingTop: 20,
-  },
-  contentMaxWidth: {
-    paddingHorizontal: 20,
-  },
-  webContentMaxWidth: {
-    paddingHorizontal: 0,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 32,
-  },
-  webProfileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginTop: 0,
-  },
-  avatarWrapper: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  avatarCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: theme.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: theme.surface,
-  },
-  avatarInitial: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: theme.primary,
-  },
-  premiumBadge: {
-    position: 'absolute',
-    bottom: -4,
-    backgroundColor: theme.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'center',
-  },
-  premiumText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  verifiedBadge: {
-    position: 'absolute',
-    bottom: 4,
-    right: 4,
-    backgroundColor: theme.primary,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: theme.surface,
-  },
-  profileInfo: {
-    alignItems: 'center',
-  },
-  webProfileInfo: {
-    alignItems: 'flex-start',
-    marginLeft: 32,
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.text,
-    marginBottom: 4,
-  },
-  profileType: {
-    fontSize: 14,
-    color: theme.textMuted,
-    marginBottom: 16,
-  },
-  profileHandle: {
-    fontSize: 16,
-    color: theme.primary,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  profileBio: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 20,
-    maxWidth: 400,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.primaryLight,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: theme.primaryLight,
-  },
-  editButtonText: {
-    color: theme.primary,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 32,
-  },
-  webStatsRow: {
-    justifyContent: 'flex-start',
-    gap: 20,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: theme.surface,
-    borderRadius: 20,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  webStatCard: {
-    flex: 0,
-    minWidth: 140,
-  },
-  statIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: theme.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.text,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: theme.textMuted,
-    fontWeight: '500',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.text,
-    marginBottom: 16,
-  },
-  viewAllText: {
-    color: theme.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  recordsGrid: {
-    gap: 12,
-    marginBottom: 32,
-  },
-  webRecordsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  recordCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  webRecordCard: {
-    width: '48.5%',
-  },
-  recordIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: theme.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  recordInfo: {
-    flex: 1,
-  },
-  recordTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.text,
-    marginBottom: 2,
-  },
-  recordSubtitle: {
-    fontSize: 13,
-    color: theme.textMuted,
-  },
-  activityList: {
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-    padding: 32,
-    borderWidth: 1,
-    borderColor: theme.border,
-    alignItems: 'center',
-  },
-  emptyActivity: {
-    alignItems: 'center',
-  },
-  emptyActivityText: {
-    marginTop: 12,
-    color: theme.textMuted,
-    fontSize: 14,
-  },
-  actionButtonsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
-  followButton: {
-    backgroundColor: theme.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  followButtonText: {
-    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  messageButton: {
-    backgroundColor: theme.surface,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  messageButtonText: {
-    color: theme.text,
-    fontWeight: '600',
-    fontSize: 15,
-  },
-  socialStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    backgroundColor: theme.surface,
-    borderRadius: 20,
-    marginBottom: 32,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  socialStatItem: {
-    alignItems: 'center',
-  },
-  socialStatValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.text,
-  },
-  socialStatLabel: {
-    fontSize: 10,
-    color: theme.textMuted,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginTop: 4,
-  },
-  communitiesScroll: {
-    gap: 12,
-    paddingBottom: 8,
-  },
-  communityThumb: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: theme.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.primaryLight,
-  },
-  joinMoreBtn: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: theme.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderStyle: 'dashed',
-  },
-  editHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.text,
-  },
-  saveText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.primary,
-  },
-  mobileEditFooter: {
-    marginTop: 24,
-    marginBottom: 32,
-  },
-  mobileSaveBtn: {
-    backgroundColor: theme.primary,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mobileSaveText: {
-    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  webEditHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  webEditTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: theme.text,
-  },
-  webEditActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  webCancelBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: theme.background,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  webCancelText: {
-    color: theme.textSecondary,
-    fontWeight: '600',
-  },
-  webSaveBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: theme.primary,
-  },
-  webSaveText: {
-    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
-    fontWeight: '700',
-  },
-  editSection: {
-    backgroundColor: theme.surface,
-    borderRadius: 20,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  webEditGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
-  },
-  inputGroup: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  webInputHalf: {
-    width: '48%',
-  },
-  webInputThird: {
-    width: '31%',
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.textSecondary,
-    marginBottom: 8,
-  },
-  textInput: {
-    backgroundColor: theme.background,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: theme.border,
-    fontSize: 15,
-    color: theme.text,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  divider: {
-    width: '100%',
-    height: 1,
-    backgroundColor: theme.border,
-    marginVertical: 12,
-  },
-  formSubTitle: {
-    width: '100%',
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.text,
-    marginBottom: 16,
-    marginTop: 8,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: theme.background,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  activityText: {
-    flex: 1,
-    fontSize: 14,
-    color: theme.text,
-    fontWeight: '500',
-    marginLeft: 12,
-  },
-  activityDate: {
-    fontSize: 12,
-    color: theme.textMuted,
-  },
-  communityThumbText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.primary,
-  },
-  settingsCard: {
-    backgroundColor: theme.surface,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: theme.border,
-    marginTop: 16,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  settingLabel: {
-    fontSize: 15,
-    color: theme.text,
-    fontWeight: '500',
-  },
-  settingItemCol: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-  },
-  dropdownHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  dropdownHeaderText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 52,
-    left: 0,
-    right: 0,
-    borderWidth: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  dropdownItemText: {
-    fontSize: 14,
-  },
-});

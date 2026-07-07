@@ -1,149 +1,266 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   Platform,
   useWindowDimensions,
-} from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useTheme } from '../context/ThemeContext';
+} from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web' && width >= 768;
-  const [selectedDoctor, setSelectedDoctor] = useState('Dr. Sarah');
-  const [selectedService, setSelectedService] = useState('Video Call');
-  const [selectedDate, setSelectedDate] = useState('WED 19');
-  const [selectedSlot, setSelectedSlot] = useState('09:30 AM');
+  const isWeb = Platform.OS === "web" && width >= 768;
+  const [selectedDoctor, setSelectedDoctor] = useState("Dr. Sarah");
+  const [selectedService, setSelectedService] = useState("Video Call");
+  const [selectedDate, setSelectedDate] = useState("WED 19");
+  const [selectedSlot, setSelectedSlot] = useState("09:30 AM");
 
   const doctors = [
-    { name: 'Dr. Sarah', rating: '4.9', specialty: 'General Physician' },
-    { name: 'Dr. Mark', rating: '4.8', specialty: 'Cardiologist' },
-    { name: 'Dr. Elena', rating: '5.0', specialty: 'Dermatologist' },
-    { name: 'Dr. James', rating: '4.7', specialty: 'Pediatrician' },
-    { name: 'Dr. Chen', rating: '4.8', specialty: 'Neurologist' },
+    { name: "Dr. Sarah", rating: "4.9", specialty: "General Physician" },
+    { name: "Dr. Mark", rating: "4.8", specialty: "Cardiologist" },
+    { name: "Dr. Elena", rating: "5.0", specialty: "Dermatologist" },
+    { name: "Dr. James", rating: "4.7", specialty: "Pediatrician" },
+    { name: "Dr. Chen", rating: "4.8", specialty: "Neurologist" },
   ];
 
   const dates = [
-    { label: 'MON', day: '17' },
-    { label: 'TUE', day: '18' },
-    { label: 'WED', day: '19' },
-    { label: 'THU', day: '20' },
-    { label: 'FRI', day: '21' },
-    { label: 'SAT', day: '22' },
+    { label: "MON", day: "17" },
+    { label: "TUE", day: "18" },
+    { label: "WED", day: "19" },
+    { label: "THU", day: "20" },
+    { label: "FRI", day: "21" },
+    { label: "SAT", day: "22" },
   ];
 
-  const morningSlots = ['09:00 AM', '09:30 AM', '10:00 AM', '11:00 AM', '11:30 AM', '12:00 PM'];
-  const afternoonSlots = ['02:00 PM', '03:30 PM', '04:00 PM'];
+  const morningSlots = [
+    "09:00 AM",
+    "09:30 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "11:30 AM",
+    "12:00 PM",
+  ];
+  const afternoonSlots = ["02:00 PM", "03:30 PM", "04:00 PM"];
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-transparent">
       {!isWeb && (
-        <View style={styles.headerRow}>
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            borderBottomColor: theme.border,
+          }}
+          className="flex-row items-center justify-between px-5 py-3 border-b"
+        >
           <TouchableOpacity onPress={onBack}>
             <MaterialIcons name="arrow-back" size={24} color="#4B5563" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Book Consultation</Text>
-          <View style={styles.headerRight} />
+          <Text style={{ color: theme.text }} className="text-lg font-bold">
+            Book Consultation
+          </Text>
+          <View className="w-6" />
         </View>
       )}
 
-      <ScrollView 
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWeb && styles.webScrollContent
-        ]}
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: isWeb ? 0 : 0 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[
-          styles.contentMaxWidth,
-          isWeb && styles.webContentMaxWidth
-        ]}>
-          <View style={[styles.bookingLayout, isWeb && styles.webBookingLayout]}>
-            <View style={[styles.bookingMain, isWeb && styles.webBookingMain]}>
-              <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>Select Specialist</Text>
+        <View className={isWeb ? "px-0" : "px-5"}>
+          <View className={`mt-5 gap-6 ${isWeb ? "flex-row items-start" : ""}`}>
+            {/* Main Content Pane */}
+            <View className={isWeb ? "flex-[1.5]" : "flex-1"}>
+              <View className="flex-row justify-between items-center mb-4">
+                <Text
+                  style={{ color: theme.text }}
+                  className="text-lg font-bold"
+                >
+                  Select Specialist
+                </Text>
                 <TouchableOpacity>
-                  <Text style={styles.sectionAction}>View All</Text>
+                  <Text
+                    style={{ color: theme.primary }}
+                    className="text-sm font-semibold"
+                  >
+                    View All
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.quickRow}
+                contentContainerStyle={{ paddingBottom: 20 }}
               >
                 {doctors.map((doctor) => {
                   const isSelected = selectedDoctor === doctor.name;
                   return (
                     <TouchableOpacity
                       key={doctor.name}
-                      style={[styles.doctorCard, isSelected && styles.doctorCardSelected]}
+                      style={{
+                        backgroundColor: theme.surface,
+                        borderColor: isSelected ? theme.primary : theme.border,
+                      }}
+                      className="w-[140px] rounded-[20px] p-4 mr-4 items-center border"
                       onPress={() => setSelectedDoctor(doctor.name)}
                     >
-                      <View style={styles.doctorAvatar}>
-                        <MaterialIcons name="person" size={32} color={isSelected ? '#000000' : '#9CA3AF'} />
+                      <View
+                        style={{ backgroundColor: theme.background }}
+                        className="w-16 h-16 rounded-full items-center justify-center mb-3 relative"
+                      >
+                        <MaterialIcons
+                          name="person"
+                          size={32}
+                          color={isSelected ? theme.primary : "#9CA3AF"}
+                        />
                         {isSelected && (
-                          <View style={styles.selectedCheck}>
-                            <MaterialIcons name="check" size={12} color="#FFFFFF" />
+                          <View
+                            style={{
+                              backgroundColor: theme.primary,
+                              borderColor: theme.surface,
+                            }}
+                            className="absolute bottom-0 right-0 w-5 h-5 rounded-full items-center justify-center border-2"
+                          >
+                            <MaterialIcons
+                              name="check"
+                              size={12}
+                              color="#FFFFFF"
+                            />
                           </View>
                         )}
                       </View>
-                      <Text style={[styles.doctorName, isSelected && styles.doctorNameSelected]}>{doctor.name}</Text>
-                      <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
-                      <View style={styles.ratingBox}>
+                      <Text
+                        style={{
+                          color: isSelected ? theme.primary : theme.text,
+                        }}
+                        className="text-sm font-semibold mb-1"
+                      >
+                        {doctor.name}
+                      </Text>
+                      <Text
+                        style={{ color: theme.textSecondary }}
+                        className="text-[11px] mb-2 text-center"
+                      >
+                        {doctor.specialty}
+                      </Text>
+                      <View
+                        style={{ backgroundColor: theme.warningLight }}
+                        className="flex-row items-center px-2 py-1 rounded-e-lg"
+                      >
                         <MaterialIcons name="star" size={14} color="#FBBF24" />
-                        <Text style={styles.ratingText}>{doctor.rating}</Text>
+                        <Text
+                          style={{ color: theme.warning }}
+                          className="text-xs font-bold ml-1"
+                        >
+                          {doctor.rating}
+                        </Text>
                       </View>
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
 
-              <Text style={styles.sectionTitle}>Service Type</Text>
-              <View style={[styles.serviceRow, isWeb && styles.webServiceRow]}>
+              <Text
+                style={{ color: theme.text }}
+                className="text-lg font-bold mb-4"
+              >
+                Service Type
+              </Text>
+              <View className={`gap-3 ${isWeb ? "flex-row flex-wrap" : ""}`}>
                 {[
-                  { label: 'Video Call', icon: 'videocam', price: '$25' },
-                  { label: 'Voice Call', icon: 'call', price: '$15' },
-                  { label: 'Chat', icon: 'chat', price: '$10' },
+                  { label: "Video Call", icon: "videocam", price: "$25" },
+                  { label: "Voice Call", icon: "call", price: "$15" },
+                  { label: "Chat", icon: "chat", price: "$10" },
                 ].map((item) => {
                   const isSelected = selectedService === item.label;
                   return (
                     <TouchableOpacity
                       key={item.label}
-                      style={[styles.serviceItem, isSelected && styles.serviceItemSelected]}
+                      style={{
+                        backgroundColor: theme.surface,
+                        borderColor: isSelected ? theme.primary : theme.border,
+                      }}
+                      className={`flex-row items-center rounded-2xl p-4 border ${isWeb ? "flex-1 min-w-[200px]" : ""}`}
                       onPress={() => setSelectedService(item.label)}
                     >
-                      <View style={[styles.serviceIconBox, isSelected && styles.serviceIconBoxSelected]}>
-                        <MaterialIcons name={item.icon} size={24} color={isSelected ? '#FFFFFF' : '#000000'} />
+                      <View
+                        style={{
+                          backgroundColor: isSelected
+                            ? theme.primary
+                            : theme.primaryLight,
+                        }}
+                        className="w-12 h-12 rounded-xl items-center justify-center mr-4"
+                      >
+                        <MaterialIcons
+                          name={item.icon}
+                          size={24}
+                          color={isSelected ? "#FFFFFF" : theme.primary}
+                        />
                       </View>
-                      <View style={styles.serviceInfo}>
-                        <Text style={[styles.serviceLabel, isSelected && styles.serviceLabelSelected]}>{item.label}</Text>
-                        <Text style={styles.servicePrice}>{item.price}</Text>
+                      <View className="flex-1">
+                        <Text
+                          style={{
+                            color: isSelected ? theme.primary : theme.text,
+                          }}
+                          className="text-[15px] font-semibold"
+                        >
+                          {item.label}
+                        </Text>
+                        <Text
+                          style={{ color: theme.textSecondary }}
+                          className="text-xs mt-0.5"
+                        >
+                          {item.price}
+                        </Text>
                       </View>
-                      {isSelected && <MaterialIcons name="check-circle" size={20} color="#000000" />}
+                      {isSelected && (
+                        <MaterialIcons
+                          name="check-circle"
+                          size={20}
+                          color={theme.primary}
+                        />
+                      )}
                     </TouchableOpacity>
                   );
                 })}
               </View>
             </View>
 
-            <View style={[styles.bookingSidebar, isWeb && styles.webBookingSidebar]}>
-              <View style={styles.scheduleCard}>
-                <View style={styles.scheduleHeader}>
-                  <Text style={styles.sectionTitle}>Schedule</Text>
-                  <Text style={styles.scheduleMonth}>June 2024</Text>
+            {/* Sidebar / Scheduling Area */}
+            <View className={isWeb ? "flex-1" : "w-full"}>
+              <View
+                style={{
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                  ...Platform.select({
+                    web: { boxShadow: "0 4px 20px rgba(0,0,0,0.05)" },
+                  }),
+                }}
+                className="rounded-[24px] p-6 border"
+              >
+                <View className="flex-row justify-between items-center mb-5">
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-lg font-bold"
+                  >
+                    Schedule
+                  </Text>
+                  <Text
+                    style={{ color: theme.textSecondary }}
+                    className="text-sm font-semibold"
+                  >
+                    June 2024
+                  </Text>
                 </View>
 
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.dateRow}
+                  contentContainerStyle={{ paddingBottom: 20 }}
                 >
                   {dates.map((date) => {
                     const key = `${date.label} ${date.day}`;
@@ -151,51 +268,138 @@ export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
                     return (
                       <TouchableOpacity
                         key={key}
-                        style={[styles.dateItem, isSelected && styles.dateItemSelected]}
+                        style={{
+                          backgroundColor: isSelected
+                            ? theme.primary
+                            : theme.background,
+                          borderColor: isSelected
+                            ? theme.primary
+                            : theme.border,
+                        }}
+                        className="w-16 h-20 rounded-2xl items-center justify-center mr-3 border"
                         onPress={() => setSelectedDate(key)}
                       >
-                        <Text style={[styles.dateLabel, isSelected && styles.dateLabelSelected]}>{date.label}</Text>
-                        <Text style={[styles.dateDay, isSelected && styles.dateDaySelected]}>{date.day}</Text>
+                        <Text
+                          style={{
+                            color: isSelected
+                              ? "rgba(255,255,255,0.8)"
+                              : theme.textSecondary,
+                          }}
+                          className="text-[11px] font-semibold mb-1"
+                        >
+                          {date.label}
+                        </Text>
+                        <Text
+                          style={{
+                            color: isSelected
+                              ? theme.mode === "dark"
+                                ? "#000000"
+                                : "#FFFFFF"
+                              : theme.text,
+                          }}
+                          className="text-18 font-bold"
+                        >
+                          {date.day}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </ScrollView>
 
-                <Text style={styles.subSectionTitle}>MORNING SLOTS</Text>
-                <View style={styles.slotRow}>
+                <Text
+                  style={{ color: theme.textMuted }}
+                  className="text-[12px] font-bold tracking-wider mt-3 mb-3 uppercase"
+                >
+                  MORNING SLOTS
+                </Text>
+                <View className="flex-row flex-wrap gap-2.5 mb-5">
                   {morningSlots.map((slot) => {
                     const isSelected = selectedSlot === slot;
                     return (
                       <TouchableOpacity
                         key={slot}
-                        style={[styles.slotPill, isSelected && styles.slotPillSelected]}
+                        style={{
+                          backgroundColor: isSelected
+                            ? theme.primaryLight
+                            : theme.background,
+                          borderColor: isSelected
+                            ? theme.primary
+                            : theme.border,
+                        }}
+                        className="px-4 py-2.5 rounded-xl border"
                         onPress={() => setSelectedSlot(slot)}
                       >
-                        <Text style={[styles.slotLabel, isSelected && styles.slotLabelSelected]}>{slot}</Text>
+                        <Text
+                          style={{
+                            color: isSelected
+                              ? theme.primary
+                              : theme.textSecondary,
+                          }}
+                          className="text-xs font-semibold"
+                        >
+                          {slot}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
 
-                <Text style={styles.subSectionTitle}>AFTERNOON SLOTS</Text>
-                <View style={styles.slotRow}>
+                <Text
+                  style={{ color: theme.textMuted }}
+                  className="text-[12px] font-bold tracking-wider mt-3 mb-3 uppercase"
+                >
+                  AFTERNOON SLOTS
+                </Text>
+                <View className="flex-row flex-wrap gap-2.5 mb-5">
                   {afternoonSlots.map((slot) => {
                     const isSelected = selectedSlot === slot;
                     return (
                       <TouchableOpacity
                         key={slot}
-                        style={[styles.slotPill, isSelected && styles.slotPillSelected]}
+                        style={{
+                          backgroundColor: isSelected
+                            ? theme.primaryLight
+                            : theme.background,
+                          borderColor: isSelected
+                            ? theme.primary
+                            : theme.border,
+                        }}
+                        className="px-4 py-2.5 rounded-xl border"
                         onPress={() => setSelectedSlot(slot)}
                       >
-                        <Text style={[styles.slotLabel, isSelected && styles.slotLabelSelected]}>{slot}</Text>
+                        <Text
+                          style={{
+                            color: isSelected
+                              ? theme.primary
+                              : theme.textSecondary,
+                          }}
+                          className="text-xs font-semibold"
+                        >
+                          {slot}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
 
-                <TouchableOpacity style={styles.proceedButton} onPress={onProceed}>
-                  <Text style={styles.proceedButtonText}>Confirm Booking</Text>
-                  <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" />
+                <TouchableOpacity
+                  style={{ backgroundColor: theme.primary }}
+                  className="flex-row items-center justify-center py-4 rounded-xl mt-3"
+                  onPress={onProceed}
+                >
+                  <Text
+                    style={{
+                      color: theme.mode === "dark" ? "#000000" : "#FFFFFF",
+                    }}
+                    className="text-base font-bold mr-2"
+                  >
+                    Confirm Booking
+                  </Text>
+                  <MaterialIcons
+                    name="arrow-forward"
+                    size={20}
+                    color={theme.mode === "dark" ? "#000000" : "#FFFFFF"}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -208,427 +412,111 @@ export function ConsultBookingScreen({ onBack, onProceed, onGoHome }) {
 
 export function ConsultConfirmScreen({ onBack, onDone }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web' && width >= 768;
+  const isWeb = Platform.OS === "web" && width >= 768;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.confirmContent}>
-        <View style={styles.successIconCircle}>
+    <View className="flex-1 bg-transparent">
+      <View className="flex-1 items-center justify-center px-8">
+        <View
+          style={{ backgroundColor: theme.success }}
+          className="w-[100px] h-[100px] rounded-full items-center justify-center mb-8"
+        >
           <MaterialIcons name="check" size={60} color="#FFFFFF" />
         </View>
-        <Text style={styles.successTitle}>Booking Confirmed!</Text>
-        <Text style={styles.successSubtitle}>
-          Your consultation with Dr. Sarah has been scheduled for June 19, 2024 at 09:30 AM.
+        <Text
+          style={{ color: theme.text }}
+          className="text-3xl font-black text-center mb-3"
+        >
+          Booking Confirmed!
         </Text>
-        
-        <View style={[styles.summaryCard, isWeb && styles.webSummaryCard]}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Doctor</Text>
-            <Text style={styles.summaryValue}>Dr. Sarah</Text>
+        <Text
+          style={{ color: theme.textSecondary }}
+          className="text-base text-center leading-6 mb-10"
+        >
+          Your consultation with Dr. Sarah has been scheduled for June 19, 2024
+          at 09:30 AM.
+        </Text>
+
+        <View
+          style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+          className={`w-full rounded-[24px] p-6 border mb-10 ${isWeb ? "max-w-[500px]" : ""}`}
+        >
+          <View className="flex-row justify-between items-center py-2">
+            <Text
+              style={{ color: theme.textSecondary }}
+              className="text-[15px]"
+            >
+              Doctor
+            </Text>
+            <Text
+              style={{ color: theme.text }}
+              className="text-[15px] font-semibold"
+            >
+              Dr. Sarah
+            </Text>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Service</Text>
-            <Text style={styles.summaryValue}>Video Call</Text>
+          <View className="flex-row justify-between items-center py-2">
+            <Text
+              style={{ color: theme.textSecondary }}
+              className="text-[15px]"
+            >
+              Service
+            </Text>
+            <Text
+              style={{ color: theme.text }}
+              className="text-[15px] font-semibold"
+            >
+              Video Call
+            </Text>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Time</Text>
-            <Text style={styles.summaryValue}>09:30 AM</Text>
+          <View className="flex-row justify-between items-center py-2">
+            <Text
+              style={{ color: theme.textSecondary }}
+              className="text-[15px]"
+            >
+              Time
+            </Text>
+            <Text
+              style={{ color: theme.text }}
+              className="text-[15px] font-semibold"
+            >
+              09:30 AM
+            </Text>
           </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total Payment</Text>
-            <Text style={[styles.summaryValue, styles.totalPrice]}>$25.00</Text>
+          <View
+            style={{ backgroundColor: theme.border }}
+            className="h-[1px] my-3"
+          />
+          <View className="flex-row justify-between items-center py-2">
+            <Text
+              style={{ color: theme.textSecondary }}
+              className="text-[15px]"
+            >
+              Total Payment
+            </Text>
+            <Text
+              style={{ color: theme.primary }}
+              className="text-xl font-extrabold"
+            >
+              $25.00
+            </Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.doneButton} onPress={onDone}>
-          <Text style={styles.doneButtonText}>Go to Dashboard</Text>
+        <TouchableOpacity
+          style={{ backgroundColor: theme.primary }}
+          className={`px-12 py-4 rounded-xl ${isWeb ? "min-w-[240px]" : ""}`}
+          onPress={onDone}
+        >
+          <Text
+            style={{ color: theme.mode === "dark" ? "#000000" : "#FFFFFF" }}
+            className="text-base font-bold text-center"
+          >
+            Go to Dashboard
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const createStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 12,
-    backgroundColor: theme.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.text,
-  },
-  headerRight: {
-    width: 24,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  webScrollContent: {
-    paddingTop: 0,
-  },
-  contentMaxWidth: {
-    paddingHorizontal: 20,
-  },
-  webContentMaxWidth: {
-    paddingHorizontal: 0,
-  },
-  bookingLayout: {
-    marginTop: 20,
-    gap: 24,
-  },
-  webBookingLayout: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  bookingMain: {
-    flex: 1,
-  },
-  webBookingMain: {
-    flex: 1.5,
-  },
-  bookingSidebar: {
-    flex: 1,
-  },
-  webBookingSidebar: {
-    flex: 1,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.text,
-  },
-  sectionAction: {
-    fontSize: 14,
-    color: theme.primary,
-    fontWeight: '600',
-  },
-  quickRow: {
-    paddingBottom: 20,
-  },
-  doctorCard: {
-    width: 140,
-    backgroundColor: theme.surface,
-    borderRadius: 20,
-    padding: 16,
-    marginRight: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  doctorCardSelected: {
-    borderColor: theme.primary,
-    backgroundColor: theme.primaryLight,
-  },
-  doctorAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: theme.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    position: 'relative',
-  },
-  selectedCheck: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: theme.primary,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: theme.surface,
-  },
-  doctorName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.text,
-    marginBottom: 4,
-  },
-  doctorNameSelected: {
-    color: theme.primary,
-  },
-  doctorSpecialty: {
-    fontSize: 11,
-    color: theme.textSecondary,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  ratingBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.warningLight,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.warning,
-    marginLeft: 4,
-  },
-  serviceRow: {
-    gap: 12,
-  },
-  webServiceRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  serviceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    ...Platform.select({
-      web: { flex: 1, minWidth: 200 }
-    })
-  },
-  serviceItemSelected: {
-    borderColor: theme.primary,
-    backgroundColor: theme.primaryLight,
-  },
-  serviceIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: theme.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  serviceIconBoxSelected: {
-    backgroundColor: theme.primary,
-  },
-  serviceInfo: {
-    flex: 1,
-  },
-  serviceLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.text,
-  },
-  serviceLabelSelected: {
-    color: theme.primary,
-  },
-  servicePrice: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    marginTop: 2,
-  },
-  scheduleCard: {
-    backgroundColor: theme.surface,
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: theme.border,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
-      }
-    })
-  },
-  scheduleHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  scheduleMonth: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.textSecondary,
-  },
-  dateRow: {
-    paddingBottom: 20,
-  },
-  dateItem: {
-    width: 64,
-    height: 80,
-    borderRadius: 16,
-    backgroundColor: theme.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  dateItemSelected: {
-    backgroundColor: theme.primary,
-    borderColor: theme.primary,
-  },
-  dateLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: theme.textSecondary,
-    marginBottom: 4,
-  },
-  dateLabelSelected: {
-    color: 'rgba(255,255,255,0.8)',
-  },
-  dateDay: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.text,
-  },
-  dateDaySelected: {
-    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
-  },
-  subSectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.textMuted,
-    letterSpacing: 1,
-    marginTop: 12,
-    marginBottom: 12,
-  },
-  slotRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 20,
-  },
-  slotPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: theme.background,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  slotPillSelected: {
-    backgroundColor: theme.primaryLight,
-    borderColor: theme.primary,
-  },
-  slotLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.textSecondary,
-  },
-  slotLabelSelected: {
-    color: theme.primary,
-  },
-  proceedButton: {
-    backgroundColor: theme.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 16,
-    marginTop: 12,
-  },
-  proceedButtonText: {
-    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    marginRight: 8,
-  },
-  confirmContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  successIconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: theme.success,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
-  },
-  successTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: theme.text,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  successSubtitle: {
-    fontSize: 16,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 40,
-  },
-  summaryCard: {
-    width: '100%',
-    backgroundColor: theme.surface,
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: theme.border,
-    marginBottom: 40,
-  },
-  webSummaryCard: {
-    maxWidth: 500,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  summaryLabel: {
-    fontSize: 15,
-    color: theme.textSecondary,
-  },
-  summaryValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.text,
-  },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: theme.border,
-    marginVertical: 12,
-  },
-  totalPrice: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: theme.primary,
-  },
-  doneButton: {
-    backgroundColor: theme.primary,
-    paddingHorizontal: 48,
-    paddingVertical: 16,
-    borderRadius: 16,
-    ...Platform.select({
-      web: { minWidth: 240 }
-    })
-  },
-  doneButtonText: {
-    color: theme.mode === 'dark' ? '#000000' : '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-});

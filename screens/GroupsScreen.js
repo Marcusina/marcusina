@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,47 @@ import {
   useWindowDimensions,
   ActivityIndicator,
   TextInput,
-  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCommunities,
   getMyCommunities,
   joinCommunity,
 } from "../api/community.api";
 import { useTheme } from "../context/ThemeContext";
+import { useToast } from "../context/ToastContext";
+
+const SUGGESTED_COMMUNITIES = [
+  {
+    id: "1",
+    name: "Hypertension Warriors NG",
+    members: "14.2k members",
+    image:
+      "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    id: "2",
+    name: "Mama & Baby Health",
+    members: "9.8k members",
+    image:
+      "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    id: "3",
+    name: "Men's Health Africa",
+    members: "7.3k members",
+    image:
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=300&q=80",
+  },
+  {
+    id: "4",
+    name: "Sickle Cell Warriors",
+    members: "5.6k members",
+    image:
+      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=300&q=80",
+  },
+];
 
 export function GroupsScreen({
   token,
@@ -26,109 +58,60 @@ export function GroupsScreen({
   onOpenProfile,
 }) {
   const { theme, themeMode } = useTheme();
+  const { showToast } = useToast();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width >= 768;
+  const queryClient = useQueryClient();
 
-  const [suggestedGroups, setSuggestedGroups] = useState([]);
-  const [myCommunities, setMyCommunities] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
-
-  // Mock data array for clean iteration
-  const SUGGESTED_COMMUNITIES = [
-    {
-      id: "1",
-      name: "Hypertension Warriors NG",
-      members: "14.2k members",
-      image:
-        "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=300&q=80",
-    },
-    {
-      id: "2",
-      name: "Mama & Baby Health",
-      members: "9.8k members",
-      image:
-        "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=300&q=80",
-    },
-    {
-      id: "3",
-      name: "Men's Health Africa",
-      members: "7.3k members",
-      image:
-        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=300&q=80",
-    },
-    {
-      id: "4",
-      name: "Sickle Cell Warriors",
-      members: "5.6k members",
-      image:
-        "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=300&q=80",
-    },
-  ];
-
-  // Fallback brand color if not explicitly defined outside context
   const brandPrimaryColor = theme.primary || "#3B82F6";
 
-  const fetchCommunities = useCallback(async () => {
-    if (!token) return;
-    try {
-      setIsLoading(true);
-      const [allRes, myRes] = await Promise.all([
-        getCommunities(token, { limit: 10 }),
-        getMyCommunities(token),
-      ]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-      const myIds = new Set(myRes.map((c) => c._id));
-      const suggestions = (allRes.data || []).filter((c) => !myIds.has(c._id));
+  // Use TanStack Query to fetch my communities
+  const { data: myCommunities = [], isLoading: isMyCommunitiesLoading } = useQuery({
+    queryKey: ["myCommunities", token],
+    queryFn: () => getMyCommunities(token),
+    enabled: !!token,
+  });
 
-      setSuggestedGroups(suggestions);
-      setMyCommunities(myRes);
-    } catch (error) {
-      console.error("Failed to fetch communities:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
+  // Use TanStack Query to fetch suggested/all communities
+  const { data: allRes, isLoading: isAllCommunitiesLoading } = useQuery({
+    queryKey: ["allCommunities", token, searchQuery],
+    queryFn: () => getCommunities(token, { search: searchQuery, limit: 10 }),
+    enabled: !!token,
+  });
 
-  useEffect(() => {
-    fetchCommunities();
-  }, [fetchCommunities]);
+  const suggestedGroups = React.useMemo(() => {
+    const myIds = new Set(myCommunities.map((c) => c._id));
+    return (allRes?.data || []).filter((c) => !myIds.has(c._id));
+  }, [allRes, myCommunities]);
 
-  const handleSearch = async (text) => {
-    setSearchQuery(text);
-    if (!text.trim()) {
-      fetchCommunities();
-      return;
-    }
+  const joinMutation = useMutation({
+    mutationFn: (communityId) => joinCommunity(token, communityId),
+    onSuccess: () => {
+      showToast("Joined group successfully!", "success");
+      queryClient.invalidateQueries({ queryKey: ["myCommunities", token] });
+      queryClient.invalidateQueries({ queryKey: ["allCommunities", token] });
+    },
+    onError: (error) => {
+      showToast(error.message || "Failed to join group", "error");
+    },
+  });
 
-    try {
-      setIsSearching(true);
-      const res = await getCommunities(token, { search: text });
-      setSuggestedGroups(res.data || []);
-    } catch (error) {
-      console.error("Search failed:", error);
-    } finally {
-      setIsSearching(false);
-    }
+  const handleJoinGroup = (communityId) => {
+    joinMutation.mutate(communityId);
   };
 
-  const handleJoinGroup = async (communityId) => {
-    try {
-      await joinCommunity(token, communityId);
-      Alert.alert("Success", "Joined group successfully!");
-      fetchCommunities();
-    } catch (error) {
-      Alert.alert("Error", error.message || "Failed to join group");
-    }
+  const handleSearch = (text) => {
+    setSearchQuery(text);
   };
 
   const handleCreateGroup = () => {
-    Alert.alert(
-      "Coming Soon",
-      "Group creation will be available in the next update.",
-    );
+    showToast("Group creation will be available in the next update.", "info");
   };
+
+  const isLoading = isMyCommunitiesLoading || isAllCommunitiesLoading;
+  const isSearching = isAllCommunitiesLoading && searchQuery.trim().length > 0;
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
@@ -141,36 +124,6 @@ export function GroupsScreen({
           >
             Groups
           </Text>
-          <View className="flex-row items-center space-x-3">
-            <TouchableOpacity
-              className="p-2 rounded-xl"
-              style={{ backgroundColor: theme.surfaceSubtle }}
-              onPress={onOpenProfile}
-            >
-              <MaterialIcons
-                name="person-outline"
-                size={24}
-                color={theme.textSecondary}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="p-2 rounded-xl relative"
-              style={{ backgroundColor: theme.surfaceSubtle }}
-            >
-              <MaterialIcons
-                name="notifications-none"
-                size={24}
-                color={theme.textSecondary}
-              />
-              <View
-                className="absolute top-2 right-2 w-2 height-2 rounded-full border-2"
-                style={{
-                  backgroundColor: theme.error,
-                  borderColor: theme.surfaceSubtle,
-                }}
-              />
-            </TouchableOpacity>
-          </View>
         </View>
       )}
 

@@ -8,10 +8,12 @@ import {
   Platform,
   ScrollView,
   Image,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import Logo from "./Logo";
 
 const SIDEBAR_WIDTH = 230;
 const MOBILE_BREAKPOINT = 768;
@@ -38,15 +40,15 @@ function createStyles(theme) {
     sidebarHeaderContent: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: 1,
     },
     sidebarLogo: {
-      width: 140,
+      width: 70,
       height: 40,
       paddingLeft: 1,
     },
     sidebarLogoText: {
-      fontSize: 10,
+      fontSize: 20,
 
       fontWeight: "800",
       color: theme.text,
@@ -146,10 +148,10 @@ function createStyles(theme) {
     mobileHeaderContent: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: 0.5,
     },
     mobileLogo: {
-      width: 120,
+      width: 40,
       height: 32,
     },
     mobileLogoText: {
@@ -549,6 +551,113 @@ function createStyles(theme) {
       fontSize: 10,
       fontWeight: "700",
     },
+    themeContainer: {
+      flexDirection: "row",
+      backgroundColor: theme.surfaceSubtle,
+      borderRadius: 12,
+      padding: 4,
+      marginHorizontal: 20,
+      marginVertical: 10,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    themeOption: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 8,
+      borderRadius: 8,
+      gap: 6,
+    },
+    themeOptionActive: {
+      backgroundColor: theme.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+      borderWidth: 0.5,
+      borderColor: theme.border,
+    },
+    themeOptionText: {
+      fontSize: 12,
+      fontWeight: "500",
+    },
+    themeOptionTextActive: {
+      fontWeight: "700",
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContent: {
+      width: "85%",
+      maxWidth: 360,
+      backgroundColor: theme.surface,
+      borderRadius: 24,
+      padding: 24,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: theme.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    modalIconWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme.errorLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 16,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: "800",
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    modalDescription: {
+      fontSize: 14,
+      textAlign: "center",
+      lineHeight: 20,
+      marginBottom: 24,
+    },
+    modalActions: {
+      flexDirection: "row",
+      width: "100%",
+      gap: 12,
+    },
+    modalBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    modalBtnCancel: {
+      backgroundColor: theme.surfaceSubtle,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    modalBtnConfirm: {
+      backgroundColor: theme.error,
+    },
+    modalBtnTextCancel: {
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    modalBtnTextConfirm: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: "#FFFFFF",
+    },
   });
 }
 
@@ -559,7 +668,7 @@ export function Layout({
   userProfile,
   onLogout,
 }) {
-  const { theme } = useTheme();
+  const { theme, themeMode, setThemeMode } = useTheme();
   const styles = createStyles(theme);
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= MOBILE_BREAKPOINT;
@@ -587,11 +696,7 @@ export function Layout({
     <View style={styles.sidebar}>
       <View style={styles.sidebarHeader}>
         <View style={styles.sidebarHeaderContent}>
-          <Image
-            source={require("../assets/logo.png")}
-            style={styles.sidebarLogo}
-            resizeMode="contain"
-          />
+          <Logo width={40} height={40} style={{ marginRight: 6 }} />
           <Text style={styles.sidebarLogoText}>MEDGRAM</Text>
         </View>
       </View>
@@ -643,7 +748,10 @@ export function Layout({
             </Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutItem} onPress={onLogout}>
+        <TouchableOpacity
+          style={styles.logoutItem}
+          onPress={() => setShowLogoutConfirm(true)}
+        >
           <MaterialIcons name="logout" size={20} color="#EF4444" />
           <Text style={styles.logoutLabel}>Logout</Text>
         </TouchableOpacity>
@@ -660,10 +768,20 @@ export function Layout({
               <View key={item.id} style={styles.navFabWrap}>
                 <TouchableOpacity
                   onPress={() => setFabOpen(true)}
-                  style={[styles.navFab, { backgroundColor: theme.primary }]}
+                  style={[
+                    styles.navFab,
+                    {
+                      backgroundColor:
+                        theme.mode === "dark" ? theme.primary : "#000000",
+                    },
+                  ]}
                   activeOpacity={0.8}
                 >
-                  <MaterialIcons name="add" size={24} color={theme.mode === 'dark' ? '#000000' : '#FFFFFF'} />
+                  <MaterialIcons
+                    name="add"
+                    size={24}
+                    color={theme.mode === "dark" ? "#000000" : "#FFFFFF"}
+                  />
                 </TouchableOpacity>
               </View>
             );
@@ -705,11 +823,7 @@ export function Layout({
           <SafeAreaView edges={["top"]} style={styles.safeHeader}>
             <View style={styles.mobileHeader}>
               <View style={styles.mobileHeaderContent}>
-                <Image
-                  source={require("../assets/logo.png")}
-                  style={styles.mobileLogo}
-                  resizeMode="contain"
-                />
+                <Logo width={30} height={30} style={{ marginRight: 6 }} />
                 <Text style={styles.mobileLogoText}>MEDGRAM</Text>
               </View>
               {/* Actions row: notifications, wishlist, cart, and drawer toggle */}
@@ -797,7 +911,7 @@ export function Layout({
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.headerProfileButton}
                   onPress={() => setDrawerOpen(true)}
                   activeOpacity={0.8}
@@ -828,7 +942,7 @@ export function Layout({
         </ScrollView>
         {!isDesktop && renderBottomNav()}
       </View>
-      
+
       {/* FAB Overlay Bottom Sheet */}
       {!isDesktop && fabOpen && (
         <View style={styles.fabOverlayContainer}>
@@ -838,21 +952,61 @@ export function Layout({
             onPress={() => setFabOpen(false)}
           />
           <View style={[styles.fabSheet, { backgroundColor: theme.surface }]}>
-            <View style={[styles.fabHandle, { backgroundColor: theme.borderDark }]} />
-            <Text style={[styles.fabTitle, { color: theme.text }]}>What do you want to do?</Text>
-            
+            <View
+              style={[styles.fabHandle, { backgroundColor: theme.borderDark }]}
+            />
+            <Text style={[styles.fabTitle, { color: theme.text }]}>
+              What do you want to do?
+            </Text>
+
             <View style={styles.fabGrid}>
               {[
-                { label: "Post", desc: "Share health update", icon: "create", screen: "createPost" },
-                { label: "Connect", desc: "Link external apps", icon: "link", screen: "home" },
-                { label: "Ask AI", desc: "AI health assistant", icon: "chat", screen: "home" },
-                { label: "Reel", desc: "Record health reel", icon: "videocam", screen: "home" },
-                { label: "Poll", desc: "Run a health poll", icon: "poll", screen: "createPost" },
-                { label: "Record", desc: "Voice health log", icon: "mic", screen: "home" },
+                {
+                  label: "Post",
+                  desc: "Share health update",
+                  icon: "create",
+                  screen: "createPost",
+                },
+                {
+                  label: "Connect",
+                  desc: "Link external apps",
+                  icon: "link",
+                  screen: "home",
+                },
+                {
+                  label: "Ask AI",
+                  desc: "AI health assistant",
+                  icon: "chat",
+                  screen: "home",
+                },
+                {
+                  label: "Reel",
+                  desc: "Record health reel",
+                  icon: "videocam",
+                  screen: "home",
+                },
+                {
+                  label: "Poll",
+                  desc: "Run a health poll",
+                  icon: "poll",
+                  screen: "createPost",
+                },
+                {
+                  label: "Record",
+                  desc: "Voice health log",
+                  icon: "mic",
+                  screen: "home",
+                },
               ].map((item, idx) => (
                 <TouchableOpacity
                   key={idx}
-                  style={[styles.fabItem, { backgroundColor: theme.surfaceSubtle, borderColor: theme.border }]}
+                  style={[
+                    styles.fabItem,
+                    {
+                      backgroundColor: theme.surfaceSubtle,
+                      borderColor: theme.border,
+                    },
+                  ]}
                   onPress={() => {
                     setFabOpen(false);
                     onNavigate(item.screen);
@@ -860,10 +1014,20 @@ export function Layout({
                   activeOpacity={0.7}
                 >
                   <View style={styles.fabItemIcon}>
-                    <MaterialIcons name={item.icon} size={22} color={theme.primary} />
+                    <MaterialIcons
+                      name={item.icon}
+                      size={22}
+                      color={theme.primary}
+                    />
                   </View>
-                  <Text style={[styles.fabItemTitle, { color: theme.text }]}>{item.label}</Text>
-                  <Text style={[styles.fabItemDesc, { color: theme.textMuted }]}>{item.desc}</Text>
+                  <Text style={[styles.fabItemTitle, { color: theme.text }]}>
+                    {item.label}
+                  </Text>
+                  <Text
+                    style={[styles.fabItemDesc, { color: theme.textMuted }]}
+                  >
+                    {item.desc}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -878,9 +1042,25 @@ export function Layout({
             activeOpacity={1}
             onPress={() => setDrawerOpen(false)}
           />
-          <View style={[styles.drawerPane, { backgroundColor: theme.surface, width: isDesktop ? "50%" : "82%" }]}>
+          <View
+            style={[
+              styles.drawerPane,
+              {
+                backgroundColor: theme.surface,
+                width: isDesktop ? "50%" : "82%",
+              },
+            ]}
+          >
             {/* Header */}
-            <View style={[styles.drawerHeader, { backgroundColor: theme.mode === 'dark' ? '#000000' : '#0A0A0A' }]}>
+            <View
+              style={[
+                styles.drawerHeader,
+                {
+                  backgroundColor:
+                    theme.mode === "dark" ? "#000000" : "#0A0A0A",
+                },
+              ]}
+            >
               {/* Close Button */}
               <TouchableOpacity
                 style={styles.drawerCloseButton}
@@ -892,18 +1072,56 @@ export function Layout({
 
               <View style={styles.drawerUserRow}>
                 <Image
-                  source={{ uri: userProfile?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80" }}
+                  source={{
+                    uri:
+                      userProfile?.avatar ||
+                      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+                  }}
                   style={styles.drawerAvatar}
                 />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.drawerUserName}>{userProfile?.name || "Medgram User"}</Text>
-                  <Text style={styles.drawerUserSub}>@{userProfile?.name?.toLowerCase().replace(/\s+/g, '') || "user"} · Patient</Text>
+                  <Text style={styles.drawerUserName}>
+                    {userProfile?.name || "Medgram User"}
+                  </Text>
+                  <Text style={styles.drawerUserSub}>
+                    @
+                    {userProfile?.name?.toLowerCase().replace(/\s+/g, "") ||
+                      "user"}{" "}
+                    · Patient
+                  </Text>
                   <View style={styles.drawerPillRow}>
-                    <View style={[styles.drawerPill, { backgroundColor: "rgba(0,201,167,0.15)", borderColor: "rgba(0,201,167,0.3)" }]}>
-                      <Text style={[styles.drawerPillText, { color: "#00C9A7" }]}>O+ Blood</Text>
+                    <View
+                      style={[
+                        styles.drawerPill,
+                        {
+                          backgroundColor: "rgba(0,201,167,0.15)",
+                          borderColor: "rgba(0,201,167,0.3)",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.drawerPillText, { color: "#00C9A7" }]}
+                      >
+                        O+ Blood
+                      </Text>
                     </View>
-                    <View style={[styles.drawerPill, { backgroundColor: "rgba(255,255,255,0.08)", borderColor: "transparent" }]}>
-                      <Text style={[styles.drawerPillText, { color: "rgba(255,255,255,0.5)" }]}>MG-2025-NG</Text>
+                    <View
+                      style={[
+                        styles.drawerPill,
+                        {
+                          backgroundColor: "rgba(255,255,255,0.08)",
+                          borderColor: "transparent",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.drawerPillText,
+                          { color: "rgba(255,255,255,0.5)" },
+                        ]}
+                      >
+                        MG-2025-NG
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -919,15 +1137,24 @@ export function Layout({
                   <Text style={styles.drawerStatLbl}>FOLLOWERS</Text>
                 </View>
                 <View style={[styles.drawerStat, { borderRightWidth: 0 }]}>
-                  <Text style={[styles.drawerStatVal, { color: "#00C9A7" }]}>82</Text>
+                  <Text style={[styles.drawerStatVal, { color: "#00C9A7" }]}>
+                    82
+                  </Text>
                   <Text style={styles.drawerStatLbl}>HEALTH SCORE</Text>
                 </View>
               </View>
             </View>
 
             {/* Menu Items */}
-            <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-              <Text style={[styles.drawerSectionTitle, { color: theme.textMuted }]}>MY ACCOUNT</Text>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ flex: 1 }}
+            >
+              <Text
+                style={[styles.drawerSectionTitle, { color: theme.textMuted }]}
+              >
+                MY ACCOUNT
+              </Text>
 
               <TouchableOpacity
                 style={styles.drawerItem}
@@ -937,16 +1164,40 @@ export function Layout({
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#E8F5E9" }]}>
-                  <MaterialIcons name="person-outline" size={20} color="#0A0A0A" />
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#E8F5E9" },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="person-outline"
+                    size={20}
+                    color="#0A0A0A"
+                  />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>My Profile</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>View public profile &amp; posts</Text>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    My Profile
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    View public profile &amp; posts
+                  </Text>
                 </View>
-                <MaterialIcons name="chevron-right" size={20} color={theme.textMuted} />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
               </TouchableOpacity>
-              <View style={[styles.drawerDivider, { backgroundColor: theme.border }]} />
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
 
               <TouchableOpacity
                 style={styles.drawerItem}
@@ -956,16 +1207,36 @@ export function Layout({
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#E3F2FD" }]}>
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#E3F2FD" },
+                  ]}
+                >
                   <MaterialIcons name="settings" size={20} color="#0A0A0A" />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>Account Management</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>Manage your account details</Text>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Account Management
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Manage your account details
+                  </Text>
                 </View>
-                <MaterialIcons name="chevron-right" size={20} color={theme.textMuted} />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
               </TouchableOpacity>
-              <View style={[styles.drawerDivider, { backgroundColor: theme.border }]} />
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
 
               <TouchableOpacity
                 style={styles.drawerItem}
@@ -975,16 +1246,40 @@ export function Layout({
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#FFF3E0" }]}>
-                  <MaterialIcons name="display-settings" size={20} color="#0A0A0A" />
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#FFF3E0" },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="display-settings"
+                    size={20}
+                    color="#0A0A0A"
+                  />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>Settings</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>App preferences &amp; display</Text>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Settings
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    App preferences &amp; display
+                  </Text>
                 </View>
-                <MaterialIcons name="chevron-right" size={20} color={theme.textMuted} />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
               </TouchableOpacity>
-              <View style={[styles.drawerDivider, { backgroundColor: theme.border }]} />
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
 
               <TouchableOpacity
                 style={styles.drawerItem}
@@ -993,18 +1288,95 @@ export function Layout({
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#FCE4EC" }]}>
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#FCE4EC" },
+                  ]}
+                >
                   <MaterialIcons name="security" size={20} color="#0A0A0A" />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>Security</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>Password, 2FA, login activity</Text>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Security
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Password, 2FA, login activity
+                  </Text>
                 </View>
-                <MaterialIcons name="chevron-right" size={20} color={theme.textMuted} />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
               </TouchableOpacity>
-              <View style={[styles.drawerDivider, { backgroundColor: theme.border }]} />
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
 
-              <Text style={[styles.drawerSectionTitle, { color: theme.textMuted }]}>INTEGRATIONS</Text>
+              <Text
+                style={[styles.drawerSectionTitle, { color: theme.textMuted }]}
+              >
+                APPEARANCE
+              </Text>
+
+              <View style={styles.themeContainer}>
+                {[
+                  { mode: "light", label: "Light", icon: "wb-sunny" },
+                  { mode: "dark", label: "Dark", icon: "nights-stay" },
+                  { mode: "system", label: "System", icon: "brightness-auto" },
+                ].map((item) => {
+                  const isActive = themeMode === item.mode;
+                  return (
+                    <TouchableOpacity
+                      key={item.mode}
+                      style={[
+                        styles.themeOption,
+                        isActive && styles.themeOptionActive,
+                      ]}
+                      onPress={() => setThemeMode(item.mode)}
+                      activeOpacity={0.8}
+                    >
+                      <MaterialIcons
+                        name={item.icon}
+                        size={16}
+                        color={isActive ? theme.primary : theme.textSecondary}
+                      />
+                      <Text
+                        style={[
+                          styles.themeOptionText,
+                          {
+                            color: isActive
+                              ? theme.primary
+                              : theme.textSecondary,
+                          },
+                          isActive && styles.themeOptionTextActive,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
+
+              <Text
+                style={[styles.drawerSectionTitle, { color: theme.textMuted }]}
+              >
+                INTEGRATIONS
+              </Text>
 
               <TouchableOpacity
                 style={styles.drawerItem}
@@ -1013,16 +1385,36 @@ export function Layout({
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#E8EAF6" }]}>
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#E8EAF6" },
+                  ]}
+                >
                   <MaterialIcons name="share" size={20} color="#0A0A0A" />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>Connections</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>Linked devices &amp; integrations</Text>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Connections
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Linked devices &amp; integrations
+                  </Text>
                 </View>
-                <MaterialIcons name="chevron-right" size={20} color={theme.textMuted} />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
               </TouchableOpacity>
-              <View style={[styles.drawerDivider, { backgroundColor: theme.border }]} />
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
 
               <TouchableOpacity
                 style={styles.drawerItem}
@@ -1031,18 +1423,42 @@ export function Layout({
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#E0F7FA" }]}>
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#E0F7FA" },
+                  ]}
+                >
                   <MaterialIcons name="devices" size={20} color="#0A0A0A" />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>Device Info</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>Connected health hardware</Text>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Device Info
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Connected health hardware
+                  </Text>
                 </View>
-                <MaterialIcons name="chevron-right" size={20} color={theme.textMuted} />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
               </TouchableOpacity>
-              <View style={[styles.drawerDivider, { backgroundColor: theme.border }]} />
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
 
-              <Text style={[styles.drawerSectionTitle, { color: theme.textMuted }]}>HEALTH &amp; BILLING</Text>
+              <Text
+                style={[styles.drawerSectionTitle, { color: theme.textMuted }]}
+              >
+                HEALTH &amp; BILLING
+              </Text>
 
               <TouchableOpacity
                 style={styles.drawerItem}
@@ -1052,21 +1468,52 @@ export function Layout({
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#F3E5F5" }]}>
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#F3E5F5" },
+                  ]}
+                >
                   <MaterialIcons name="event" size={20} color="#0A0A0A" />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>Appointments</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>Upcoming &amp; past bookings</Text>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Appointments
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Upcoming &amp; past bookings
+                  </Text>
                 </View>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <View style={[styles.drawerBadge, { backgroundColor: theme.primaryLight }]}>
-                    <Text style={[styles.drawerBadgeText, { color: theme.primary }]}>1 Soon</Text>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
+                  <View
+                    style={[
+                      styles.drawerBadge,
+                      { backgroundColor: theme.primaryLight },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.drawerBadgeText, { color: theme.primary }]}
+                    >
+                      1 Soon
+                    </Text>
                   </View>
-                  <MaterialIcons name="chevron-right" size={20} color={theme.textMuted} />
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={20}
+                    color={theme.textMuted}
+                  />
                 </View>
               </TouchableOpacity>
-              <View style={[styles.drawerDivider, { backgroundColor: theme.border }]} />
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
 
               <TouchableOpacity
                 style={styles.drawerItem}
@@ -1075,36 +1522,80 @@ export function Layout({
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#FFFDE7" }]}>
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#FFFDE7" },
+                  ]}
+                >
                   <MaterialIcons name="star" size={20} color="#FFB800" />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>Premium</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>Upgrade your health experience</Text>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Premium
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Upgrade your health experience
+                  </Text>
                 </View>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <View style={[styles.drawerBadge, { backgroundColor: "#FFF8E1" }]}>
-                    <Text style={[styles.drawerBadgeText, { color: "#FFB800" }]}>PRO</Text>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
+                  <View
+                    style={[styles.drawerBadge, { backgroundColor: "#FFF8E1" }]}
+                  >
+                    <Text
+                      style={[styles.drawerBadgeText, { color: "#FFB800" }]}
+                    >
+                      PRO
+                    </Text>
                   </View>
-                  <MaterialIcons name="chevron-right" size={20} color={theme.textMuted} />
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={20}
+                    color={theme.textMuted}
+                  />
                 </View>
               </TouchableOpacity>
-              <View style={[styles.drawerDivider, { backgroundColor: theme.border }]} />
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
 
               <TouchableOpacity
                 onPress={() => {
                   setDrawerOpen(false);
-                  onLogout();
+                  setShowLogoutConfirm(true);
                 }}
                 activeOpacity={0.7}
                 style={[styles.drawerItem, { marginTop: 24, marginBottom: 40 }]}
               >
-                <View style={[styles.drawerItemIconWrap, { backgroundColor: "#FFEBEE" }]}>
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#FFEBEE" },
+                  ]}
+                >
                   <MaterialIcons name="logout" size={20} color="#FF3B30" />
                 </View>
                 <View style={styles.drawerItemLabel}>
-                  <Text style={[styles.drawerItemTitle, { color: "#FF3B30", fontWeight: "700" }]}>Logout</Text>
-                  <Text style={[styles.drawerItemDesc, { color: theme.textMuted }]}>Sign out of your account</Text>
+                  <Text
+                    style={[
+                      styles.drawerItemTitle,
+                      { color: "#FF3B30", fontWeight: "700" },
+                    ]}
+                  >
+                    Logout
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Sign out of your account
+                  </Text>
                 </View>
                 <MaterialIcons name="chevron-right" size={20} color="#FF3B30" />
               </TouchableOpacity>
@@ -1112,6 +1603,57 @@ export function Layout({
           </View>
         </View>
       )}
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showLogoutConfirm}
+        onRequestClose={() => setShowLogoutConfirm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconWrap}>
+              <MaterialIcons name="logout" size={28} color={theme.error} />
+            </View>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>
+              Log Out
+            </Text>
+            <Text
+              style={[styles.modalDescription, { color: theme.textSecondary }]}
+            >
+              Are you sure you want to log out of Medgram? You will need to sign
+              back in to access your health dashboard.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={() => setShowLogoutConfirm(false)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.modalBtnTextCancel,
+                    { color: theme.textSecondary },
+                  ]}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnConfirm]}
+                onPress={() => {
+                  setShowLogoutConfirm(false);
+                  onLogout();
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalBtnTextConfirm}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
