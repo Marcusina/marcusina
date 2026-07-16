@@ -18,9 +18,20 @@ import {
 } from "@expo/vector-icons";
 import Svg, { Path, Circle, Rect } from "react-native-svg";
 import { useTheme } from "../context/ThemeContext";
+import { useUser } from "../context/UserContext";
 
 export function CreatePostScreen() {
   const { theme } = useTheme();
+  const { user } = useUser();
+
+  const userName =
+    `${user?.profile?.first_name || ""} ${user?.profile?.last_name || ""}`.trim() ||
+    user?.username ||
+    "Amara Okonkwo";
+
+  const userAvatar =
+    user?.profile?.avatar ||
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=60&q=80";
 
   // Screen layout state tracking
   const [activeTab, setActiveTab] = useState("Post");
@@ -136,7 +147,7 @@ export function CreatePostScreen() {
           >
             <Image
               source={{
-                uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=60&q=80",
+                uri: userAvatar,
               }}
               className="w-9 h-9 rounded-full"
               resizeMode="cover"
@@ -146,7 +157,7 @@ export function CreatePostScreen() {
                 className="text-[13px] font-bold mb-1"
                 style={{ color: textPrimaryColor }}
               >
-                Amara Okonkwo
+                {userName}
               </Text>
 
               <TouchableOpacity

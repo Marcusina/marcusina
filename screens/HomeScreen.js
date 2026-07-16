@@ -18,7 +18,8 @@ import Svg, {
   Path,
 } from "react-native-svg";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMedications, getCart, addToCart } from "../api/meds.api";
+import { getMedications } from "../api/meds.api";
+import { getCart, addToCart } from "../api/cart.api";
 import { useTheme } from "../context/ThemeContext";
 import { toast } from "../context/ToastContext";
 
@@ -34,6 +35,7 @@ export function HomeScreen({
 }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
+  const firstName = user?.profile?.first_name || user?.username || "User";
 
   // Responsive Breakpoints
   const isTablet = width >= 600 && width < 1024;
@@ -49,8 +51,8 @@ export function HomeScreen({
   // Use TanStack Query to fetch medications
   const searchQueryValue = selectedCategory || searchQuery;
   const { data: medicationsResponse, isLoading: isMedsLoading } = useQuery({
-    queryKey: ["medications", token, searchQueryValue],
-    queryFn: () => getMedications(token, { search: searchQueryValue }),
+    queryKey: ["medications", searchQueryValue],
+    queryFn: () => getMedications({ search: searchQueryValue }),
     enabled: !!token,
   });
 
@@ -58,18 +60,19 @@ export function HomeScreen({
 
   // Use TanStack Query to fetch cart
   const { data: cartData } = useQuery({
-    queryKey: ["cart", token],
-    queryFn: () => getCart(token),
+    queryKey: ["cart"],
+    queryFn: getCart,
     enabled: !!token,
   });
 
-  const cartCount = cartData?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+  const cartCount =
+    cartData?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
 
   // Mutation to add to cart
   const addToCartMutation = useMutation({
-    mutationFn: (medicationId) => addToCart(token, medicationId, 1),
+    mutationFn: (medicationId) => addToCart(medicationId, 1),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart", token] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
       toast.success("Item added to cart");
     },
     onError: (error) => {
@@ -207,16 +210,37 @@ export function HomeScreen({
                   position: "relative",
                 }}
               >
-                <Image
-                  source={{
-                    uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-                  }}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: avatarSize / 2,
-                  }}
-                />
+                {user?.profile?.profile_photo_url?.url ? (
+                  <Image
+                    source={{ uri: user.profile.profile_photo_url.url }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: avatarSize / 2,
+                    }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: avatarSize / 2,
+                      backgroundColor: "#E0E0E0", // Give it a nice fallback background color
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: avatarSize * 0.4, // Dynamically scales font size to the container
+                        fontWeight: "bold",
+                        color: "#555",
+                      }}
+                    >
+                      {`${user?.profile?.first_name?.[0] || ""}${user?.profile?.last_name?.[0] || ""}`.toUpperCase()}
+                    </Text>
+                  </View>
+                )}
                 <View
                   style={{
                     backgroundColor: theme.text,
@@ -376,7 +400,7 @@ export function HomeScreen({
                     letterSpacing: -0.2,
                   }}
                 >
-                  Good morning, Amara 👋
+                  Good morning, {firstName} 👋
                 </Text>
               </View>
               <View

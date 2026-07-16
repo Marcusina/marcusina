@@ -64,6 +64,9 @@ import { GroupsScreen } from "./screens/GroupsScreen";
 import { PlaceScreen } from "./screens/PlaceScreen";
 import { PostScreen } from "./screens/PostScreen";
 import { CreatePostScreen } from "./screens/CreatePostScreen";
+import { CartScreen } from "./screens/CartScreen";
+import { WishlistScreen } from "./screens/WishlistScreen";
+import { NotificationsScreen } from "./screens/NotificationsScreen";
 import {
   ConsultBookingScreen,
   ConsultConfirmScreen,
@@ -158,6 +161,7 @@ function AppContent() {
         location: user.profile?.location_address || prev.location,
         bio: user.profile?.bio || prev.bio,
         role: user.role?.role_type || prev.role,
+        handle: user.username ? `@${user.username}` : prev.handle,
       }));
     }
   }, [user]);
@@ -170,7 +174,7 @@ function AppContent() {
       const idToken = params.get("id_token");
       const state = params.get("state");
       if (idToken) {
-        window.location.hash = "";
+        window.history.replaceState(null, "", window.location.pathname);
 
         if (
           state &&
@@ -336,7 +340,7 @@ function AppContent() {
   }, []);
 
   const handleLoginSuccess = async (userData, userToken) => {
-    await loginWithToken(userToken);
+    await loginWithToken(userToken, userData);
     setScreen("home");
   };
 
@@ -363,6 +367,7 @@ function AppContent() {
                 location: userProfile.location_address || fullProfile.location,
                 email: user.email || fullProfile.email,
                 phone: user.phone_number || fullProfile.phone,
+                handle: user.username ? `@${user.username}` : fullProfile.handle,
               };
             }
           } catch (err) {
@@ -535,6 +540,26 @@ function AppContent() {
           onOpenConsult={() => setScreen("consultBook")}
           onOpenGroups={() => setScreen("groups")}
           onOpenProfile={() => setScreen("profileHealth")}
+        />
+      );
+    } else if (screen === "cart") {
+      content = (
+        <CartScreen
+          onBackHome={() => setScreen("home")}
+          onOpenPlace={() => setScreen("place")}
+        />
+      );
+    } else if (screen === "wishlist") {
+      content = (
+        <WishlistScreen
+          onBackHome={() => setScreen("home")}
+          onOpenPlace={() => setScreen("place")}
+        />
+      );
+    } else if (screen === "notifications") {
+      content = (
+        <NotificationsScreen
+          onBackHome={() => setScreen("home")}
         />
       );
     } else if (screen === "settings") {

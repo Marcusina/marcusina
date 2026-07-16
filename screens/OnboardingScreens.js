@@ -649,7 +649,10 @@ export function VerifyPhoneScreen() {
             onPress={skipPhoneVerification}
             className="mt-6 items-center py-2"
           >
-            <Text style={{ color: theme.textSecondary }} className="text-sm font-semibold underline">
+            <Text
+              style={{ color: theme.textSecondary }}
+              className="text-sm font-semibold underline"
+            >
               Skip phone verification for now
             </Text>
           </TouchableOpacity>
@@ -769,7 +772,7 @@ export function CreateRoleSpecificProfileScreen() {
         account_number: "",
         swift_code: "",
         iban: "",
-        currency: "USD",
+        currency: "",
       };
     } else if (role === "patient") {
       return {
@@ -798,7 +801,7 @@ export function CreateRoleSpecificProfileScreen() {
         account_number: "",
         swift_code: "",
         iban: "",
-        currency: "USD",
+        currency: "",
       };
     } else if (role === "counselor") {
       return {
@@ -816,7 +819,7 @@ export function CreateRoleSpecificProfileScreen() {
         account_number: "",
         swift_code: "",
         iban: "",
-        currency: "USD",
+        currency: "",
       };
     } else if (role === "pharmacist") {
       return {
@@ -835,7 +838,7 @@ export function CreateRoleSpecificProfileScreen() {
         account_number: "",
         swift_code: "",
         iban: "",
-        currency: "USD",
+        currency: "",
       };
     } else if (role === "socialworker") {
       return {
@@ -854,7 +857,7 @@ export function CreateRoleSpecificProfileScreen() {
         account_number: "",
         swift_code: "",
         iban: "",
-        currency: "USD",
+        currency: "",
       };
     } else if (role === "admin") {
       return {
@@ -1044,7 +1047,11 @@ export function CreateRoleSpecificProfileScreen() {
       }
 
       // Structure arrays
-      if (castedForm.languages_spoken && role !== "patient" && role !== "admin") {
+      if (
+        castedForm.languages_spoken &&
+        role !== "patient" &&
+        role !== "admin"
+      ) {
         castedForm.languages_spoken = castedForm.languages_spoken
           .split(",")
           .map((s) => s.trim())
@@ -1154,7 +1161,9 @@ export function CreateRoleSpecificProfileScreen() {
         delete castedForm.currency;
 
         // Keep the user configured availability schedule, formatting times to 24h format for the backend validation pattern
-        castedForm.availability_schedule = (form.availability_schedule || []).map((item) => ({
+        castedForm.availability_schedule = (
+          form.availability_schedule || []
+        ).map((item) => ({
           ...item,
           start_time: convertTo24Hour(item.start_time),
           end_time: convertTo24Hour(item.end_time),
@@ -1410,7 +1419,9 @@ export function CreateRoleSpecificProfileScreen() {
                   placeholder="e.g. Internal Medicine Residency at LUTH"
                   placeholderTextColor={theme.textMuted}
                   value={form.residency_program}
-                  onChangeText={(t) => setForm({ ...form, residency_program: t })}
+                  onChangeText={(t) =>
+                    setForm({ ...form, residency_program: t })
+                  }
                   className="h-12 rounded-[12px] border px-4 text-[15px]"
                   style={{
                     backgroundColor: theme.surface,
@@ -1429,7 +1440,9 @@ export function CreateRoleSpecificProfileScreen() {
                   placeholder="e.g. American Board of Internal Medicine, etc."
                   placeholderTextColor={theme.textMuted}
                   value={form.board_certifications}
-                  onChangeText={(t) => setForm({ ...form, board_certifications: t })}
+                  onChangeText={(t) =>
+                    setForm({ ...form, board_certifications: t })
+                  }
                   className="h-12 rounded-[12px] border px-4 text-[15px]"
                   style={{
                     backgroundColor: theme.surface,
@@ -1448,7 +1461,9 @@ export function CreateRoleSpecificProfileScreen() {
                   placeholder="e.g. Lagos University Teaching Hospital"
                   placeholderTextColor={theme.textMuted}
                   value={form.hospital_affiliations}
-                  onChangeText={(t) => setForm({ ...form, hospital_affiliations: t })}
+                  onChangeText={(t) =>
+                    setForm({ ...form, hospital_affiliations: t })
+                  }
                   className="h-12 rounded-[12px] border px-4 text-[15px]"
                   style={{
                     backgroundColor: theme.surface,
@@ -1467,7 +1482,9 @@ export function CreateRoleSpecificProfileScreen() {
                   placeholder="e.g. Reliance HMO, AXA Mansard"
                   placeholderTextColor={theme.textMuted}
                   value={form.insurance_networks}
-                  onChangeText={(t) => setForm({ ...form, insurance_networks: t })}
+                  onChangeText={(t) =>
+                    setForm({ ...form, insurance_networks: t })
+                  }
                   className="h-12 rounded-[12px] border px-4 text-[15px]"
                   style={{
                     backgroundColor: theme.surface,
@@ -1476,25 +1493,41 @@ export function CreateRoleSpecificProfileScreen() {
                   }}
                 />
 
-                <View className="flex-row items-center justify-between mt-4 py-2 border-b" style={{ borderColor: theme.border }}>
-                  <Text className="text-sm font-semibold" style={{ color: theme.text }}>
+                <View
+                  className="flex-row items-center justify-between mt-4 py-2 border-b"
+                  style={{ borderColor: theme.border }}
+                >
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: theme.text }}
+                  >
                     Accepts Insurance
                   </Text>
                   <Switch
                     value={form.accepts_insurance}
-                    onValueChange={(val) => setForm({ ...form, accepts_insurance: val })}
+                    onValueChange={(val) =>
+                      setForm({ ...form, accepts_insurance: val })
+                    }
                     trackColor={{ false: theme.border, true: theme.primary }}
                     thumbColor={form.accepts_insurance ? "#FFF" : "#F4F3F0"}
                   />
                 </View>
 
-                <View className="flex-row items-center justify-between mt-2 py-2 border-b" style={{ borderColor: theme.border }}>
-                  <Text className="text-sm font-semibold" style={{ color: theme.text }}>
+                <View
+                  className="flex-row items-center justify-between mt-2 py-2 border-b"
+                  style={{ borderColor: theme.border }}
+                >
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: theme.text }}
+                  >
                     Accepting New Patients
                   </Text>
                   <Switch
                     value={form.is_accepting_patients}
-                    onValueChange={(val) => setForm({ ...form, is_accepting_patients: val })}
+                    onValueChange={(val) =>
+                      setForm({ ...form, is_accepting_patients: val })
+                    }
                     trackColor={{ false: theme.border, true: theme.primary }}
                     thumbColor={form.is_accepting_patients ? "#FFF" : "#F4F3F0"}
                   />
@@ -2360,7 +2393,9 @@ export function CreateRoleSpecificProfileScreen() {
                   placeholder="English, Spanish, French, etc."
                   placeholderTextColor={theme.textMuted}
                   value={form.languages_spoken}
-                  onChangeText={(t) => setForm({ ...form, languages_spoken: t })}
+                  onChangeText={(t) =>
+                    setForm({ ...form, languages_spoken: t })
+                  }
                   className="h-12 rounded-[12px] border px-4 text-[15px]"
                   style={{
                     backgroundColor: theme.surface,

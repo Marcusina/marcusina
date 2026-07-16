@@ -569,58 +569,9 @@ export function LoginScreen({
   const [otpMode, setOtpMode] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 
-  // 🔌 Listen for the incoming Google Redirect Token
-  useEffect(() => {
-    const handleOpenURL = async (event) => {
-      if (!event.url) return;
-      await processOAuthRedirect(event.url);
-    };
-
-    // Check if app was opened from a closed state via OAuth link
-    Linking.getInitialURL().then((url) => {
-      if (url) processOAuthRedirect(url);
-    });
-
-    // Listen for background-to-foreground URL events
-    const subscription = Linking.addEventListener("url", handleOpenURL);
-    return () => subscription.remove();
-  }, []);
-
-  const processOAuthRedirect = async (url) => {
-    try {
-      // Parse the ID token out of the redirect URL fragment or query parameter
-      const match =
-        url.match(/[#&]id_token=([^&]+)/) || url.match(/[?&]id_token=([^&]+)/);
-      if (!match) return;
-
-      const idToken = match[1];
-      setGoogleLoading(true);
-
-      console.log("[Google Auth] Forwarding token to backend...");
-      const response = await googleLoginApi(idToken);
-      console.log("[Google Auth] Backend Response:", response);
-
-      // Extract user and token from your Fastify backend payload
-      const userData = response.user;
-      const userToken = response.token; // Present on mobile responses
-
-      if (userData) {
-        // If backend tells us the role is "pending_onboarding", you can handle routing changes here
-        onLoginSuccess(userData, userToken);
-      }
-    } catch (error) {
-      console.error("[Google Auth] Backend exchange failed:", error);
-      showAlert(
-        "Authentication Error",
-        error.message || "Google Sign-In failed.",
-      );
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   const handleGoogleLogin = async () => {
     const clientId = config.GOOGLE_CLIENT_ID;
+    setGoogleLoading(true);
     if (Platform.OS === "web") {
       const redirectUri = window.location.origin;
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Math.random().toString(36)}`;
@@ -636,6 +587,7 @@ export function LoginScreen({
       } catch (error) {
         console.error("Error opening URL for Google OAuth:", error);
         showAlert("Error", "An error occurred starting Google Sign-In.");
+        setGoogleLoading(false);
       }
     }
   };
@@ -916,47 +868,9 @@ export function ProfileBasicsScreen({
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // 🔌 Listen for the incoming Google Redirect Token during registration view
-  useEffect(() => {
-    const handleOpenURL = async (event) => {
-      if (event.url) await processOAuthRedirect(event.url);
-    };
-    Linking.getInitialURL().then((url) => {
-      if (url) processOAuthRedirect(url);
-    });
-    const subscription = Linking.addEventListener("url", handleOpenURL);
-    return () => subscription.remove();
-  }, []);
-
-  const processOAuthRedirect = async (url) => {
-    try {
-      const match =
-        url.match(/[#&]id_token=([^&]+)/) || url.match(/[?&]id_token=([^&]+)/);
-      if (!match) return;
-
-      const idToken = match[1];
-      setGoogleLoading(true);
-
-      const response = await googleLoginApi(idToken);
-      const userData = response.user;
-      const userToken = response.token;
-
-      if (userData) {
-        // Pass straight through to core app login state management
-        onLoginSuccess(userData, userToken);
-      }
-    } catch (error) {
-      showAlert(
-        "Authentication Error",
-        error.message || "Google registration failed.",
-      );
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   const handleGoogleLogin = async () => {
     const clientId = config.GOOGLE_CLIENT_ID;
+    setGoogleLoading(true);
     if (Platform.OS === "web") {
       const redirectUri = window.location.origin;
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Math.random().toString(36)}`;
@@ -970,6 +884,7 @@ export function ProfileBasicsScreen({
         await Linking.openURL(url);
       } catch (error) {
         showAlert("Error", "An error occurred starting Google Sign-In.");
+        setGoogleLoading(false);
       }
     }
   };

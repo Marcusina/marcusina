@@ -13,7 +13,8 @@ const apiClient = async (endpoint, options = {}) => {
     ...headers,
   };
 
-  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  const isFormData =
+    typeof FormData !== "undefined" && body instanceof FormData;
 
   if (body && !isFormData) {
     clientHeaders["Content-Type"] = "application/json";
@@ -40,7 +41,7 @@ const apiClient = async (endpoint, options = {}) => {
 
   const requestConfig = {
     method,
-    credentials: "include", // 🔑 Include cookies in requests and responses
+    credentials: "include", // Include cookies in requests and responses
     headers: clientHeaders,
     ...rest,
   };
@@ -51,7 +52,7 @@ const apiClient = async (endpoint, options = {}) => {
       console.log("[API Request Body] FormData payload");
     } else {
       requestConfig.body = JSON.stringify(body);
-      console.log("[API Request Body]", requestConfig.body);
+      console.log("[API Request Body] JSON payload");
     }
   }
 
@@ -62,7 +63,7 @@ const apiClient = async (endpoint, options = {}) => {
 
     const response = await fetch(url, requestConfig);
     const textResponse = await response.text();
-    console.log("[API Raw Response]", textResponse);
+    console.log("[API Raw Response]");
     console.log("[API Response Status]", response.status, response.statusText);
     console.log("[API Response Headers]", {
       "content-type": response.headers.get("content-type"),

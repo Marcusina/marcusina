@@ -16,6 +16,7 @@ import {
   logout as logoutApi,
   getActiveCurrency,
   updateActiveCurrency,
+  refreshToken as refreshTokenApi,
 } from "../api/auth.api";
 
 const UserContext = createContext();
@@ -200,10 +201,17 @@ export const UserProvider = ({ children }) => {
     await fetchUserAndCheckOnboarding();
   };
 
-  const loginWithToken = async (userToken) => {
-    setUser(null);
+  const loginWithToken = async (userToken, userData = null) => {
+    if (userData) {
+      setUser(userData);
+    } else {
+      setUser(null);
+    }
     if (userToken) {
       await setToken(userToken);
+    } else {
+      // ⏳ Introduce a small delay on Web to let the browser commit the httpOnly cookie to the store
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
     await fetchUserAndCheckOnboarding();
   };
@@ -239,6 +247,20 @@ export const UserProvider = ({ children }) => {
     await fetchUserAndCheckOnboarding();
   };
 
+  const handleRefreshToken = async () => {
+    try {
+      const res = await refreshTokenApi();
+      if (res && res.token) {
+        await setToken(res.token);
+      }
+      await fetchUserAndCheckOnboarding();
+      return { success: true };
+    } catch (error) {
+      console.error("Token refresh failed:", error);
+      throw error;
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -260,6 +282,7 @@ export const UserProvider = ({ children }) => {
         skipPhoneVerification,
         submitRoleSpecificProfile,
         submitCurrency,
+        handleRefreshToken,
         refreshUser: () => fetchUserAndCheckOnboarding(),
       }}
     >

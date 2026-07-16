@@ -12,8 +12,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "./Logo";
+import { SessionExpiryBanner } from "./SessionExpiryBanner";
+import { getCart } from "../api/cart.api";
+import { getNotifications } from "../api/notifications.api";
+import { useUser } from "../context/UserContext";
 
 const SIDEBAR_WIDTH = 230;
 const MOBILE_BREAKPOINT = 768;
@@ -675,6 +680,26 @@ export function Layout({
   const [fabOpen, setFabOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const { user, token } = useUser();
+
+  const { data: cart } = useQuery({
+    queryKey: ["cart"],
+    queryFn: getCart,
+    enabled: !!token,
+    refetchInterval: 15000,
+  });
+
+  const { data: notifications } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: getNotifications,
+    enabled: !!token,
+    refetchInterval: 15000,
+  });
+
+  const cartCount = cart?.items?.length || 0;
+  const unreadNotificationsCount = Array.isArray(notifications)
+    ? notifications.filter((n) => !n.is_read).length
+    : 0;
 
   const desktopNavItems = [
     { id: "home", label: "Home", icon: "home" },
@@ -835,38 +860,56 @@ export function Layout({
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.mobileIconButton}>
+                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("notifications")}>
                   <MaterialIcons
                     name="notifications-none"
                     size={20}
                     color={theme.textSecondary}
                   />
-                  <View style={styles.mobileNotificationBadge} />
+                  {unreadNotificationsCount > 0 && <View style={styles.mobileNotificationBadge} />}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.mobileIconButton}>
+                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("wishlist")}>
                   <Ionicons
                     name="heart"
                     size={20}
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.mobileIconButton}>
+                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("cart")}>
                   <MaterialIcons
                     name="shopping-cart"
                     size={20}
                     color={theme.textSecondary}
                   />
+                  {cartCount > 0 && <View style={styles.mobileNotificationBadge} />}
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.headerProfileButton}
                   onPress={() => setDrawerOpen(true)}
                   activeOpacity={0.8}
                 >
-                  <View style={styles.headerAvatar}>
-                    <Text style={styles.headerAvatarText}>
-                      {userProfile?.name?.charAt(0) || "M"}
-                    </Text>
-                  </View>
+                  {user?.profile?.profile_photo_url?.url ? (
+                    <Image
+                      source={{ uri: user.profile.profile_photo_url.url }}
+                      style={[
+                        styles.headerAvatar,
+                        {
+                          width: 40,
+                          height: 40,
+                          borderRadius: 20,
+                          resizeMode: "cover",
+                        },
+                      ]}
+                    />
+                  ) : (
+                    <View style={styles.headerAvatar}>
+                      <Text style={styles.headerAvatarText}>
+                        {user?.profile?.first_name || user?.profile?.last_name
+                          ? `${user?.profile?.first_name?.[0] || ""}${user?.profile?.last_name?.[0] || ""}`.toUpperCase()
+                          : user?.name?.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -889,43 +932,62 @@ export function Layout({
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("notifications")}>
                   <MaterialIcons
                     name="notifications-none"
                     size={22}
                     color={theme.textSecondary}
                   />
-                  <View style={styles.notificationBadge} />
+                  {unreadNotificationsCount > 0 && <View style={styles.notificationBadge} />}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("wishlist")}>
                   <Ionicons
                     name="heart"
                     size={22}
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("cart")}>
                   <MaterialIcons
                     name="shopping-cart"
                     size={22}
                     color={theme.textSecondary}
                   />
+                  {cartCount > 0 && <View style={styles.notificationBadge} />}
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.headerProfileButton}
                   onPress={() => setDrawerOpen(true)}
                   activeOpacity={0.8}
                 >
-                  <View style={styles.headerAvatar}>
-                    <Text style={styles.headerAvatarText}>
-                      {userProfile?.name?.charAt(0) || "M"}
-                    </Text>
-                  </View>
+                  {user?.profile?.profile_photo_url?.url ? (
+                    <Image
+                      source={{ uri: user.profile.profile_photo_url.url }}
+                      style={[
+                        styles.headerAvatar,
+                        {
+                          width: 40,
+                          height: 40,
+                          borderRadius: 20,
+                          resizeMode: "cover",
+                        },
+                      ]}
+                    />
+                  ) : (
+                    <View style={styles.headerAvatar}>
+                      <Text style={styles.headerAvatarText}>
+                        {user?.profile?.first_name || user?.profile?.last_name
+                          ? `${user?.profile?.first_name?.[0] || ""}${user?.profile?.last_name?.[0] || ""}`.toUpperCase()
+                          : user?.name?.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         )}
+        <SessionExpiryBanner />
         <ScrollView
           style={styles.mainArea}
           contentContainerStyle={[isDesktop && styles.webMainArea]}
@@ -1071,23 +1133,47 @@ export function Layout({
               </TouchableOpacity>
 
               <View style={styles.drawerUserRow}>
-                <Image
-                  source={{
-                    uri:
-                      userProfile?.avatar ||
-                      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-                  }}
-                  style={styles.drawerAvatar}
-                />
+                {user?.profile?.profile_photo_url?.url ? (
+                  <Image
+                    source={{ uri: user.profile.profile_photo_url.url }}
+                    style={[styles.drawerAvatar, { resizeMode: "cover" }]}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.drawerAvatar,
+                      {
+                        backgroundColor: "#E0E0E0",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 24, // Adjust this size to scale with your drawer layout
+                        fontWeight: "bold",
+                        color: "#555",
+                      }}
+                    >
+                      {user?.profile?.first_name || user?.profile?.last_name
+                        ? `${user?.profile?.first_name?.[0] || ""}${user?.profile?.last_name?.[0] || ""}`.toUpperCase()
+                        : user?.name?.charAt(0).toUpperCase() || "M"}
+                    </Text>
+                  </View>
+                )}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.drawerUserName}>
                     {userProfile?.name || "Medgram User"}
                   </Text>
                   <Text style={styles.drawerUserSub}>
-                    @
-                    {userProfile?.name?.toLowerCase().replace(/\s+/g, "") ||
-                      "user"}{" "}
-                    · Patient
+                    {userProfile?.handle ||
+                      `@${userProfile?.name?.toLowerCase().replace(/\s+/g, "") || "user"}`}{" "}
+                    ·{" "}
+                    {userProfile?.role
+                      ? userProfile.role.charAt(0).toUpperCase() +
+                        userProfile.role.slice(1)
+                      : "Patient"}
                   </Text>
                   <View style={styles.drawerPillRow}>
                     <View
