@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import {
 import Svg, { Path, Circle, Rect } from "react-native-svg";
 import { useTheme } from "../context/ThemeContext";
 import { useUser } from "../context/UserContext";
+import { toast } from "../context/ToastContext";
 
 export function CreatePostScreen() {
   const { theme } = useTheme();
@@ -37,6 +38,23 @@ export function CreatePostScreen() {
   const [activeTab, setActiveTab] = useState("Post");
   const [postText, setPostText] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("#HeartHealth");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageUri, setSelectedImageUri] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image size exceeds the 2MB limit.");
+        e.target.value = "";
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      setSelectedImage(file);
+      setSelectedImageUri(url);
+    }
+  };
 
   const postTabs = ["Post", "Reel", "Poll", "Article"];
   const healthTopics = [
@@ -216,47 +234,76 @@ export function CreatePostScreen() {
           </View>
 
           {/* Media Upload Container Preview Asset Box */}
+          {Platform.OS === "web" && (
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+          )}
           <TouchableOpacity
             activeOpacity={0.75}
-            className="mx-[18px] mb-4 h-[130px] flex-col items-center justify-center gap-2 rounded-xl"
+            onPress={() => Platform.OS === "web" && fileInputRef.current?.click()}
+            className="mx-[18px] mb-4 h-[180px] flex-col items-center justify-center gap-2 rounded-xl overflow-hidden relative"
             style={{
               backgroundColor: surfaceBackgroundColor,
-              borderStyle: "dashed",
+              borderStyle: selectedImageUri ? "solid" : "dashed",
               borderWidth: 1.5,
               borderColor: borderMediumColor,
             }}
           >
-            <Svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <Rect
-                x="2"
-                y="4"
-                width="24"
-                height="20"
-                rx="4"
-                stroke={textSecondaryColor}
-                strokeWidth="1.6"
-              />
-              <Circle
-                cx="9"
-                cy="11"
-                r="2.5"
-                stroke={textSecondaryColor}
-                strokeWidth="1.4"
-              />
-              <Path
-                d="M2 20l7-7 5 5 3-3 9 5"
-                stroke={textSecondaryColor}
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-            <Text
-              className="text-[12px] font-semibold"
-              style={{ color: textSecondaryColor }}
-            >
-              Add photo or video
-            </Text>
+            {selectedImageUri ? (
+              <>
+                <Image source={{ uri: selectedImageUri }} className="w-full h-full" style={{ resizeMode: "cover" }} />
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage(null);
+                    setSelectedImageUri(null);
+                  }}
+                  className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/60 items-center justify-center z-10"
+                >
+                  <MaterialIcons name="close" size={20} color="white" />
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <Rect
+                    x="2"
+                    y="4"
+                    width="24"
+                    height="20"
+                    rx="4"
+                    stroke={textSecondaryColor}
+                    strokeWidth="1.6"
+                  />
+                  <Circle
+                    cx="9"
+                    cy="11"
+                    r="2.5"
+                    stroke={textSecondaryColor}
+                    strokeWidth="1.4"
+                  />
+                  <Path
+                    d="M2 20l7-7 5 5 3-3 9 5"
+                    stroke={textSecondaryColor}
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+                <Text
+                  className="text-[12px] font-semibold"
+                  style={{ color: textSecondaryColor }}
+                >
+                  Add photo or video
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {/* Health Topic Tags Selector Flow Block */}
@@ -455,6 +502,7 @@ export function CreatePostScreen() {
             {/* Action Bar Tab Buttons */}
             <TouchableOpacity
               activeOpacity={0.7}
+              onPress={() => Platform.OS === "web" && fileInputRef.current?.click()}
               className="flex-row items-center gap-1.5 py-2 px-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900"
             >
               <Ionicons

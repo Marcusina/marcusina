@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { useTheme } from "../context/ThemeContext";
+import { toast } from "../context/ToastContext";
 
 export function ProfilePhotoPicker({ imageUri, onImageSelected }) {
   const { theme } = useTheme();
@@ -9,6 +10,11 @@ export function ProfilePhotoPicker({ imageUri, onImageSelected }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image size exceeds the 2MB limit.");
+        e.target.value = "";
+        return;
+      }
       const url = URL.createObjectURL(file);
       onImageSelected(file, url);
     }

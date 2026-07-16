@@ -218,6 +218,11 @@ export function CreateBasicProfileScreen() {
         formData.append(key, val);
       });
       if (photoFile) {
+        if (photoFile.size > 2 * 1024 * 1024) {
+          showToast("Profile photo size exceeds the 2MB limit", "error");
+          setLoading(false);
+          return;
+        }
         formData.append("image", photoFile);
       }
       await submitBasicProfile(formData);
@@ -255,6 +260,10 @@ export function CreateBasicProfileScreen() {
             <ProfilePhotoPicker
               imageUri={photoUri}
               onImageSelected={(file, uri) => {
+                if (file && file.size > 2 * 1024 * 1024) {
+                  showToast("Profile photo size exceeds the 2MB limit", "error");
+                  return;
+                }
                 setPhotoFile(file);
                 setPhotoUri(uri);
               }}

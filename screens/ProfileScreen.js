@@ -13,6 +13,8 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "../components/Logo";
+import { ProfilePhotoPicker } from "../components/ProfilePhotoPicker";
+import { toast } from "../context/ToastContext";
 
 export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings, profile, onLogout }) {
   const { theme, themeMode, setThemeMode } = useTheme();
@@ -43,14 +45,18 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings,
                   backgroundColor: theme.primaryLight,
                   borderColor: theme.surface,
                 }}
-                className="w-[100px] h-[100px] rounded-full alignItems-center justify-center border-4"
+                className="w-[100px] h-[100px] rounded-full items-center justify-center border-4 overflow-hidden"
               >
-                <Text
-                  style={{ color: theme.primary }}
-                  className="text-[40px] font-bold"
-                >
-                  {avatarInitial}
-                </Text>
+                {profile.avatar || profile.image ? (
+                  <Image source={{ uri: profile.avatar || profile.image }} className="w-full h-full" style={{ resizeMode: "cover" }} />
+                ) : (
+                  <Text
+                    style={{ color: theme.primary }}
+                    className="text-[40px] font-bold"
+                  >
+                    {avatarInitial}
+                  </Text>
+                )}
               </View>
               <View
                 style={{ backgroundColor: theme.primary }}
@@ -463,14 +469,18 @@ export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
                   backgroundColor: theme.primaryLight,
                   borderColor: theme.surface,
                 }}
-                className="w-[100px] h-[100px] rounded-full items-center justify-center border-4"
+                className="w-[100px] h-[100px] rounded-full items-center justify-center border-4 overflow-hidden"
               >
-                <Text
-                  style={{ color: theme.primary }}
-                  className="text-[40px] font-bold"
-                >
-                  {avatarInitial}
-                </Text>
+                {profile.avatar || profile.image ? (
+                  <Image source={{ uri: profile.avatar || profile.image }} className="w-full h-full" style={{ resizeMode: "cover" }} />
+                ) : (
+                  <Text
+                    style={{ color: theme.primary }}
+                    className="text-[40px] font-bold"
+                  >
+                    {avatarInitial}
+                  </Text>
+                )}
               </View>
               <View
                 style={{
@@ -732,6 +742,18 @@ export function ProfileScreen({ profile, onCancel, onSave }) {
             }}
             className={`rounded-2xl p-6 border ${isWeb ? "flex-row flex-wrap gap-5" : ""}`}
           >
+            <View className="w-full items-center mb-6">
+              <ProfilePhotoPicker
+                imageUri={edited.avatar || edited.image || ""}
+                onImageSelected={(file, uri) => {
+                  if (file && file.size > 2 * 1024 * 1024) {
+                    toast.error("Profile photo size exceeds the 2MB limit.");
+                    return;
+                  }
+                  setEdited({ ...edited, avatar: uri, image: uri });
+                }}
+              />
+            </View>
             <View className={`mb-5 ${isWeb ? "w-[48.5%]" : "w-full"}`}>
               <Text
                 style={{ color: theme.textSecondary }}
