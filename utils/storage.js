@@ -9,10 +9,13 @@ const THEME_KEY = "medgram_theme";
 // --- TOKEN STORAGE (SECURE) ---
 export const saveToken = async (token) => {
   try {
-    if (Platform.OS === "android") {
-      // Hardware-encrypted storage on iOS/Android
-      await SecureStore.setItemAsync(STORAGE_KEY, token);
+    if (Platform.OS === "web") return;
+    if (token === null || token === undefined || token === "undefined" || token === "null" || token === "") {
+      await removeToken();
+      return;
     }
+    // Hardware-encrypted storage on iOS/Android
+    await SecureStore.setItemAsync(STORAGE_KEY, token);
   } catch (e) {
     console.error("Error saving token securely", e);
   }
@@ -20,10 +23,13 @@ export const saveToken = async (token) => {
 
 export const getToken = async () => {
   try {
-    if (Platform.OS === "android") {
-      // Hardware-encrypted storage on iOS/Android
-      return await SecureStore.getItemAsync(STORAGE_KEY);
+    if (Platform.OS === "web") return null;
+    // Hardware-encrypted storage on iOS/Android
+    const token = await SecureStore.getItemAsync(STORAGE_KEY);
+    if (token === "undefined" || token === "null" || token === "") {
+      return null;
     }
+    return token;
   } catch (e) {
     console.error("Error getting secure token", e);
     return null;
@@ -32,10 +38,9 @@ export const getToken = async () => {
 
 export const removeToken = async () => {
   try {
-    if (Platform.OS === "android") {
-      // Hardware-encrypted storage on iOS/Android
-      await SecureStore.deleteItemAsync(STORAGE_KEY);
-    }
+    if (Platform.OS === "web") return;
+    // Hardware-encrypted storage on iOS/Android
+    await SecureStore.deleteItemAsync(STORAGE_KEY);
   } catch (e) {
     console.error("Error removing secure token", e);
   }
@@ -44,10 +49,14 @@ export const removeToken = async () => {
 // --- PROFILE STORAGE (STANDARD) ---
 export const saveProfile = async (profile) => {
   try {
+    if (profile === null || profile === undefined) {
+      await removeProfile();
+      return;
+    }
     const data = JSON.stringify(profile);
     if (Platform.OS === "web") {
       localStorage.setItem(PROFILE_KEY, data);
-    } else if (Platform.OS === "android") {
+    } else {
       await SecureStore.setItemAsync(PROFILE_KEY, data);
     }
   } catch (e) {
@@ -60,10 +69,13 @@ export const getProfile = async () => {
     let data;
     if (Platform.OS === "web") {
       data = localStorage.getItem(PROFILE_KEY);
-    } else if (Platform.OS === "android") {
+    } else {
       data = await SecureStore.getItemAsync(PROFILE_KEY);
     }
-    return data ? JSON.parse(data) : null;
+    if (!data || data === "undefined" || data === "null") {
+      return null;
+    }
+    return JSON.parse(data);
   } catch (e) {
     console.error("Error getting profile", e);
     return null;
@@ -74,7 +86,7 @@ export const removeProfile = async () => {
   try {
     if (Platform.OS === "web") {
       localStorage.removeItem(PROFILE_KEY);
-    } else if (Platform.OS === "android") {
+    } else {
       await SecureStore.deleteItemAsync(PROFILE_KEY);
     }
   } catch (e) {
@@ -87,7 +99,7 @@ export const saveTheme = async (theme) => {
   try {
     if (Platform.OS === "web") {
       localStorage.setItem(THEME_KEY, theme);
-    } else if (Platform.OS === "android") {
+    } else {
       await SecureStore.setItemAsync(THEME_KEY, theme);
     }
   } catch (e) {
@@ -97,11 +109,16 @@ export const saveTheme = async (theme) => {
 
 export const getTheme = async () => {
   try {
+    let theme;
     if (Platform.OS === "web") {
-      return localStorage.getItem(THEME_KEY);
-    } else if (Platform.OS === "android") {
-      return await SecureStore.getItemAsync(THEME_KEY);
+      theme = localStorage.getItem(THEME_KEY);
+    } else {
+      theme = await SecureStore.getItemAsync(THEME_KEY);
     }
+    if (theme === "undefined" || theme === "null") {
+      return null;
+    }
+    return theme;
   } catch (e) {
     console.error("Error getting theme", e);
     return null;
@@ -115,7 +132,7 @@ export const savePhoneSkipped = async () => {
   try {
     if (Platform.OS === "web") {
       localStorage.setItem(SKIP_PHONE_KEY, "true");
-    } else if (Platform.OS === "android") {
+    } else {
       await SecureStore.setItemAsync(SKIP_PHONE_KEY, "true");
     }
   } catch (e) {
@@ -125,11 +142,13 @@ export const savePhoneSkipped = async () => {
 
 export const getPhoneSkipped = async () => {
   try {
+    let data;
     if (Platform.OS === "web") {
-      return localStorage.getItem(SKIP_PHONE_KEY) === "true";
-    } else if (Platform.OS === "android") {
-      return (await SecureStore.getItemAsync(SKIP_PHONE_KEY)) === "true";
+      data = localStorage.getItem(SKIP_PHONE_KEY);
+    } else {
+      data = await SecureStore.getItemAsync(SKIP_PHONE_KEY);
     }
+    return data === "true";
   } catch (e) {
     console.error("Error getting phone skip status", e);
     return false;
@@ -140,7 +159,7 @@ export const removePhoneSkipped = async () => {
   try {
     if (Platform.OS === "web") {
       localStorage.removeItem(SKIP_PHONE_KEY);
-    } else if (Platform.OS === "android") {
+    } else {
       await SecureStore.deleteItemAsync(SKIP_PHONE_KEY);
     }
   } catch (e) {
@@ -155,7 +174,7 @@ export const saveRoleProfileCreated = async () => {
   try {
     if (Platform.OS === "web") {
       localStorage.setItem(ROLE_PROFILE_CREATED_KEY, "true");
-    } else if (Platform.OS === "android") {
+    } else {
       await SecureStore.setItemAsync(ROLE_PROFILE_CREATED_KEY, "true");
     }
   } catch (e) {
@@ -165,13 +184,13 @@ export const saveRoleProfileCreated = async () => {
 
 export const getRoleProfileCreated = async () => {
   try {
+    let data;
     if (Platform.OS === "web") {
-      return localStorage.getItem(ROLE_PROFILE_CREATED_KEY) === "true";
-    } else if (Platform.OS === "android") {
-      return (
-        (await SecureStore.getItemAsync(ROLE_PROFILE_CREATED_KEY)) === "true"
-      );
+      data = localStorage.getItem(ROLE_PROFILE_CREATED_KEY);
+    } else {
+      data = await SecureStore.getItemAsync(ROLE_PROFILE_CREATED_KEY);
     }
+    return data === "true";
   } catch (e) {
     console.error("Error getting role profile created status", e);
     return false;
@@ -182,7 +201,7 @@ export const removeRoleProfileCreated = async () => {
   try {
     if (Platform.OS === "web") {
       localStorage.removeItem(ROLE_PROFILE_CREATED_KEY);
-    } else if (Platform.OS === "android") {
+    } else {
       await SecureStore.deleteItemAsync(ROLE_PROFILE_CREATED_KEY);
     }
   } catch (e) {

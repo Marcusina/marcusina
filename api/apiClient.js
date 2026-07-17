@@ -22,9 +22,25 @@ const apiClient = async (endpoint, options = {}) => {
 
   // Automatically attach saved token to Authorization header if not already present
   try {
+    // If caller explicitly passed a token parameter that resolved to undefined/null, clean it up
+    if (
+      clientHeaders["Authorization"] === "Bearer undefined" ||
+      clientHeaders["Authorization"] === "Bearer null"
+    ) {
+      delete clientHeaders["Authorization"];
+    }
+    if (
+      clientHeaders["authorization"] === "Bearer undefined" ||
+      clientHeaders["authorization"] === "Bearer null"
+    ) {
+      delete clientHeaders["authorization"];
+    }
+
     const savedToken = await getToken();
     if (
       savedToken &&
+      savedToken !== "undefined" &&
+      savedToken !== "null" &&
       !clientHeaders["Authorization"] &&
       !clientHeaders["authorization"]
     ) {

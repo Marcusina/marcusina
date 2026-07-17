@@ -116,8 +116,16 @@ export const UserProvider = ({ children }) => {
       setOnboardingStep("completed");
     } catch (error) {
       console.error("Failed to fetch user data:", error);
-      // Auto logout if unauthorized
-      if (error.message.includes("Unauthorized") || error.message.includes("token")) {
+      // Auto logout if unauthorized or token is invalid/malformed/expired
+      const isAuthError =
+        error.message.includes("Unauthorized") ||
+        error.message.includes("token") ||
+        error.message.includes("jwt") ||
+        error.message.includes("malformed") ||
+        error.message.includes("expired") ||
+        error.message.includes("Invalid");
+
+      if (isAuthError) {
         await handleLogout();
       } else {
         setOnboardingStep("splash");

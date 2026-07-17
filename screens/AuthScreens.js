@@ -607,6 +607,7 @@ export function LoginScreen({
     setLoading(true);
     try {
       const response = await loginApi(email, password);
+      console.log("=======Login response:", response);
       const userData = response.user || response.data?.user;
       const userToken = response.token || response.data?.token;
 
@@ -651,6 +652,7 @@ export function LoginScreen({
     setLoading(true);
     try {
       const response = await verifyIdentityByOtp(email, otpCode);
+      console.log("======= OTP verification response:", response);
       const userData = response.user || response.data?.user;
       const userToken = response.token || response.data?.token;
       if (userToken && userData) {
@@ -1093,7 +1095,8 @@ export function EmailVerifyScreen({ email, onBack }) {
       const response = await resendVerificationEmail(email);
       showAlert(
         "Link Sent",
-        response.message || "A new verification link has been sent to your email.",
+        response.message ||
+          "A new verification link has been sent to your email.",
       );
     } catch (error) {
       console.error("[EmailVerify][Resend] Error:", error);
@@ -1151,17 +1154,29 @@ export function EmailVerifyScreen({ email, onBack }) {
               style={{ color: theme.textSecondary }}
             >
               A verification link has been sent to{" "}
-              <Text className="font-semibold" style={{ color: theme.text }}>{email || "your email"}</Text>. Please check your inbox and click the link to verify your account and activate your Medgram profile.
+              <Text className="font-semibold" style={{ color: theme.text }}>
+                {email || "your email"}
+              </Text>
+              . Please check your inbox and click the link to verify your
+              account and activate your Medgram profile.
             </Text>
-            
+
             <PrimaryButton
-              label={resending ? <ActivityIndicator color="#FFF" /> : "Resend Verification Link"}
+              label={
+                resending ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  "Resend Verification Link"
+                )
+              }
               onPress={handleResendCode}
               disabled={resending}
             />
 
             <TouchableOpacity onPress={onBack} className="mt-6 items-center">
-              <Text className="font-semibold" style={{ color: theme.primary }}>Back to Login</Text>
+              <Text className="font-semibold" style={{ color: theme.primary }}>
+                Back to Login
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
