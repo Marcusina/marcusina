@@ -702,19 +702,19 @@ export function Layout({
     : 0;
 
   const desktopNavItems = [
-    { id: "home", label: "Home", icon: "home" },
-    { id: "groups", label: "Spaces", icon: "group" },
-    { id: "place", label: "Market", icon: "store" },
-    { id: "consultBook", label: "Consult", icon: "medical-services" },
-    { id: "profileHealth", label: "Profile", icon: "person" },
+    { id: "Home", label: "Home", icon: "home" },
+    { id: "Health", label: "Health", icon: "medical-services" },
+    { id: "Community", label: "Spaces", icon: "group" },
+    { id: "Marketplace", label: "Market", icon: "store" },
+    { id: "Me", label: "Profile", icon: "person" },
   ];
 
   const mobileNavItems = [
-    { id: "home", label: "Home", icon: "home" },
-    { id: "groups", label: "Spaces", icon: "group" },
-    { id: "createPost", label: "Create", icon: "add", isFab: true },
-    { id: "place", label: "Market", icon: "store" },
-    { id: "consultBook", label: "Consult", icon: "medical-services" },
+    { id: "Home", label: "Home", icon: "home" },
+    { id: "Health", label: "Health", icon: "medical-services" },
+    { id: "CreatePost", label: "Create", icon: "add", isFab: true },
+    { id: "Community", label: "Spaces", icon: "group" },
+    { id: "Marketplace", label: "Market", icon: "store" },
   ];
 
   const renderSidebar = () => (
@@ -860,7 +860,7 @@ export function Layout({
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("notifications")}>
+                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("Notifications")}>
                   <MaterialIcons
                     name="notifications-none"
                     size={20}
@@ -868,14 +868,14 @@ export function Layout({
                   />
                   {unreadNotificationsCount > 0 && <View style={styles.mobileNotificationBadge} />}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("wishlist")}>
+                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("Wishlist")}>
                   <Ionicons
                     name="heart"
                     size={20}
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("cart")}>
+                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("Cart")}>
                   <MaterialIcons
                     name="shopping-cart"
                     size={20}
@@ -932,7 +932,7 @@ export function Layout({
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("notifications")}>
+                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("Notifications")}>
                   <MaterialIcons
                     name="notifications-none"
                     size={22}
@@ -940,14 +940,14 @@ export function Layout({
                   />
                   {unreadNotificationsCount > 0 && <View style={styles.notificationBadge} />}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("wishlist")}>
+                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("Wishlist")}>
                   <Ionicons
                     name="heart"
                     size={22}
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("cart")}>
+                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("Cart")}>
                   <MaterialIcons
                     name="shopping-cart"
                     size={22}
@@ -988,11 +988,7 @@ export function Layout({
           </View>
         )}
         <SessionExpiryBanner />
-        <ScrollView
-          style={styles.mainArea}
-          contentContainerStyle={[isDesktop && styles.webMainArea]}
-          showsVerticalScrollIndicator={false}
-        >
+        <View style={[styles.mainArea, isDesktop && styles.webMainArea]}>
           <View
             style={[
               styles.contentContainer,
@@ -1001,7 +997,7 @@ export function Layout({
           >
             {children}
           </View>
-        </ScrollView>
+        </View>
         {!isDesktop && renderBottomNav()}
       </View>
 
@@ -1027,37 +1023,37 @@ export function Layout({
                   label: "Post",
                   desc: "Share health update",
                   icon: "create",
-                  screen: "createPost",
+                  screen: "CreatePost",
                 },
                 {
                   label: "Connect",
                   desc: "Link external apps",
                   icon: "link",
-                  screen: "home",
+                  screen: "Home",
                 },
                 {
                   label: "Ask AI",
                   desc: "AI health assistant",
                   icon: "chat",
-                  screen: "home",
+                  screen: "Home",
                 },
                 {
                   label: "Reel",
                   desc: "Record health reel",
                   icon: "videocam",
-                  screen: "home",
+                  screen: "Home",
                 },
                 {
                   label: "Poll",
                   desc: "Run a health poll",
                   icon: "poll",
-                  screen: "createPost",
+                  screen: "CreatePost",
                 },
                 {
                   label: "Record",
                   desc: "Voice health log",
                   icon: "mic",
-                  screen: "home",
+                  screen: "Home",
                 },
               ].map((item, idx) => (
                 <TouchableOpacity
@@ -1246,7 +1242,7 @@ export function Layout({
                 style={styles.drawerItem}
                 onPress={() => {
                   setDrawerOpen(false);
-                  onNavigate("profileHealth");
+                  onNavigate("MeHome");
                 }}
                 activeOpacity={0.7}
               >
@@ -1289,7 +1285,7 @@ export function Layout({
                 style={styles.drawerItem}
                 onPress={() => {
                   setDrawerOpen(false);
-                  onNavigate("profileEdit");
+                  onNavigate("ProfileEdit");
                 }}
                 activeOpacity={0.7}
               >
@@ -1328,7 +1324,7 @@ export function Layout({
                 style={styles.drawerItem}
                 onPress={() => {
                   setDrawerOpen(false);
-                  onNavigate("profileHealth");
+                  onNavigate("Settings");
                 }}
                 activeOpacity={0.7}
               >
@@ -1550,7 +1546,7 @@ export function Layout({
                 style={styles.drawerItem}
                 onPress={() => {
                   setDrawerOpen(false);
-                  onNavigate("consultBook");
+                  onNavigate("AppointmentsList");
                 }}
                 activeOpacity={0.7}
               >

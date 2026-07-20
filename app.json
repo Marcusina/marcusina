@@ -30,7 +30,13 @@
     },
     "plugins": [
       "expo-video",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Medgram uses your location to fill in your profile's geospatial coordinates for location-based search."
+        }
+      ]
     ],
     "extra": {
       "eas": {

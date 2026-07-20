@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 
 export function LocationPicker({ theme, value, onChange }) {
   const [lat, setLat] = useState("");
@@ -15,6 +16,17 @@ export function LocationPicker({ theme, value, onChange }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const iframeRef = useRef(null);
+
+  // The map iframe posts its initial (default Lagos) position as soon as it
+  // loads, and the message-listener effect below only resubscribes when
+  // [lat, lng] change - so without this ref, handleMapMessage would call
+  // whatever `onChange` closure existed when the listener was last
+  // (re)attached, which can be stale by the time the message actually
+  // arrives (e.g. the parent's form has since gained fields the user typed
+  // in the meantime). Reading onChangeRef.current always gets the latest
+  // one, regardless of when the effect last ran.
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   // Sync initial / external value changes
   useEffect(() => {
@@ -26,13 +38,16 @@ export function LocationPicker({ theme, value, onChange }) {
     }
   }, [value]);
 
-  // Handle location update and propagate to parent
+  // Handle location update and propagate to parent - always via
+  // onChangeRef.current (see comment above) since this is called from the
+  // async iframe-message and geolocation callbacks below, not just from
+  // direct user typing.
   const updateLocation = (latitude, longitude) => {
     const parsedLat = parseFloat(latitude);
     const parsedLng = parseFloat(longitude);
     if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
       // GeoJSON is [longitude, latitude]
-      onChange({
+      onChangeRef.current({
         type: "Point",
         coordinates: [parsedLng, parsedLat],
       });
@@ -72,36 +87,62 @@ export function LocationPicker({ theme, value, onChange }) {
     }
   };
 
-  // Get current device location using browser/device geolocation
-  const detectLocation = () => {
+  // Get current device location - browser Geolocation API on web (navigator
+  // .geolocation isn't available in native RN, hence the platform split),
+  // expo-location on iOS/Android.
+  const detectLocation = async () => {
     setLoading(true);
     setErrorMsg("");
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setLat(String(latitude.toFixed(6)));
-          setLng(String(longitude.toFixed(6)));
-          updateLocation(latitude, longitude);
 
-          // Update Leaflet map on Web
-          if (Platform.OS === "web" && iframeRef.current) {
-            iframeRef.current.contentWindow?.postMessage(
-              { type: "set-location", lat: latitude, lng: longitude },
-              "*"
-            );
-          }
-          setLoading(false);
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setErrorMsg("Could not detect location. Please input coordinates manually.");
-          setLoading(false);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
-    } else {
-      setErrorMsg("Geolocation is not supported by this device.");
+    if (Platform.OS === "web") {
+      if (typeof navigator !== "undefined" && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setLat(String(latitude.toFixed(6)));
+            setLng(String(longitude.toFixed(6)));
+            updateLocation(latitude, longitude);
+
+            if (iframeRef.current) {
+              iframeRef.current.contentWindow?.postMessage(
+                { type: "set-location", lat: latitude, lng: longitude },
+                "*"
+              );
+            }
+            setLoading(false);
+          },
+          (error) => {
+            console.error("Geolocation error:", error);
+            setErrorMsg("Could not detect location. Please input coordinates manually.");
+            setLoading(false);
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
+      } else {
+        setErrorMsg("Geolocation is not supported by this browser.");
+        setLoading(false);
+      }
+      return;
+    }
+
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Location permission denied. Please input coordinates manually.");
+        setLoading(false);
+        return;
+      }
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      const { latitude, longitude } = position.coords;
+      setLat(String(latitude.toFixed(6)));
+      setLng(String(longitude.toFixed(6)));
+      updateLocation(latitude, longitude);
+    } catch (error) {
+      console.error("Geolocation error:", error);
+      setErrorMsg("Could not detect location. Please input coordinates manually.");
+    } finally {
       setLoading(false);
     }
   };

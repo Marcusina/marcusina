@@ -879,12 +879,14 @@ export function CreateRoleSpecificProfileScreen() {
     return {};
   };
 
-  const [form, setForm] = useState(getInitialState());
-
-  // Reset form state on role changes
-  useEffect(() => {
-    setForm(getInitialState());
-  }, [role]);
+  // Lazy initializer: getInitialState() only needs to run once, against
+  // whatever role is already resolved at mount time. submitRole() (in
+  // UserContext) awaits a full user/role refresh before ever navigating
+  // here, so role is stable for the lifetime of this screen - a
+  // useEffect(() => setForm(getInitialState()), [role]) here would refire
+  // on mount and clobber whatever the user has already typed with no
+  // upside, since the initializer below already covers the real case.
+  const [form, setForm] = useState(getInitialState);
 
   const handleSubmit = async () => {
     setLoading(true);

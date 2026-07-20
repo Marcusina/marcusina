@@ -5,6 +5,11 @@ import { getToken, saveToken, removeToken, saveProfile, getProfile, removeProfil
 import {
   login as loginApi,
   getCurrentUser,
+  getUserProfile,
+  getPatientProfile,
+  getUserPrescriptions,
+  getUserCommunities,
+  updateProfile as updateProfileApi,
   getRoleSpecificProfile,
   createRole as createRoleApi,
   createBasicProfile as createBasicProfileApi,
@@ -19,6 +24,25 @@ import {
   refreshToken as refreshTokenApi,
 } from "../api/auth.api";
 
+const DEFAULT_PROFILE = {
+  name: "",
+  email: "",
+  phone: "",
+  location: "",
+  handle: "",
+  bio: "",
+  bloodType: "",
+  height: "",
+  weight: "",
+  role: "patient",
+  prescriptions: [],
+  communities: [],
+  followers: 0,
+  following: 0,
+  posts: 0,
+  recentActivity: [],
+};
+
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
@@ -27,7 +51,126 @@ export const UserProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [onboardingStep, setOnboardingStep] = useState("splash"); // 'splash' | 'login' | 'select-role' | 'create-basic-profile' | 'verify-phone' | 'create-role-specific-profile' | 'completed' | 'verify-device'
   const [pendingEmail, setPendingEmail] = useState("");
+  const [profile, setProfile] = useState(DEFAULT_PROFILE);
+  const [profileLoading, setProfileLoading] = useState(true);
   const queryClient = useQueryClient();
+
+  // Load saved profile from storage on mount
+  useEffect(() => {
+    const loadSavedProfile = async () => {
+      try {
+        const savedProfile = await getProfile();
+        if (savedProfile) {
+          setProfile((prev) => ({ ...prev, ...savedProfile }));
+        }
+      } catch (e) {
+        console.error("Error loading saved profile", e);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    loadSavedProfile();
+  }, []);
+
+  // Synchronize profile data whenever the authenticated user changes
+  useEffect(() => {
+    if (user) {
+      setProfile((prev) => ({
+        ...prev,
+        name:
+          `${user.profile?.first_name || ""} ${user.profile?.last_name || ""}`.trim() ||
+          user.username ||
+          "User",
+        email: user.email || prev.email,
+        phone: user.phone_number || prev.phone,
+        location: user.profile?.location_address || prev.location,
+        bio: user.profile?.bio || prev.bio,
+        role: user.role?.role_type || prev.role,
+        handle: user.username ? `@${user.username}` : prev.handle,
+      }));
+    }
+  }, [user]);
+
+  // Fetch richer profile/prescriptions/communities data once authenticated
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (token && user) {
+        try {
+          let fullProfile = { ...profile };
+
+          try {
+            const userProfile = await getUserProfile(token, user._id);
+            if (userProfile) {
+              fullProfile = {
+                ...fullProfile,
+                name: `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim(),
+                bio: userProfile.bio || fullProfile.bio,
+                location: userProfile.location_address || fullProfile.location,
+                email: user.email || fullProfile.email,
+                phone: user.phone_number || fullProfile.phone,
+                handle: user.username ? `@${user.username}` : fullProfile.handle,
+              };
+            }
+          } catch (err) {
+            console.log("No user profile found yet or error fetching");
+          }
+
+          try {
+            const patientProfile = await getPatientProfile(token, user._id);
+            if (patientProfile) {
+              fullProfile = {
+                ...fullProfile,
+                bloodType: patientProfile.blood_group || fullProfile.bloodType,
+                height: patientProfile.height_cm
+                  ? patientProfile.height_cm.toString()
+                  : fullProfile.height,
+                weight: patientProfile.weight_kg
+                  ? patientProfile.weight_kg.toString()
+                  : fullProfile.weight,
+              };
+            }
+          } catch (err) {
+            console.log("No patient profile found yet or error fetching");
+          }
+
+          try {
+            const prescriptionsData = await getUserPrescriptions(token, user._id);
+            fullProfile = {
+              ...fullProfile,
+              prescriptions: Array.isArray(prescriptionsData) ? prescriptionsData : [],
+            };
+          } catch (err) {
+            console.log("No prescriptions found or error fetching");
+          }
+
+          try {
+            const communitiesData = await getUserCommunities(token);
+            fullProfile = {
+              ...fullProfile,
+              communities: Array.isArray(communitiesData) ? communitiesData : [],
+            };
+          } catch (err) {
+            console.log("No communities found or error fetching");
+          }
+
+          setProfile(fullProfile);
+          await saveProfile(fullProfile);
+        } catch (error) {
+          console.error("Failed to fetch auxiliary user data:", error);
+        }
+      }
+    };
+    fetchUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, user]);
+
+  const updateProfileAndSave = async (updated) => {
+    if (token) {
+      await updateProfileApi(token, updated);
+    }
+    setProfile(updated);
+    await saveProfile(updated);
+  };
 
   // Load token on mount
   useEffect(() => {
@@ -37,7 +180,17 @@ export const UserProvider = ({ children }) => {
         if (savedToken) {
           setTokenState(savedToken);
         }
-        await fetchUserAndCheckOnboarding();
+        // On native, auth depends entirely on the Bearer token in SecureStore.
+        // With no token the user is logged out, so skip the authed bootstrap
+        // (it would only 401 and trigger a spurious logout call). On web, auth
+        // rides on httpOnly cookies — getToken() is always null there — so we
+        // must still attempt the bootstrap to pick up an existing session.
+        if (savedToken || Platform.OS === "web") {
+          await fetchUserAndCheckOnboarding();
+        } else {
+          setOnboardingStep("splash");
+          setIsLoading(false);
+        }
       } catch (err) {
         console.error("Failed to load saved token:", err);
         setOnboardingStep("splash");
@@ -139,6 +292,13 @@ export const UserProvider = ({ children }) => {
     setTokenState(newToken);
     if (newToken) {
       await saveToken(newToken);
+      if (__DEV__) {
+        const persisted = await getToken();
+        console.log(
+          "[Auth] Token persisted to SecureStore:",
+          persisted ? `yes (len ${persisted.length})` : "NO - readback empty",
+        );
+      }
     } else {
       await removeToken();
     }
@@ -147,10 +307,12 @@ export const UserProvider = ({ children }) => {
   const handleLogin = async (email, password) => {
     try {
       const res = await loginApi(email, password);
-      // Backend returns either { user } (Web) or { user, token } (Mobile)
-      const userToken = res.token;
-      
-      setUser(res.user);
+      // Backend returns either { user } (Web) or { user, token } (Mobile),
+      // and may wrap the payload in { data: {...} } — match the unwrapping
+      // used at every other login call site (App.js, AuthScreens.js).
+      const userToken = res.token || res.data?.token;
+
+      setUser(res.user || res.data?.user);
       if (userToken) {
         await setToken(userToken);
       }
@@ -171,9 +333,9 @@ export const UserProvider = ({ children }) => {
     try {
       const activeEmail = email || pendingEmail;
       const res = await verifyDeviceByOtpApi(activeEmail, otp);
-      const userToken = res.token;
-      
-      setUser(res.user);
+      const userToken = res.token || res.data?.token;
+
+      setUser(res.user || res.data?.user);
       if (userToken) {
         await setToken(userToken);
       }
@@ -190,14 +352,21 @@ export const UserProvider = ({ children }) => {
   };
 
   const handleLogout = async () => {
-    try {
-      await logoutApi();
-    } catch (e) {
-      console.warn("Backend logout failed or session expired:", e);
+    // On native there's nothing to revoke server-side without a token, so skip
+    // the call (it would only 401). On web the session lives in an httpOnly
+    // cookie, so always hit the endpoint to clear it.
+    const savedToken = await getToken();
+    if (savedToken || Platform.OS === "web") {
+      try {
+        await logoutApi();
+      } catch (e) {
+        console.warn("Backend logout failed or session expired:", e);
+      }
     }
     setUser(null);
     await setToken(null);
     await removeProfile();
+    setProfile(DEFAULT_PROFILE);
     await removePhoneSkipped();
     await removeRoleProfileCreated();
     setOnboardingStep("splash");
@@ -258,8 +427,9 @@ export const UserProvider = ({ children }) => {
   const handleRefreshToken = async () => {
     try {
       const res = await refreshTokenApi();
-      if (res && res.token) {
-        await setToken(res.token);
+      const newToken = res?.token || res?.data?.token;
+      if (newToken) {
+        await setToken(newToken);
       }
       await fetchUserAndCheckOnboarding();
       return { success: true };
@@ -278,6 +448,7 @@ export const UserProvider = ({ children }) => {
         onboardingStep,
         setOnboardingStep,
         pendingEmail,
+        setPendingEmail,
         handleLogin,
         handleVerifyDevice,
         handleResendDeviceOtp,
@@ -292,6 +463,10 @@ export const UserProvider = ({ children }) => {
         submitCurrency,
         handleRefreshToken,
         refreshUser: () => fetchUserAndCheckOnboarding(),
+        profile,
+        setProfile,
+        profileLoading,
+        updateProfileAndSave,
       }}
     >
       {children}

@@ -21,7 +21,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useUser } from "../context/UserContext";
 import { toast } from "../context/ToastContext";
 
-export function CreatePostScreen() {
+export function CreatePostScreen({ navigation }) {
   const { theme } = useTheme();
   const { user } = useUser();
 
@@ -92,7 +92,11 @@ export function CreatePostScreen() {
           className="flex-row items-center justify-between h-14 px-4 border-b"
           style={{ borderColor: borderLightColor }}
         >
-          <TouchableOpacity activeOpacity={0.7} className="py-2 px-3">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            className="py-2 px-3"
+            onPress={() => navigation?.goBack()}
+          >
             <Text
               className="text-[13.5px] font-semibold"
               style={{ color: textSecondaryColor }}
