@@ -860,6 +860,13 @@ export function Layout({
                     color={theme.textSecondary}
                   />
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("UnifiedInbox")}>
+                  <MaterialIcons
+                    name="chat-bubble-outline"
+                    size={20}
+                    color={theme.textSecondary}
+                  />
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("Notifications")}>
                   <MaterialIcons
                     name="notifications-none"
@@ -928,6 +935,13 @@ export function Layout({
                 <TouchableOpacity style={styles.iconButton}>
                   <MaterialIcons
                     name="search"
+                    size={22}
+                    color={theme.textSecondary}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("UnifiedInbox")}>
+                  <MaterialIcons
+                    name="chat-bubble-outline"
                     size={22}
                     color={theme.textSecondary}
                   />
@@ -1546,7 +1560,7 @@ export function Layout({
                 style={styles.drawerItem}
                 onPress={() => {
                   setDrawerOpen(false);
-                  onNavigate("healthHub");
+                  onNavigate("Health");
                 }}
                 activeOpacity={0.7}
               >
@@ -1589,7 +1603,46 @@ export function Layout({
                 style={styles.drawerItem}
                 onPress={() => {
                   setDrawerOpen(false);
-                  onNavigate("appointments");
+                  onNavigate("DigitalHealthId");
+                }}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#E0F2F1" },
+                  ]}
+                >
+                  <MaterialIcons name="badge" size={20} color="#0A0A0A" />
+                </View>
+                <View style={styles.drawerItemLabel}>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Digital Health ID
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    QR code, ID number &amp; emergency card
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
+
+              <TouchableOpacity
+                style={styles.drawerItem}
+                onPress={() => {
+                  setDrawerOpen(false);
+                  onNavigate("AppointmentsList");
                 }}
                 activeOpacity={0.7}
               >

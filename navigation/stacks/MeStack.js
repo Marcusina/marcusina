@@ -19,6 +19,8 @@ function HealthProfileScreenWrapper({ navigation }) {
       onBackHome={() => navigation.navigate("Home")}
       onEditProfile={() => navigation.navigate("ProfileEdit")}
       onOpenSettings={() => navigation.navigate("Settings")}
+      onOpenIdentity={() => navigation.navigate("DigitalHealthId")}
+      onOpenWallet={() => navigation.navigate("WalletHome")}
       profile={profile}
       onLogout={handleLogout}
     />

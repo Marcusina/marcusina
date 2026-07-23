@@ -16,7 +16,7 @@ import Logo from "../components/Logo";
 import { ProfilePhotoPicker } from "../components/ProfilePhotoPicker";
 import { toast } from "../context/ToastContext";
 
-export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings, profile, onLogout }) {
+export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings, onOpenIdentity, onOpenWallet, profile, onLogout }) {
   const { theme, themeMode, setThemeMode } = useTheme();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width >= 768;
@@ -246,6 +246,58 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings,
             className="rounded-2xl p-5 border mt-4"
           >
             <View className="flex-col items-stretch">
+              {/* Digital Health ID Link */}
+              <TouchableOpacity
+                onPress={onOpenIdentity}
+                className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                style={{ borderBottomColor: theme.border }}
+              >
+                <View className="flex-row items-center gap-3">
+                  <MaterialIcons
+                    name="badge"
+                    size={24}
+                    color={theme.textSecondary}
+                  />
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-[15px] font-medium"
+                  >
+                    Digital Health ID
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={theme.textSecondary}
+                />
+              </TouchableOpacity>
+
+              {/* Wallet Link */}
+              <TouchableOpacity
+                onPress={onOpenWallet}
+                className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                style={{ borderBottomColor: theme.border }}
+              >
+                <View className="flex-row items-center gap-3">
+                  <MaterialIcons
+                    name="account-balance-wallet"
+                    size={24}
+                    color={theme.textSecondary}
+                  />
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-[15px] font-medium"
+                  >
+                    Wallet
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={theme.textSecondary}
+                />
+              </TouchableOpacity>
+
               {/* Account Settings Link */}
               <TouchableOpacity
                 onPress={onOpenSettings}
