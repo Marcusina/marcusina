@@ -148,6 +148,74 @@ export function HealthHubScreen({ navigation }) {
           onPress={() => navigation.navigate("InsuranceList")}
           theme={theme}
         />
+        <NavCard
+          icon="share"
+          label="Referrals"
+          description="Track referrals to specialists"
+          onPress={() => navigation.navigate("ReferralsList")}
+          theme={theme}
+        />
+        <NavCard
+          icon="checklist"
+          label="Care Plans"
+          description="Chronic disease management & wellness"
+          onPress={() => navigation.navigate("CarePlansList")}
+          theme={theme}
+        />
+
+        <Text className="text-xs font-bold uppercase mb-2 mt-2" style={{ color: theme.textMuted }}>
+          Records
+        </Text>
+        <NavCard
+          icon="folder-shared"
+          label="Health Record"
+          description="Diagnoses, medications, labs & more"
+          onPress={() => navigation.navigate("HealthRecordHome")}
+          theme={theme}
+        />
+        <NavCard
+          icon="vaccines"
+          label="Vaccination Record"
+          description="Certificates & immunization history"
+          onPress={() => navigation.navigate("VaccinationRecord")}
+          theme={theme}
+        />
+
+        <Text className="text-xs font-bold uppercase mb-2 mt-2" style={{ color: theme.textMuted }}>
+          Identity & Coverage
+        </Text>
+        <NavCard
+          icon="badge"
+          label="Digital Health ID"
+          description="QR code, ID number & emergency card"
+          onPress={() => navigation.navigate("DigitalHealthId")}
+          theme={theme}
+        />
+        <NavCard
+          icon="flight"
+          label="MedGram Passport"
+          description="Vaccination & travel credential"
+          onPress={() => navigation.navigate("MedGramPassport")}
+          theme={theme}
+        />
+
+        <Text className="text-xs font-bold uppercase mb-2 mt-2" style={{ color: theme.textMuted }}>
+          Insights
+        </Text>
+        <NavCard
+          icon="insights"
+          label="Health Insights"
+          description="AI risk trends & summaries"
+          onPress={() => navigation.navigate("AIInsights")}
+          theme={theme}
+        />
+        <NavCard
+          icon="auto-awesome"
+          label="Ask the AI Assistant"
+          description="Symptom check & decision support"
+          onPress={() => navigation.navigate("AIChatHome")}
+          theme={theme}
+        />
       </View>
     </ScrollView>
   );
