@@ -40,3 +40,4 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+MedGram_App_Frontend_Screen_Architecture.md

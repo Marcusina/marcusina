@@ -48,10 +48,16 @@ import {
   ConsultBookingScreen,
   ConsultConfirmScreen,
 } from "./screens/ConsultScreens";
+import {
+  HealthHubScreen,
+  AppointmentsScreen,
+  AppointmentDetailScreen,
+} from "./screens/HealthScreens";
 import { Layout } from "./components/Layout";
 
 export default function App() {
   const [selectedPostId, setSelectedPostId] = useState("short-2");
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [screen, setScreen] = useState("splash");
   const [verificationSource, setVerificationSource] = useState("registration"); // 'registration' or 'login'
   const [user, setUser] = useState(null);
@@ -491,6 +497,33 @@ export default function App() {
           setScreen("post"); // Fire screen switch routing state update
         }}
         onOpenCreatePost={() => setScreen("createPost")}
+        onOpenAppointments={() => setScreen("appointments")}
+      />
+    );
+  } else if (screen === "healthHub") {
+    content = (
+      <HealthHubScreen
+        onOpenAppointments={() => setScreen("appointments")}
+        onOpenConsult={() => setScreen("consultBook")}
+      />
+    );
+  } else if (screen === "appointments") {
+    content = (
+      <AppointmentsScreen
+        onBack={() => setScreen("healthHub")}
+        onBookNew={() => setScreen("consultBook")}
+        onOpenDetail={(id) => {
+          setSelectedAppointmentId(id);
+          setScreen("appointmentDetail");
+        }}
+      />
+    );
+  } else if (screen === "appointmentDetail") {
+    content = (
+      <AppointmentDetailScreen
+        appointmentId={selectedAppointmentId}
+        onBack={() => setScreen("appointments")}
+        onOpenConsult={() => setScreen("consultBook")}
       />
     );
   } else if (screen === "profileHealth") {
@@ -591,6 +624,9 @@ export default function App() {
     "profileEdit",
     "consultBook",
     "consultConfirm",
+    "healthHub",
+    "appointments",
+    "appointmentDetail",
     "groups",
     "place",
     "post",

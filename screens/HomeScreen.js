@@ -30,6 +30,7 @@ export function HomeScreen({
   onOpenPlace,
   onOpenPost,
   onOpenCreatePost,
+  onOpenAppointments,
 }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
@@ -540,7 +541,9 @@ export function HomeScreen({
           </View>
 
           {/* Upcoming Appointment Banner */}
-          <View
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={onOpenAppointments}
             style={{
               flexDirection: "row",
               backgroundColor: theme.dark ? theme.surface : "#1E293B",
@@ -595,7 +598,7 @@ export function HomeScreen({
                 10:30 AM · Video Consultation
               </Text>
             </View>
-            <TouchableOpacity
+            <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -623,8 +626,8 @@ export function HomeScreen({
               >
                 Join
               </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          </TouchableOpacity>
 
           {/* Post 1 - Enhanced Responsive Image Aspect Ratio */}
           <View

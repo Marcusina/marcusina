@@ -1464,7 +1464,50 @@ export function Layout({
                 style={styles.drawerItem}
                 onPress={() => {
                   setDrawerOpen(false);
-                  onNavigate("consultBook");
+                  onNavigate("healthHub");
+                }}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#E0F2F1" },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="health-and-safety"
+                    size={20}
+                    color="#0A0A0A"
+                  />
+                </View>
+                <View style={styles.drawerItemLabel}>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Health Hub
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Records, care, identity &amp; insights
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
+
+              <TouchableOpacity
+                style={styles.drawerItem}
+                onPress={() => {
+                  setDrawerOpen(false);
+                  onNavigate("appointments");
                 }}
                 activeOpacity={0.7}
               >
