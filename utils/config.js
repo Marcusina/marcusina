@@ -11,8 +11,9 @@ function requireEnv(name) {
 
 // 1. Fetch environment values or fallback safely
 const DEV_PORT = process.env.EXPO_PUBLIC_DEV_PORT || "3001";
-const FALLBACK_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || `http://localhost:${DEV_PORT}/api/v1`;
+// Set explicitly (e.g. to a Render URL) to override the local/LAN host
+// construction below - takes priority in both dev and prod.
+const EXPLICIT_API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const DEV_URLS = {
   ios: process.env.EXPO_PUBLIC_DEV_IP_IOS || "192.168.1.52",
@@ -28,8 +29,14 @@ const getAndroidHost = () => {
   // Expo Router / Modern Expo compatibility (expoConfig), with fallback to manifest
   const debuggerHost =
     Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
-  if (debuggerHost) {
-    return debuggerHost.split(":")[0];
+  const reportedHost = debuggerHost ? debuggerHost.split(":")[0] : null;
+  // 127.0.0.1/localhost is never a valid host here: inside the emulator that
+  // address is the emulator's own loopback, not the dev machine. Expo reports
+  // this when Metro is reached via `adb reverse` (which only forwards the
+  // Metro port, not the API port) - fall back to the emulator's dedicated
+  // host alias instead of trusting it verbatim.
+  if (reportedHost && reportedHost !== "127.0.0.1" && reportedHost !== "localhost") {
+    return reportedHost;
   }
   return DEV_URLS.androidEmulator;
 };
@@ -42,17 +49,18 @@ const getHost = () => {
 
 // 3. Formulate the running base URL context
 const isDev = process.env.NODE_ENV === "development";
-const API_BASE_URL = isDev
-  ? `http://${getHost()}:${DEV_PORT}/api/v1`
-  : FALLBACK_URL;
+const API_BASE_URL =
+  EXPLICIT_API_BASE_URL ||
+  (isDev ? `http://${getHost()}:${DEV_PORT}/api/v1` : `http://localhost:${DEV_PORT}/api/v1`);
 
-const FRONTEND_WEB_URL = Platform.OS === "web"
-  ? (typeof window !== "undefined" ? window.location.origin : "http://localhost:8081")
-  : `http://${getHost()}:8081`;
+const FRONTEND_WEB_URL =
+  Platform.OS === "web"
+    ? typeof window !== "undefined"
+      ? window.location.origin
+      : "http://localhost:8081"
+    : `http://${getHost()}:8081`;
 
-const DEEP_LINK_SCHEME = Platform.OS === "web"
-  ? ""
-  : `exp://${getHost()}:8081`;
+const DEEP_LINK_SCHEME = Platform.OS === "web" ? "" : `exp://${getHost()}:8081`;
 
 const config = {
   NODE_ENV: process.env.NODE_ENV || "development",
@@ -70,7 +78,10 @@ const config = {
   //   FLW_PUBLIC_KEY: requireEnv("EXPO_PUBLIC_FLW_PUBLIC_KEY"),
 
   // Socials
-  GOOGLE_CLIENT_ID: requireEnv("EXPO_PUBLIC_GOOGLE_CLIENT_ID"),
+  // Not required at startup: only needed lazily when the user taps
+  // "Sign in with Google" (see screens/AuthScreens.js), so a missing value
+  // here shouldn't crash the whole app on boot.
+  GOOGLE_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || null,
 };
 
 export default config;

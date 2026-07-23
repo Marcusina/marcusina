@@ -1,7 +1,10 @@
 import "./global.css";
-import { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator, Platform, Linking } from "react-native";
+import { useState, useEffect, useRef } from "react";
+import { Platform, Linking } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { NavigationContainer, useNavigationContainerRef } from "@react-navigation/native";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./api/apiClient";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider, toast } from "./context/ToastContext";
 import {
@@ -85,27 +88,14 @@ export default function App() {
 
   // Load saved token and profile on mount
   useEffect(() => {
-    const loadSavedData = async () => {
-      try {
-        const savedToken = await getToken();
-        const savedProfile = await getProfile();
-
-        if (savedToken) {
-          setToken(savedToken);
-          setScreen("home");
-        }
-
-        if (savedProfile) {
-          setProfile(savedProfile);
-        }
-      } catch (e) {
-        console.error("Error loading saved data", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadSavedData();
-  }, []);
+    if (pendingAuthNavigation && !userLoading) {
+      navigationRef.current?.navigate(
+        pendingAuthNavigation.screen,
+        pendingAuthNavigation.params,
+      );
+      setPendingAuthNavigation(null);
+    }
+  }, [pendingAuthNavigation, userLoading]);
 
   // Handle Google Redirect on Web
   useEffect(() => {
@@ -115,38 +105,81 @@ export default function App() {
       const idToken = params.get("id_token");
       const state = params.get("state");
       if (idToken) {
-        // Clear hash from URL for clean appearance
-        window.location.hash = "";
-        
-        // If the state parameter is a deep link (originating from mobile app),
-        // redirect back to mobile with the parsed id_token
-        if (state && (state.startsWith("exp://") || state.startsWith("medgram://"))) {
+        window.history.replaceState(null, "", window.location.pathname);
+
+        if (
+          state &&
+          (state.startsWith("exp://") || state.startsWith("medgram://"))
+        ) {
           console.log("[Google Auth] Redirecting back to mobile app:", state);
           window.location.href = `${state}?id_token=${idToken}`;
           return;
         }
 
         const performGoogleLogin = async () => {
-          setIsLoading(true);
           try {
             console.log("[Google Auth] Found id_token in redirect URL");
             const response = await googleLogin(idToken);
             const userData = response.user || response.data?.user;
             const userToken = response.token || response.data?.token;
-            
-            // Web gets a cookie set by backend, so token will be dummy-token or userToken
-            const finalToken = userToken || "dummy-token";
-            handleLoginSuccess(userData || { email: "google-user@example.com" }, finalToken);
+
+            await loginWithToken(userToken, userData);
           } catch (error) {
             console.error("Google login from redirect failed:", error);
             toast.error(error.message || "Google authentication failed");
-          } finally {
-            setIsLoading(false);
           }
         };
         performGoogleLogin();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handle Email Verification, Reactivation, Deactivation & Reset Password on Web
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      if (verificationStarted.current) return;
+
+      const queryParams = new URLSearchParams(window.location.search);
+      const tokenParam = queryParams.get("token");
+      const path = window.location.pathname;
+
+      const hasVerify =
+        path.includes("verify-email") ||
+        window.location.href.includes("verify-email");
+      const hasReactivate =
+        path.includes("reactivate") ||
+        window.location.href.includes("reactivate");
+      const hasReset =
+        path.includes("reset-password") ||
+        window.location.href.includes("reset-password");
+      const hasDeactivate =
+        path.includes("deactivate-account") ||
+        window.location.href.includes("deactivate-account");
+
+      if (
+        (hasVerify || hasReactivate || hasReset || hasDeactivate) &&
+        tokenParam
+      ) {
+        verificationStarted.current = true;
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+
+        if (hasVerify) {
+          setPendingAuthNavigation({ screen: "VerifyEmailLink", params: { token: tokenParam } });
+        } else if (hasReactivate) {
+          setPendingAuthNavigation({ screen: "ReactivateAccount", params: { token: tokenParam } });
+        } else if (hasDeactivate) {
+          setPendingAuthNavigation({ screen: "DeactivateAccount", params: { token: tokenParam } });
+        } else if (hasReset) {
+          setPendingAuthNavigation({ screen: "ResetPassword", params: { token: tokenParam } });
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle incoming deep links (Mobile)
@@ -155,34 +188,66 @@ export default function App() {
       const handleDeepLink = (event) => {
         if (event.url) {
           console.log("[Deep Link Received]", event.url);
-          const match = event.url.match(/[?&]id_token=([^&]+)/);
-          if (match && match[1]) {
-            const idToken = match[1];
-            
+          const matchGoogle = event.url.match(/[?&]id_token=([^&]+)/);
+          const matchVerifyEmail =
+            event.url.match(/verify-email\?token=([^&]+)/) ||
+            event.url.match(/[?&]token=([^&]+)/);
+          const matchReactivate =
+            event.url.match(/reactivate-account\?token=([^&]+)/) ||
+            event.url.match(/reactivate\?token=([^&]+)/);
+          const matchDeactivate =
+            event.url.match(/deactivate-account\?token=([^&]+)/) ||
+            event.url.match(/deactivate\?token=([^&]+)/);
+
+          if (matchGoogle && matchGoogle[1]) {
+            const idToken = matchGoogle[1];
+
             const performGoogleLogin = async () => {
-              setIsLoading(true);
               try {
                 console.log("[Google Auth] Performing deep link Google login");
                 const response = await googleLogin(idToken);
                 const userData = response.user || response.data?.user;
                 const userToken = response.token || response.data?.token;
-                
-                handleLoginSuccess(userData, userToken);
+
+                await loginWithToken(userToken, userData);
               } catch (error) {
                 console.error("Google login from deep link failed:", error);
                 toast.error(error.message || "Google authentication failed");
-              } finally {
-                setIsLoading(false);
               }
             };
             performGoogleLogin();
+          } else if (
+            matchVerifyEmail &&
+            matchVerifyEmail[1] &&
+            event.url.includes("verify-email")
+          ) {
+            setPendingAuthNavigation({ screen: "VerifyEmailLink", params: { token: matchVerifyEmail[1] } });
+          } else if (
+            matchReactivate &&
+            matchReactivate[1] &&
+            (event.url.includes("reactivate-account") ||
+              event.url.includes("reactivate"))
+          ) {
+            setPendingAuthNavigation({ screen: "ReactivateAccount", params: { token: matchReactivate[1] } });
+          } else if (
+            matchDeactivate &&
+            matchDeactivate[1] &&
+            (event.url.includes("deactivate-account") ||
+              event.url.includes("deactivate"))
+          ) {
+            setPendingAuthNavigation({ screen: "DeactivateAccount", params: { token: matchDeactivate[1] } });
+          } else if (
+            event.url.includes("reset-password") &&
+            event.url.match(/[?&]token=([^&]+)/)
+          ) {
+            const rToken = event.url.match(/[?&]token=([^&]+)/)[1];
+            setPendingAuthNavigation({ screen: "ResetPassword", params: { token: rToken } });
           }
         }
       };
 
       const subscription = Linking.addEventListener("url", handleDeepLink);
 
-      // Check if the app was opened from a deep link
       Linking.getInitialURL().then((url) => {
         if (url) {
           handleDeepLink({ url });
@@ -193,6 +258,7 @@ export default function App() {
         subscription.remove();
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLoginSuccess = async (userData, userToken) => {
@@ -636,42 +702,8 @@ export default function App() {
   const isAuthScreen = authenticatedScreens.includes(screen);
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <ToastProvider>
-          {isLoading ? (
-            <View
-              style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-            >
-              <ActivityIndicator size="large" color="#000000" />
-              <Text style={{ marginTop: 12, color: "#6B7280" }}>
-                Initializing...
-              </Text>
-            </View>
-          ) : isAuthScreen ? (
-            <Layout
-              currentScreen={screen}
-              onNavigate={(target) => setScreen(target)}
-              userProfile={profile}
-              onLogout={handleLogout}
-            >
-              {content}
-            </Layout>
-          ) : (
-            content || (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text>Loading App...</Text>
-              </View>
-            )
-          )}
-        </ToastProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <NavigationContainer ref={navigationRef}>
+      <RootNavigator navigationRef={navigationRef} />
+    </NavigationContainer>
   );
 }

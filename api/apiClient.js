@@ -1,9 +1,10 @@
 import { Platform } from "react-native";
+import { QueryClient } from "@tanstack/react-query";
 import config from "../utils/config"; // Adjust paths accordingly to your file hierarchy
 import { getToken } from "../utils/storage";
 
 const API_BASE_URL = config.API_BASE_URL;
-console.log("---- url ----", API_BASE_URL);
+if (__DEV__) console.log("---- url ----", API_BASE_URL);
 
 const apiClient = async (endpoint, options = {}) => {
   const { method = "GET", body, headers = {}, ...rest } = options;
@@ -12,15 +13,34 @@ const apiClient = async (endpoint, options = {}) => {
     ...headers,
   };
 
-  if (body) {
+  const isFormData =
+    typeof FormData !== "undefined" && body instanceof FormData;
+
+  if (body && !isFormData) {
     clientHeaders["Content-Type"] = "application/json";
   }
 
   // Automatically attach saved token to Authorization header if not already present
   try {
+    // If caller explicitly passed a token parameter that resolved to undefined/null, clean it up
+    if (
+      clientHeaders["Authorization"] === "Bearer undefined" ||
+      clientHeaders["Authorization"] === "Bearer null"
+    ) {
+      delete clientHeaders["Authorization"];
+    }
+    if (
+      clientHeaders["authorization"] === "Bearer undefined" ||
+      clientHeaders["authorization"] === "Bearer null"
+    ) {
+      delete clientHeaders["authorization"];
+    }
+
     const savedToken = await getToken();
     if (
       savedToken &&
+      savedToken !== "undefined" &&
+      savedToken !== "null" &&
       !clientHeaders["Authorization"] &&
       !clientHeaders["authorization"]
     ) {
@@ -30,41 +50,45 @@ const apiClient = async (endpoint, options = {}) => {
     console.warn("[apiClient] Failed to retrieve token from storage:", error);
   }
 
-  // If on mobile, set Origin to match backend config's MOBILE_APP_URL
-  if (Platform.OS !== "web") {
-    clientHeaders["Origin"] = "http://192.168.0.0:8081";
-  }
-
   const requestConfig = {
     method,
-    credentials: "include", // 🔑 Include cookies in requests and responses
+    credentials: "include", // Include cookies in requests and responses
     headers: clientHeaders,
     ...rest,
   };
 
   if (body) {
-    requestConfig.body = JSON.stringify(body);
-    console.log("[API Request Body]", requestConfig.body);
+    if (isFormData) {
+      requestConfig.body = body;
+      if (__DEV__) console.log("[API Request Body] FormData payload");
+    } else {
+      requestConfig.body = JSON.stringify(body);
+      if (__DEV__) console.log("[API Request Body] JSON payload");
+    }
   }
 
   try {
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log(`[API Request] ${method} ${url}`);
-    console.log(`[API Platform] ${Platform.OS}`);
+    if (__DEV__) {
+      console.log(`[API Request] ${method} ${url}`);
+      console.log(`[API Platform] ${Platform.OS}`);
+    }
 
     const response = await fetch(url, requestConfig);
     const textResponse = await response.text();
-    console.log("[API Raw Response]", textResponse);
-    console.log("[API Response Status]", response.status, response.statusText);
-    console.log("[API Response Headers]", {
-      "content-type": response.headers.get("content-type"),
-      "access-control-allow-origin": response.headers.get(
-        "access-control-allow-origin",
-      ),
-      "access-control-allow-credentials": response.headers.get(
-        "access-control-allow-credentials",
-      ),
-    });
+    if (__DEV__) {
+      console.log("[API Raw Response]");
+      console.log("[API Response Status]", response.status, response.statusText);
+      console.log("[API Response Headers]", {
+        "content-type": response.headers.get("content-type"),
+        "access-control-allow-origin": response.headers.get(
+          "access-control-allow-origin",
+        ),
+        "access-control-allow-credentials": response.headers.get(
+          "access-control-allow-credentials",
+        ),
+      });
+    }
 
     let data;
     try {
@@ -81,10 +105,12 @@ const apiClient = async (endpoint, options = {}) => {
         `Error ${response.status}: ${textResponse}`;
 
       if (!errorMsg.includes("create a profile")) {
-        console.error(
-          "[API Full Error Response]",
-          JSON.stringify(data, null, 2),
-        );
+        if (__DEV__) {
+          console.error(
+            "[API Full Error Response]",
+            JSON.stringify(data, null, 2),
+          );
+        }
         console.error("[API Error Final Message]", errorMsg);
       }
 
@@ -116,5 +142,14 @@ const apiClient = async (endpoint, options = {}) => {
   }
 };
 
-export { API_BASE_URL };
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+export { API_BASE_URL, queryClient };
 export default apiClient;

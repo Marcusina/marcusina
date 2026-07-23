@@ -77,7 +77,7 @@ const PHARMACIES = [
   },
 ];
 
-export function PlaceScreen({ onOpenCart, onPharmacyShop }) {
+export function PlaceScreen({ navigation, onPharmacyShop }) {
   const { theme } = useTheme();
   const [activeCategory, setActiveCategory] = useState("All");
   const { width } = useWindowDimensions();
@@ -97,6 +97,12 @@ export function PlaceScreen({ onOpenCart, onPharmacyShop }) {
         <Text className="text-xl font-extrabold" style={{ color: theme.text }}>
           Health Market
         </Text>
+        <TouchableOpacity
+          onPress={() => navigation?.navigate("Cart")}
+          hitSlop={12}
+        >
+          <MaterialIcons name="shopping-cart" size={24} color={theme.text} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView

@@ -14,8 +14,12 @@ export const validate = (schema, data) => {
 
   // Check required fields
   required.forEach((field) => {
-    if (data[field] === undefined || data[field] === null || data[field] === '') {
-      errors[field] = 'This field is required';
+    if (
+      data[field] === undefined ||
+      data[field] === null ||
+      data[field] === ""
+    ) {
+      errors[field] = "This field is required";
     }
   });
 
@@ -24,12 +28,12 @@ export const validate = (schema, data) => {
     const value = data[field];
     const rules = properties[field];
 
-    if (value !== undefined && value !== null && value !== '') {
+    if (value !== undefined && value !== null && value !== "") {
       // Email format check
-      if (rules.format === 'email') {
+      if (rules.format === "email") {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
-          errors[field] = 'Invalid email format';
+          errors[field] = "Invalid email format";
         }
       }
 
@@ -40,7 +44,7 @@ export const validate = (schema, data) => {
 
       // Enum check
       if (rules.enum && !rules.enum.includes(value)) {
-        errors[field] = `Must be one of: ${rules.enum.join(', ')}`;
+        errors[field] = `Must be one of: ${rules.enum.join(", ")}`;
       }
     }
   });

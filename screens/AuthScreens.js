@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { toast } from "../context/ToastContext";
+import { useUser } from "../context/UserContext";
 import Logo from "../components/Logo";
 import Svg, { Rect, Path } from "react-native-svg";
 import config from "../utils/config";
@@ -11,7 +12,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
   ActivityIndicator,
   Image,
@@ -28,15 +28,18 @@ import {
   resendVerificationEmail,
   verifyIdentityByOtp,
   googleLogin as googleLoginApi,
+  forgotPassword as forgotPasswordApi,
+  resetPassword as resetPasswordApi,
+  verifyEmail,
+  reactivateAccount,
+  deactivateAccount,
 } from "../api/auth.api";
 import { validate } from "../utils/validator";
 import { loginSchema, registerSchema } from "../constants/schemas";
 
 function AppHeaderTitle() {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
   return (
-    <View style={styles.appHeaderContainer}>
+    <View className="items-center mb-6">
       <Logo width={60} height={60} />
     </View>
   );
@@ -44,36 +47,23 @@ function AppHeaderTitle() {
 
 export function WelcomeScreen({ onCreateAccount, onSignIn }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.contentMaxWidth}>
+        <View className="w-full max-w-[480px] self-center">
           {/* Top: Brand Section (takes ~55% of height) */}
-          <View
-            style={{
-              height: 280,
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              marginBottom: 20,
-            }}
-          >
+          <View className="h-[280px] items-center justify-center relative mb-5">
             {/* Subtle geometric SVG accent top-right */}
             <View
-              style={{
-                position: "absolute",
-                top: -24,
-                right: -24,
-                width: 140,
-                height: 140,
-                opacity: theme.dark ? 0.15 : 0.05,
-                pointerEvents: "none",
-              }}
+              className="absolute -top-6 -right-6 w-[140px] h-[140px] pointer-events-none"
+              style={{ opacity: theme.dark ? 0.15 : 0.05 }}
             >
               <Svg width="140" height="140" viewBox="0 0 140 140" fill="none">
                 <Rect
@@ -147,26 +137,16 @@ export function WelcomeScreen({ onCreateAccount, onSignIn }) {
             </View>
 
             {/* Wordmark & Tagline */}
-            <View style={{ marginTop: 22, alignItems: "center" }}>
+            <View className="mt-[22px] items-center">
               <Text
-                style={{
-                  fontSize: 38,
-                  fontWeight: "800",
-                  color: theme.text,
-                  letterSpacing: -1.5,
-                  marginBottom: 6,
-                }}
+                className="text-[38px] font-extrabold tracking-[-1.5px] mb-1.5"
+                style={{ color: theme.text }}
               >
                 medgram
               </Text>
               <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  color: theme.textMuted,
-                  letterSpacing: 1.8,
-                  textTransform: "uppercase",
-                }}
+                className="text-[11px] font-bold tracking-[1.8px] uppercase"
+                style={{ color: theme.textMuted }}
               >
                 The health media made for you
               </Text>
@@ -175,57 +155,44 @@ export function WelcomeScreen({ onCreateAccount, onSignIn }) {
 
           {/* Divider */}
           <View
-            style={{
-              height: 0.5,
-              backgroundColor: theme.border,
-              marginBottom: 24,
-            }}
+            className="h-[0.5px] mb-6"
+            style={{ backgroundColor: theme.border }}
           />
 
           {/* Value Props */}
-          <View style={{ marginBottom: 32, gap: 16 }}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
-            >
+          <View className="mb-8 gap-4">
+            <View className="flex-row items-center gap-[14px]">
               <View
+                className="w-9 h-9 rounded-[11px] border-[0.5px] items-center justify-center"
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 11,
                   backgroundColor: theme.surfaceSubtle,
-                  borderWidth: 0.5,
                   borderColor: theme.border,
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
                 <MaterialIcons name="schedule" size={18} color={theme.text} />
               </View>
               <View>
                 <Text
-                  style={{ fontSize: 13, fontWeight: "700", color: theme.text }}
+                  className="text-[13px] font-bold"
+                  style={{ color: theme.text }}
                 >
                   Book in seconds
                 </Text>
-                <Text style={{ fontSize: 11, color: theme.textMuted }}>
+                <Text
+                  className="text-[11px]"
+                  style={{ color: theme.textMuted }}
+                >
                   Consult verified doctors anytime
                 </Text>
               </View>
             </View>
 
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
-            >
+            <View className="flex-row items-center gap-[14px]">
               <View
+                className="w-9 h-9 rounded-[11px] border-[0.5px] items-center justify-center"
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 11,
                   backgroundColor: theme.surfaceSubtle,
-                  borderWidth: 0.5,
                   borderColor: theme.border,
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
                 <MaterialIcons
@@ -236,40 +203,41 @@ export function WelcomeScreen({ onCreateAccount, onSignIn }) {
               </View>
               <View>
                 <Text
-                  style={{ fontSize: 13, fontWeight: "700", color: theme.text }}
+                  className="text-[13px] font-bold"
+                  style={{ color: theme.text }}
                 >
                   Your health, centralised
                 </Text>
-                <Text style={{ fontSize: 11, color: theme.textMuted }}>
+                <Text
+                  className="text-[11px]"
+                  style={{ color: theme.textMuted }}
+                >
                   Records, meds, labs — one place
                 </Text>
               </View>
             </View>
 
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
-            >
+            <View className="flex-row items-center gap-[14px]">
               <View
+                className="w-9 h-9 rounded-[11px] border-[0.5px] items-center justify-center"
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 11,
                   backgroundColor: theme.surfaceSubtle,
-                  borderWidth: 0.5,
                   borderColor: theme.border,
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
                 <MaterialIcons name="security" size={18} color={theme.text} />
               </View>
               <View>
                 <Text
-                  style={{ fontSize: 13, fontWeight: "700", color: theme.text }}
+                  className="text-[13px] font-bold"
+                  style={{ color: theme.text }}
                 >
                   Built for the world
                 </Text>
-                <Text style={{ fontSize: 11, color: theme.textMuted }}>
+                <Text
+                  className="text-[11px]"
+                  style={{ color: theme.textMuted }}
+                >
                   Verified, secure, always available
                 </Text>
               </View>
@@ -278,16 +246,9 @@ export function WelcomeScreen({ onCreateAccount, onSignIn }) {
 
           {/* Buttons */}
           <TouchableOpacity
+            className="w-full h-14 rounded-[18px] flex-row items-center justify-center gap-2 mb-3"
             style={{
-              width: "100%",
-              height: 56,
               backgroundColor: theme.dark ? "#FFFFFF" : "#0A0A0A",
-              borderRadius: 18,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              marginBottom: 12,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
@@ -298,11 +259,8 @@ export function WelcomeScreen({ onCreateAccount, onSignIn }) {
             activeOpacity={0.8}
           >
             <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "700",
-                color: theme.dark ? "#0A0A0A" : "#FFFFFF",
-              }}
+              className="text-[16px] font-bold"
+              style={{ color: theme.dark ? "#0A0A0A" : "#FFFFFF" }}
             >
               Create Account
             </Text>
@@ -314,41 +272,38 @@ export function WelcomeScreen({ onCreateAccount, onSignIn }) {
           </TouchableOpacity>
 
           <TouchableOpacity
+            className="w-full h-[52px] rounded-[18px] border-[1.5px] items-center justify-center"
             style={{
-              width: "100%",
-              height: 52,
               backgroundColor: theme.surfaceSubtle,
-              borderRadius: 18,
-              borderWidth: 1.5,
               borderColor: theme.border,
-              alignItems: "center",
-              justifyContent: "center",
             }}
             onPress={onSignIn}
             activeOpacity={0.8}
           >
             <Text
-              style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+              className="text-[15px] font-semibold"
+              style={{ color: theme.text }}
             >
               Sign In
             </Text>
           </TouchableOpacity>
 
           <Text
-            style={{
-              textAlign: "center",
-              fontSize: 11,
-              color: theme.textMuted,
-              marginTop: 24,
-              lineHeight: 17,
-            }}
+            className="text-center text-[11px] mt-6 leading-[17px]"
+            style={{ color: theme.textMuted }}
           >
             By continuing you agree to Medgram's{" "}
-            <Text style={{ color: theme.textSecondary, fontWeight: "600" }}>
+            <Text
+              className="font-semibold"
+              style={{ color: theme.textSecondary }}
+            >
               Terms
             </Text>{" "}
             &amp;{" "}
-            <Text style={{ color: theme.textSecondary, fontWeight: "600" }}>
+            <Text
+              className="font-semibold"
+              style={{ color: theme.textSecondary }}
+            >
               Privacy Policy
             </Text>
           </Text>
@@ -358,18 +313,26 @@ export function WelcomeScreen({ onCreateAccount, onSignIn }) {
   );
 }
 
-function PrimaryButton({ label, onPress, disabled }) {
+function PrimaryButton({ label, onPress, disabled, style }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   return (
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={onPress}
-      style={[styles.primaryButton, disabled && styles.buttonDisabled]}
+      className="py-[14px] rounded-full items-center justify-center mt-2 w-full"
+      style={[
+        { backgroundColor: disabled ? theme.border : theme.primary },
+        style,
+      ]}
       disabled={disabled}
     >
       {typeof label === "string" ? (
-        <Text style={styles.primaryButtonLabel}>{label}</Text>
+        <Text
+          className="text-[16px] font-semibold"
+          style={{ color: theme.mode === "dark" ? "#000000" : "#FFFFFF" }}
+        >
+          {label}
+        </Text>
       ) : (
         label
       )}
@@ -388,45 +351,58 @@ function TextField({
   onRightIconPress,
 }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   return (
-    <View style={styles.fieldContainer}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <View style={styles.inputRow}>
+    <View className="mb-4">
+      <Text
+        className="text-[13px] mb-1.5"
+        style={{ color: theme.textSecondary }}
+      >
+        {label}
+      </Text>
+      <View className="flex-row items-center">
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor="#9CA3AF"
           secureTextEntry={secureTextEntry}
-          style={[
-            styles.textInput,
-            error && styles.inputError,
-            rightIcon && styles.textInputWithIcon,
-          ]}
+          className={`w-full border rounded-xl px-4 py-3 text-[15px] ${rightIcon ? "flex-1 pr-12" : ""}`}
+          style={{
+            backgroundColor: theme.surfaceSubtle,
+            color: theme.text,
+            borderColor: error ? theme.error : theme.border,
+          }}
         />
         {rightIcon ? (
           <TouchableOpacity
-            style={styles.inputIconButton}
+            className="absolute right-4 h-6 justify-center"
             onPress={onRightIconPress}
             activeOpacity={0.8}
           >
             {typeof rightIcon === "string" ? (
-              <Text style={styles.inputIcon}>{rightIcon}</Text>
+              <Text
+                className="text-[18px]"
+                style={{ color: theme.textSecondary }}
+              >
+                {rightIcon}
+              </Text>
             ) : (
               rightIcon
             )}
           </TouchableOpacity>
         ) : null}
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <Text className="text-[12px] mt-1" style={{ color: theme.error }}>
+          {error}
+        </Text>
+      )}
     </View>
   );
 }
 
-function CodeInputRow({ length, values, onChange }) {
+export function CodeInputRow({ length, values, onChange }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const inputs = useRef([]);
   const [focusedIndex, setFocusedIndex] = useState(null);
 
@@ -463,7 +439,7 @@ function CodeInputRow({ length, values, onChange }) {
   };
 
   return (
-    <View style={styles.codeRow}>
+    <View className="flex-row justify-center gap-3 my-6">
       {Array.from({ length }).map((_, index) => (
         <TextInput
           key={index}
@@ -475,11 +451,21 @@ function CodeInputRow({ length, values, onChange }) {
           onBlur={() => setFocusedIndex(null)}
           keyboardType="number-pad"
           maxLength={1}
-          style={[
-            styles.codeBox,
-            values[index] && styles.codeBoxFilled,
-            focusedIndex === index && styles.codeBoxFocused,
-          ]}
+          className="w-12 h-14 rounded-2xl border-2 text-center text-[24px] font-semibold"
+          style={{
+            color: theme.text,
+            borderColor:
+              values[index] || focusedIndex === index
+                ? theme.primary
+                : theme.border,
+            backgroundColor:
+              focusedIndex === index ? theme.surfaceSubtle : theme.background,
+            ...Platform.select({
+              web: {
+                outlineStyle: "none",
+              },
+            }),
+          }}
         />
       ))}
     </View>
@@ -495,26 +481,40 @@ function StepHeader({
   onSkip,
 }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const progress = (stepIndex / totalSteps) * 100;
 
   return (
-    <View style={styles.stepHeaderContainer}>
-      <View style={styles.stepHeaderTopRow}>
+    <View className="mb-6">
+      <View className="flex-row items-center justify-between mb-3">
         <TouchableOpacity onPress={onBack} hitSlop={16}>
-          <Text style={styles.backArrow}>←</Text>
+          <Text className="text-[20px]" style={{ color: theme.text }}>
+            ←
+          </Text>
         </TouchableOpacity>
-        <Text style={styles.stepHeaderStepText}>{title}</Text>
+        <Text className="text-[14px]" style={{ color: theme.textSecondary }}>
+          {title}
+        </Text>
         {showSkip ? (
           <TouchableOpacity onPress={onSkip}>
-            <Text style={styles.skipText}>Skip</Text>
+            <Text
+              className="text-[14px] font-medium"
+              style={{ color: theme.text }}
+            >
+              Skip
+            </Text>
           </TouchableOpacity>
         ) : (
           <View style={{ width: 40 }} />
         )}
       </View>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progress}%` }]} />
+      <View
+        className="h-1 rounded-full overflow-hidden"
+        style={{ backgroundColor: theme.border }}
+      >
+        <View
+          className="h-1 rounded-full bg-[#EC4899]"
+          style={{ width: `${progress}%` }}
+        />
       </View>
     </View>
   );
@@ -555,70 +555,27 @@ export function LoginScreen({
   onSignUp,
   onLoginSuccess,
   onEmailVerifyNeeded,
+  onDeviceVerifyNeeded,
+  onForgotPassword,
   onBack,
 }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [otpMode, setOtpMode] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 
-  // 🔌 Listen for the incoming Google Redirect Token
-  useEffect(() => {
-    const handleOpenURL = async (event) => {
-      if (!event.url) return;
-      await processOAuthRedirect(event.url);
-    };
-
-    // Check if app was opened from a closed state via OAuth link
-    Linking.getInitialURL().then((url) => {
-      if (url) processOAuthRedirect(url);
-    });
-
-    // Listen for background-to-foreground URL events
-    const subscription = Linking.addEventListener("url", handleOpenURL);
-    return () => subscription.remove();
-  }, []);
-
-  const processOAuthRedirect = async (url) => {
-    try {
-      // Parse the ID token out of the redirect URL fragment or query parameter
-      const match =
-        url.match(/[#&]id_token=([^&]+)/) || url.match(/[?&]id_token=([^&]+)/);
-      if (!match) return;
-
-      const idToken = match[1];
-      setLoading(true);
-
-      console.log("[Google Auth] Forwarding token to backend...");
-      const response = await googleLoginApi(idToken);
-      console.log("[Google Auth] Backend Response:", response);
-
-      // Extract user and token from your Fastify backend payload
-      const userData = response.user;
-      const userToken = response.token; // Present on mobile responses
-
-      if (userData) {
-        // If backend tells us the role is "pending_onboarding", you can handle routing changes here
-        onLoginSuccess(userData, userToken);
-      }
-    } catch (error) {
-      console.error("[Google Auth] Backend exchange failed:", error);
-      showAlert(
-        "Authentication Error",
-        error.message || "Google Sign-In failed.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoogleLogin = async () => {
     const clientId = config.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      showAlert("Unavailable", "Google Sign-In is not configured for this build.");
+      return;
+    }
+    setGoogleLoading(true);
     if (Platform.OS === "web") {
       const redirectUri = window.location.origin;
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Math.random().toString(36)}`;
@@ -634,6 +591,7 @@ export function LoginScreen({
       } catch (error) {
         console.error("Error opening URL for Google OAuth:", error);
         showAlert("Error", "An error occurred starting Google Sign-In.");
+        setGoogleLoading(false);
       }
     }
   };
@@ -653,10 +611,11 @@ export function LoginScreen({
     setLoading(true);
     try {
       const response = await loginApi(email, password);
+      console.log("=======Login response:", response);
       const userData = response.user || response.data?.user;
       const userToken = response.token || response.data?.token;
 
-      if (userToken && userData) {
+      if (userData) {
         onLoginSuccess(userData, userToken);
       } else {
         showAlert("Login Failed", response.message || "Unknown error");
@@ -665,8 +624,17 @@ export function LoginScreen({
       console.error("Login error:", error);
       if (error.message.includes("Verify your email")) {
         onEmailVerifyNeeded?.(email);
-      } else if (error.message.includes("verify with OTP")) {
-        setOtpMode(true);
+      } else if (
+        error.message.includes("verify with OTP") ||
+        error.message.includes("device") ||
+        error.message.includes("OTP") ||
+        error.message.includes("otp")
+      ) {
+        if (onDeviceVerifyNeeded) {
+          onDeviceVerifyNeeded(email);
+        } else {
+          setOtpMode(true);
+        }
       } else {
         showAlert(
           "Login Error",
@@ -688,6 +656,7 @@ export function LoginScreen({
     setLoading(true);
     try {
       const response = await verifyIdentityByOtp(email, otpCode);
+      console.log("======= OTP verification response:", response);
       const userData = response.user || response.data?.user;
       const userToken = response.token || response.data?.token;
       if (userToken && userData) {
@@ -702,13 +671,24 @@ export function LoginScreen({
 
   if (otpMode) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.contentMaxWidth}>
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: theme.background }}
+      >
+        <ScrollView contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center">
+          <View className="w-full max-w-[480px] self-center">
             <AppHeaderTitle />
-            <View style={styles.loginCard}>
-              <Text style={styles.screenTitle}>Verify Your Identity</Text>
-              <Text style={styles.screenSubtitle}>
+            <View className="mt-6">
+              <Text
+                className="text-[28px] font-bold mb-2"
+                style={{ color: theme.text }}
+              >
+                Verify Your Identity
+              </Text>
+              <Text
+                className="text-[14px] mb-6"
+                style={{ color: theme.textSecondary }}
+              >
                 A verification code has been sent to {email}.
               </Text>
               <CodeInputRow length={6} values={otp} onChange={setOtp} />
@@ -725,23 +705,49 @@ export function LoginScreen({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.topBar}>
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <View className="flex-row justify-between items-center mb-8">
             {onBack && (
               <TouchableOpacity onPress={onBack} hitSlop={16}>
-                <Text style={styles.backArrow}>←</Text>
+                <Text className="text-[20px]" style={{ color: theme.text }}>
+                  ←
+                </Text>
               </TouchableOpacity>
             )}
-            <View style={styles.languageButton}>
-              <Text style={styles.languageText}>English ⌄</Text>
+            <View
+              className="flex-row items-center border rounded-full py-2.5 px-3.5"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.background,
+              }}
+            >
+              <Text
+                className="text-[13px] font-medium"
+                style={{ color: theme.text }}
+              >
+                English ⌄
+              </Text>
             </View>
           </View>
-          <Text style={styles.welcomeTitle}>Welcome back</Text>
-          <Text style={styles.welcomeSubtitle}>Sign in to Medgram</Text>
+          <Text
+            className="text-[34px] font-extrabold mb-1.5"
+            style={{ color: theme.text }}
+          >
+            Welcome back
+          </Text>
+          <Text
+            className="text-[15px] mb-7"
+            style={{ color: theme.textSecondary }}
+          >
+            Sign in to Medgram
+          </Text>
 
-          <View style={styles.loginCard}>
+          <View className="mt-6">
             <TextField
               label="Email Address"
               placeholder="name@example.com"
@@ -766,25 +772,52 @@ export function LoginScreen({
               error={errors.password}
             />
 
+            <TouchableOpacity
+              onPress={onForgotPassword}
+              className="self-end -mt-1 mb-4"
+            >
+              <Text
+                className="text-[13px] font-semibold"
+                style={{ color: theme.primary }}
+              >
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
+
             <PrimaryButton
               label={loading ? <ActivityIndicator color="#FFF" /> : "Sign In"}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={loading || googleLoading}
             />
 
-            <View style={styles.orRow}>
-              <View style={styles.orDivider} />
-              <Text style={styles.orText}>or continue with</Text>
-              <View style={styles.orDivider} />
+            <View className="flex-row items-center my-6">
+              <View
+                className="flex-1 h-[1px]"
+                style={{ backgroundColor: theme.border }}
+              />
+              <Text
+                className="mx-2 text-[11px] tracking-[1px]"
+                style={{ color: theme.textMuted }}
+              >
+                or continue with
+              </Text>
+              <View
+                className="flex-1 h-[1px]"
+                style={{ backgroundColor: theme.border }}
+              />
             </View>
 
             <TouchableOpacity
-              style={styles.googleButtonContainer}
+              className="flex-row items-center justify-center gap-2 border-[1.5px] rounded-xl py-3 mt-3 w-full"
+              style={{
+                backgroundColor: theme.surfaceSubtle,
+                borderColor: theme.border,
+              }}
               activeOpacity={0.8}
               onPress={handleGoogleLogin}
-              disabled={loading}
+              disabled={loading || googleLoading}
             >
-              {loading ? (
+              {googleLoading ? (
                 <ActivityIndicator color={theme.text} />
               ) : (
                 <>
@@ -802,10 +835,20 @@ export function LoginScreen({
               )}
             </TouchableOpacity>
 
-            <View style={styles.createAccountRow}>
-              <Text style={styles.footerText}>New to Medgram?</Text>
+            <View className="flex-row justify-center mb-3">
+              <Text
+                className="text-[13px] mr-1"
+                style={{ color: theme.textSecondary }}
+              >
+                New to Medgram?
+              </Text>
               <TouchableOpacity onPress={onSignUp}>
-                <Text style={styles.footerLink}>Create an account</Text>
+                <Text
+                  className="text-[13px] font-semibold"
+                  style={{ color: theme.text }}
+                >
+                  Create an account
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -817,60 +860,27 @@ export function LoginScreen({
 
 export function ProfileBasicsScreen({
   onBack,
+  onSignIn,
   onRegisterSuccess,
   onLoginSuccess,
 }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [errors, setErrors] = useState({});
-
-  // 🔌 Listen for the incoming Google Redirect Token during registration view
-  useEffect(() => {
-    const handleOpenURL = async (event) => {
-      if (event.url) await processOAuthRedirect(event.url);
-    };
-    Linking.getInitialURL().then((url) => {
-      if (url) processOAuthRedirect(url);
-    });
-    const subscription = Linking.addEventListener("url", handleOpenURL);
-    return () => subscription.remove();
-  }, []);
-
-  const processOAuthRedirect = async (url) => {
-    try {
-      const match =
-        url.match(/[#&]id_token=([^&]+)/) || url.match(/[?&]id_token=([^&]+)/);
-      if (!match) return;
-
-      const idToken = match[1];
-      setLoading(true);
-
-      const response = await googleLoginApi(idToken);
-      const userData = response.user;
-      const userToken = response.token;
-
-      if (userData) {
-        // Pass straight through to core app login state management
-        onLoginSuccess(userData, userToken);
-      }
-    } catch (error) {
-      showAlert(
-        "Authentication Error",
-        error.message || "Google registration failed.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleGoogleLogin = async () => {
     const clientId = config.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      showAlert("Unavailable", "Google Sign-In is not configured for this build.");
+      return;
+    }
+    setGoogleLoading(true);
     if (Platform.OS === "web") {
       const redirectUri = window.location.origin;
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Math.random().toString(36)}`;
@@ -884,6 +894,7 @@ export function ProfileBasicsScreen({
         await Linking.openURL(url);
       } catch (error) {
         showAlert("Error", "An error occurred starting Google Sign-In.");
+        setGoogleLoading(false);
       }
     }
   };
@@ -911,7 +922,7 @@ export function ProfileBasicsScreen({
       await registerApi({ email, password });
       showAlert(
         "Success",
-        "Registration successful! Confirm code sent to email.",
+        "Registration successful! A verification link has been sent to your email.",
         () => {
           onRegisterSuccess({
             email,
@@ -935,22 +946,40 @@ export function ProfileBasicsScreen({
   if (/[^A-Za-z0-9]/.test(password)) strengthScore += 1;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.stepHeaderContainer}>
-            <View style={styles.stepHeaderTopRow}>
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-6 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-3">
               <TouchableOpacity onPress={onBack} hitSlop={16}>
-                <Text style={styles.backArrow}>←</Text>
+                <Text className="text-[20px]" style={{ color: theme.text }}>
+                  ←
+                </Text>
               </TouchableOpacity>
-              <Text style={styles.stepHeaderStepText}>Sign Up</Text>
+              <Text
+                className="text-[14px]"
+                style={{ color: theme.textSecondary }}
+              >
+                Sign Up
+              </Text>
               <View style={{ width: 40 }} />
             </View>
           </View>
 
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Create Account</Text>
-            <Text style={styles.screenSubtitle}>
+          <View className="mb-6">
+            <Text
+              className="text-[28px] font-bold mb-2"
+              style={{ color: theme.text }}
+            >
+              Create Account
+            </Text>
+            <Text
+              className="text-[14px] mb-6"
+              style={{ color: theme.textSecondary }}
+            >
               Join us to transform your healthcare experience.
             </Text>
 
@@ -998,80 +1027,90 @@ export function ProfileBasicsScreen({
           <PrimaryButton
             label={loading ? <ActivityIndicator color="#FFF" /> : "Continue"}
             onPress={handleRegister}
-            disabled={loading}
+            disabled={loading || googleLoading}
           />
 
-          <View style={styles.orRow}>
-            <View style={styles.orDivider} />
-            <Text style={styles.orText}>or continue with</Text>
-            <View style={styles.orDivider} />
+          <View className="flex-row items-center my-6">
+            <View
+              className="flex-1 h-[1px]"
+              style={{ backgroundColor: theme.border }}
+            />
+            <Text
+              className="mx-2 text-[11px] tracking-[1px]"
+              style={{ color: theme.textMuted }}
+            >
+              or continue with
+            </Text>
+            <View
+              className="flex-1 h-[1px]"
+              style={{ backgroundColor: theme.border }}
+            />
           </View>
 
           <TouchableOpacity
-            style={styles.googleButtonContainer}
+            className="flex-row items-center justify-center gap-2 border-[1.5px] rounded-xl py-3 mt-3 w-full"
+            style={{
+              backgroundColor: theme.surfaceSubtle,
+              borderColor: theme.border,
+            }}
             activeOpacity={0.8}
             onPress={handleGoogleLogin}
-            disabled={loading}
+            disabled={loading || googleLoading}
           >
-            <Ionicons name="logo-google" size={18} color={theme.text} />
-            <Text
-              style={{ fontSize: 14, fontWeight: "600", color: theme.text }}
-            >
-              Continue with Google
-            </Text>
+            {googleLoading ? (
+              <ActivityIndicator color={theme.text} />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={18} color={theme.text} />
+                <Text
+                  style={{ fontSize: 14, fontWeight: "600", color: theme.text }}
+                >
+                  Continue with Google
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
+
+          <View className="flex-row justify-center mb-3">
+            <Text
+              className="text-[13px] mr-1"
+              style={{ color: theme.textSecondary }}
+            >
+              Already have an account?
+            </Text>
+            <TouchableOpacity onPress={onSignIn}>
+              <Text
+                className="text-[13px] font-semibold"
+                style={{ color: theme.text }}
+              >
+                Sign in
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-export function EmailVerifyScreen({ email, onBack, onVerified }) {
+export function EmailVerifyScreen({ email, onBack }) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-
-  const handleVerifyEmail = async () => {
-    const otpCode = code.join("");
-    if (otpCode.length !== 6) {
-      showAlert(
-        "Invalid Code",
-        "Please enter the full 6-digit code from your email.",
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await verifyEmailOtpApi(email, otpCode);
-      showAlert("Success", "Email verified successfully!", onVerified);
-    } catch (error) {
-      console.error("[EmailVerify] Error:", error);
-      showAlert(
-        "Verification Error",
-        error.message || "Failed to verify email",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleResendCode = async () => {
     setResending(true);
     try {
       const response = await resendVerificationEmail(email);
       showAlert(
-        "Code Sent",
+        "Link Sent",
         response.message ||
-          "A new verification code has been sent to your email.",
+          "A new verification link has been sent to your email.",
       );
     } catch (error) {
       console.error("[EmailVerify][Resend] Error:", error);
       showAlert(
         "Resend Failed",
-        error.message || "Failed to resend verification code",
+        error.message || "Failed to resend verification link",
       );
     } finally {
       setResending(false);
@@ -1079,166 +1118,634 @@ export function EmailVerifyScreen({ email, onBack, onVerified }) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.stepHeaderContainer}>
-            <View style={styles.stepHeaderTopRow}>
+    <SafeAreaView
+      className="flex-grow flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-6 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-3">
               <TouchableOpacity onPress={onBack} hitSlop={16}>
-                <Text style={styles.backArrow}>←</Text>
+                <Text className="text-[20px]" style={{ color: theme.text }}>
+                  ←
+                </Text>
               </TouchableOpacity>
-              <Text style={styles.stepHeaderStepText}>Verify Email</Text>
+              <Text
+                className="text-[14px]"
+                style={{ color: theme.textSecondary }}
+              >
+                Verify Email
+              </Text>
               <View style={{ width: 40 }} />
             </View>
           </View>
-          <View style={styles.verificationIconWrapper}>
-            <View style={styles.verificationIconCircle}>
-              <Text style={styles.verificationIconEmoji}>✉️</Text>
+          <View className="items-center mb-6">
+            <View
+              className="w-24 h-24 rounded-full items-center justify-center"
+              style={{
+                backgroundColor: theme.mode === "dark" ? "#1E1B4B" : "#EEF2FF",
+              }}
+            >
+              <Text className="text-[40px]">✉️</Text>
             </View>
           </View>
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Verify your email</Text>
-            <Text style={styles.screenSubtitle}>
-              Enter the 6-digit verification code sent to{" "}
-              {email || "your email"}.
+          <View className="mb-6">
+            <Text
+              className="text-[28px] font-bold mb-3 text-center"
+              style={{ color: theme.text }}
+            >
+              Verify your email
             </Text>
+            <Text
+              className="text-[14px] mb-8 text-center leading-5"
+              style={{ color: theme.textSecondary }}
+            >
+              A verification link has been sent to{" "}
+              <Text className="font-semibold" style={{ color: theme.text }}>
+                {email || "your email"}
+              </Text>
+              . Please check your inbox and click the link to verify your
+              account and activate your Medgram profile.
+            </Text>
+
+            <PrimaryButton
+              label={
+                resending ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  "Resend Verification Link"
+                )
+              }
+              onPress={handleResendCode}
+              disabled={resending}
+            />
+
+            <TouchableOpacity onPress={onBack} className="mt-6 items-center">
+              <Text className="font-semibold" style={{ color: theme.primary }}>
+                Back to Login
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+export function ForgotPasswordScreen({ onBack }) {
+  const { theme } = useTheme();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!email) {
+      toast.error("Email address is required");
+      return;
+    }
+    setLoading(true);
+    try {
+      await forgotPasswordApi(email);
+      setSent(true);
+      toast.success("Reset instructions sent to your email!");
+    } catch (err) {
+      toast.error(err.message || "Failed to send reset link");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <View className="flex-row justify-between items-center mb-8">
+            {onBack && (
+              <TouchableOpacity onPress={onBack} hitSlop={16}>
+                <Text className="text-[20px]" style={{ color: theme.text }}>
+                  ←
+                </Text>
+              </TouchableOpacity>
+            )}
+            <View style={{ width: 40 }} />
+          </View>
+          <Text
+            className="text-[34px] font-extrabold mb-1.5"
+            style={{ color: theme.text }}
+          >
+            Forgot Password
+          </Text>
+          <Text
+            className="text-[15px] mb-7"
+            style={{ color: theme.textSecondary }}
+          >
+            Enter your email address to receive reset instructions
+          </Text>
+
+          <View className="mt-6">
+            {!sent ? (
+              <>
+                <TextField
+                  label="Email Address"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+
+                <PrimaryButton
+                  label={
+                    loading ? (
+                      <ActivityIndicator color="#FFF" />
+                    ) : (
+                      "Send Reset Link"
+                    )
+                  }
+                  onPress={handleSubmit}
+                  disabled={loading}
+                />
+
+                <TouchableOpacity
+                  onPress={onBack}
+                  className="mt-6 items-center"
+                >
+                  <Text
+                    className="font-semibold"
+                    style={{ color: theme.primary }}
+                  >
+                    Back to Login
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <View className="items-center mt-5">
+                <MaterialIcons
+                  name="mark-email-read"
+                  size={64}
+                  color={theme.primary}
+                />
+                <Text
+                  className="text-center mt-4 text-[20px] font-extrabold"
+                  style={{ color: theme.text }}
+                >
+                  Check your Email
+                </Text>
+                <Text
+                  className="text-center mt-2 text-[15px]"
+                  style={{ color: theme.textSecondary }}
+                >
+                  A secure password reset link has been sent to {email}.
+                </Text>
+                <PrimaryButton
+                  label="Back to Login"
+                  onPress={onBack}
+                  style={{ marginTop: 24, width: "100%" }}
+                />
+              </View>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+export function ResetPasswordScreen({ token, onBack }) {
+  const { theme } = useTheme();
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!password) {
+      toast.error("Password is required");
+      return;
+    }
+    if (password !== confirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    setLoading(true);
+    try {
+      await resetPasswordApi(token, password);
+      toast.success("Password reset successfully! Please login.");
+      onBack();
+    } catch (err) {
+      toast.error(err.message || "Failed to reset password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <Text
+            className="text-[34px] font-extrabold mb-1.5"
+            style={{ color: theme.text }}
+          >
+            Reset Password
+          </Text>
+          <Text
+            className="text-[15px] mb-7"
+            style={{ color: theme.textSecondary }}
+          >
+            Set your new account password
+          </Text>
+
+          <View className="mt-6">
+            <TextField
+              label="New Password"
+              placeholder="••••••••"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              rightIcon={
+                <MaterialIcons
+                  name={showPassword ? "visibility-off" : "visibility"}
+                  size={22}
+                  color={theme.textMuted}
+                />
+              }
+              onRightIconPress={() => setShowPassword((prev) => !prev)}
+            />
+
+            <TextField
+              label="Confirm Password"
+              placeholder="••••••••"
+              value={confirm}
+              onChangeText={setConfirm}
+              secureTextEntry={!showConfirmPassword}
+              rightIcon={
+                <MaterialIcons
+                  name={showConfirmPassword ? "visibility-off" : "visibility"}
+                  size={22}
+                  color={theme.textMuted}
+                />
+              }
+              onRightIconPress={() => setShowConfirmPassword((prev) => !prev)}
+            />
+
+            <PrimaryButton
+              label={
+                loading ? <ActivityIndicator color="#FFF" /> : "Reset Password"
+              }
+              onPress={handleSubmit}
+              disabled={loading}
+            />
+
+            <TouchableOpacity onPress={onBack} className="mt-6 items-center">
+              <Text className="font-semibold" style={{ color: theme.primary }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+export function VerifyEmailLinkScreen({ token, onBack }) {
+  const { theme } = useTheme();
+  const [loading, setLoading] = useState(false);
+  const { handleLogout } = useUser();
+
+  const handleVerify = async () => {
+    setLoading(true);
+    try {
+      const response = await verifyEmail(token);
+      toast.success(response.message || "Email verified successfully!");
+      await handleLogout();
+      onBack();
+    } catch (err) {
+      toast.error(err.message || "Email verification failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <Text
+            className="text-[34px] font-extrabold mb-1.5"
+            style={{ color: theme.text }}
+          >
+            Verify Email
+          </Text>
+          <Text
+            className="text-[15px] mb-7"
+            style={{ color: theme.textSecondary }}
+          >
+            Confirm your email address for Medgram
+          </Text>
+
+          <View className="mt-6">
+            <View className="items-center my-5">
+              <MaterialIcons
+                name="mail-outline"
+                size={64}
+                color={theme.primary}
+              />
+              <Text
+                className="text-center mt-4"
+                style={{ color: theme.textSecondary }}
+              >
+                Click below to complete the verification process.
+              </Text>
+            </View>
+
+            <PrimaryButton
+              label={
+                loading ? <ActivityIndicator color="#FFF" /> : "Verify Email"
+              }
+              onPress={handleVerify}
+              disabled={loading}
+            />
+
+            <TouchableOpacity onPress={onBack} className="mt-6 items-center">
+              <Text className="font-semibold" style={{ color: theme.primary }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+export function ReactivateAccountScreen({ token, onBack }) {
+  const { theme } = useTheme();
+  const [loading, setLoading] = useState(false);
+  const { handleLogout } = useUser();
+
+  const handleReactivate = async () => {
+    setLoading(true);
+    try {
+      const response = await reactivateAccount(token);
+      toast.success(response.message || "Account reactivated successfully!");
+      await handleLogout();
+      onBack();
+    } catch (err) {
+      toast.error(err.message || "Account reactivation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <Text
+            className="text-[34px] font-extrabold mb-1.5"
+            style={{ color: theme.text }}
+          >
+            Reactivate Account
+          </Text>
+          <Text
+            className="text-[15px] mb-7"
+            style={{ color: theme.textSecondary }}
+          >
+            Restore your Medgram account access
+          </Text>
+
+          <View className="mt-6">
+            <View className="items-center my-5">
+              <MaterialIcons name="lock-open" size={64} color={theme.primary} />
+              <Text
+                className="text-center mt-4"
+                style={{ color: theme.textSecondary }}
+              >
+                Your account was deactivated. Click below to restore full
+                access.
+              </Text>
+            </View>
+
+            <PrimaryButton
+              label={
+                loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  "Reactivate Account"
+                )
+              }
+              onPress={handleReactivate}
+              disabled={loading}
+            />
+
+            <TouchableOpacity onPress={onBack} className="mt-6 items-center">
+              <Text className="font-semibold" style={{ color: theme.primary }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+export function DeactivateAccountScreen({ token, onBack }) {
+  const { theme } = useTheme();
+  const [loading, setLoading] = useState(false);
+  const { handleLogout } = useUser();
+
+  const handleDeactivate = async () => {
+    setLoading(true);
+    try {
+      const response = await deactivateAccount(token);
+      toast.success(response.message || "Account deactivated successfully!");
+      await handleLogout();
+      onBack();
+    } catch (err) {
+      toast.error(err.message || "Account deactivation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <Text
+            className="text-[34px] font-extrabold mb-1.5"
+            style={{ color: theme.text }}
+          >
+            Deactivate Account
+          </Text>
+          <Text
+            className="text-[15px] mb-7"
+            style={{ color: theme.textSecondary }}
+          >
+            Confirm deactivation of your account
+          </Text>
+
+          <View className="mt-6">
+            <View className="items-center my-5">
+              <MaterialIcons name="warning" size={64} color={theme.error} />
+              <Text
+                className="text-center mt-4"
+                style={{ color: theme.textSecondary }}
+              >
+                Are you sure you want to deactivate your account? Click confirm
+                below.
+              </Text>
+            </View>
+
+            <PrimaryButton
+              label={
+                loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  "Confirm Deactivation"
+                )
+              }
+              onPress={handleDeactivate}
+              disabled={loading}
+              style={{ backgroundColor: theme.error }}
+            />
+
+            <TouchableOpacity onPress={onBack} className="mt-6 items-center">
+              <Text className="font-semibold" style={{ color: theme.primary }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+export function VerifyDeviceScreen({ email, onBack, onVerified }) {
+  const { theme } = useTheme();
+  const { handleVerifyDevice, handleResendDeviceOtp } = useUser();
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  const handleVerify = async () => {
+    const otpCode = code.join("");
+    if (otpCode.length !== 6) {
+      toast.error("Please enter the full 6-digit OTP code.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await handleVerifyDevice(email, otpCode);
+      toast.success("Device verified successfully!");
+      if (onVerified) onVerified();
+    } catch (err) {
+      toast.error(err.message || "Failed to verify device");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await handleResendDeviceOtp(email);
+      toast.success("New OTP sent to your email!");
+    } catch (err) {
+      toast.error(err.message || "Failed to resend OTP");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  return (
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
+    >
+      <ScrollView contentContainerClassName="px-6 pt-12 pb-8 flex-grow web:justify-center">
+        <View className="w-full max-w-[480px] self-center">
+          <View className="flex-row justify-between items-center mb-8">
+            {onBack && (
+              <TouchableOpacity onPress={onBack} hitSlop={16}>
+                <Text className="text-[20px]" style={{ color: theme.text }}>
+                  ←
+                </Text>
+              </TouchableOpacity>
+            )}
+            <View style={{ width: 40 }} />
+          </View>
+          <Text
+            className="text-[34px] font-extrabold mb-1.5"
+            style={{ color: theme.text }}
+          >
+            New Device Login
+          </Text>
+          <Text
+            className="text-[15px] mb-7"
+            style={{ color: theme.textSecondary }}
+          >
+            We detected a login request from a new device for{"\n"}
+            <Text className="font-semibold" style={{ color: theme.text }}>
+              {email}
+            </Text>
+            . Please enter the 6-digit OTP code sent to your email.
+          </Text>
+
+          <View className="mt-6">
             <CodeInputRow length={6} values={code} onChange={setCode} />
-            <Text style={styles.otpHelpText}>
+            <Text
+              className="text-[12px] mt-2 text-center"
+              style={{ color: theme.textMuted }}
+            >
               The code expires after a short time, so use the most recent one.
             </Text>
-            <View style={styles.didntReceiveContainer}>
-              <Text style={styles.didntReceiveText}>
+
+            <View className="mt-4 items-center">
+              <Text
+                className="text-[13px] mt-2"
+                style={{ color: theme.textSecondary }}
+              >
                 Didn't receive the code?
               </Text>
-              <TouchableOpacity onPress={handleResendCode} disabled={resending}>
-                <Text style={styles.resendLink}>
+              <TouchableOpacity onPress={handleResend} disabled={resending}>
+                <Text className="mt-1 text-[13px] font-medium text-[#F97316]">
                   {resending ? "Sending..." : "Resend Code"}
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-          <PrimaryButton
-            label={
-              loading ? <ActivityIndicator color="#FFF" /> : "Verify Email"
-            }
-            onPress={handleVerifyEmail}
-            disabled={loading}
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
 
-export function PhoneVerifyScreen({ onBack, onVerified }) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [code, setCode] = useState(["", "", "", "", "", ""]);
+            <PrimaryButton
+              label={
+                loading ? <ActivityIndicator color="#FFF" /> : "Verify Device"
+              }
+              onPress={handleVerify}
+              disabled={loading}
+            />
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.stepHeaderContainer}>
-            <View style={styles.stepHeaderTopRow}>
-              <TouchableOpacity onPress={onBack} hitSlop={16}>
-                <Text style={styles.backArrow}>←</Text>
-              </TouchableOpacity>
-              <Text style={styles.stepHeaderStepText}>Verify Phone</Text>
-              <View style={{ width: 40 }} />
-            </View>
-          </View>
-          <View style={styles.verificationIconWrapper}>
-            <View
-              style={[styles.verificationIconCircle, styles.phoneIconCircle]}
-            >
-              <Text style={styles.verificationIconEmoji}>📱</Text>
-            </View>
-          </View>
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Check your phone</Text>
-            <Text style={styles.screenSubtitle}>
-              Enter the 6-digit code sent via SMS to your phone number.
-            </Text>
-            <CodeInputRow length={6} values={code} onChange={setCode} />
-            <View style={styles.resendRow}>
-              <Text style={styles.didntReceivePrefix}>
-                Didn't receive code?
+            <TouchableOpacity onPress={onBack} className="mt-6 items-center">
+              <Text className="font-semibold" style={{ color: theme.primary }}>
+                Back to Login
               </Text>
-              <TouchableOpacity>
-                <Text style={styles.resendLinkInline}>Resend SMS</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.resendTimerText}>
-              Resend available in 00:24
-            </Text>
-          </View>
-          <PrimaryButton label="Confirm & Continue" onPress={onVerified} />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-export function VerificationChoiceScreen({
-  onBack,
-  onChooseEmail,
-  onChoosePhone,
-}) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <View style={styles.stepHeaderContainer}>
-            <View style={styles.stepHeaderTopRow}>
-              <TouchableOpacity onPress={onBack} hitSlop={16}>
-                <Text style={styles.backArrow}>←</Text>
-              </TouchableOpacity>
-              <Text style={styles.stepHeaderStepText}>Verify Account</Text>
-              <View style={{ width: 40 }} />
-            </View>
-          </View>
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Verification Method</Text>
-            <Text style={styles.screenSubtitle}>
-              Choose how you'd like to verify your account to ensure your
-              medical data stays secure.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.methodCard}
-              onPress={onChooseEmail}
-              activeOpacity={0.7}
-            >
-              <View style={styles.methodIconCircle}>
-                <Text style={styles.methodIcon}>✉️</Text>
-              </View>
-              <View style={styles.methodInfo}>
-                <Text style={styles.methodTitle}>Email Verification</Text>
-                <Text style={styles.methodDescription}>
-                  Receive a 6-digit code at your registered email address.
-                </Text>
-              </View>
-              <Text style={styles.methodArrow}>→</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.methodCard, { marginTop: 16 }]}
-              onPress={onChoosePhone}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.methodIconCircle, styles.phoneIconCircle]}>
-                <Text style={styles.methodIcon}>📱</Text>
-              </View>
-              <View style={styles.methodInfo}>
-                <Text style={styles.methodTitle}>Phone Verification</Text>
-                <Text style={styles.methodDescription}>
-                  Receive a verification code via SMS on your mobile phone.
-                </Text>
-              </View>
-              <Text style={styles.methodArrow}>→</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1246,896 +1753,3 @@ export function VerificationChoiceScreen({
     </SafeAreaView>
   );
 }
-
-export function NameStepScreen({ onBack, onNext, onSkip }) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState("");
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <StepHeader
-            stepIndex={1}
-            totalSteps={3}
-            title="Step 1 of 3"
-            showSkip
-            onBack={onBack}
-            onSkip={onSkip}
-          />
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Tell us about yourself</Text>
-            <Text style={styles.screenSubtitle}>
-              Let's start with your legal name for medical records. This ensures
-              your data is accurate and secure.
-            </Text>
-            <TextField
-              label="First Name"
-              placeholder="First Name"
-              value={firstName}
-              onChangeText={setFirstName}
-            />
-            <TextField
-              label="Middle Name"
-              placeholder="Middle Name (Optional)"
-              value={middleName}
-              onChangeText={setMiddleName}
-            />
-            <TextField
-              label="Last Name"
-              placeholder="Last Name"
-              value={lastName}
-              onChangeText={setLastName}
-            />
-          </View>
-          <PrimaryButton
-            label="Next Step"
-            onPress={() =>
-              onNext({
-                name: `${firstName} ${middleName} ${lastName}`
-                  .replace(/\s+/g, " ")
-                  .trim(),
-              })
-            }
-          />
-          <Text style={styles.termsText}>
-            By continuing, you agree to our Terms of Service.
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-export function ContactStepScreen({ onBack, onNext, onSkip }) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <StepHeader
-            stepIndex={2}
-            totalSteps={3}
-            title="Step 2 of 3"
-            showSkip
-            onBack={onBack}
-            onSkip={onSkip}
-          />
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Let's stay in touch</Text>
-            <Text style={styles.screenSubtitle}>
-              Please provide your contact details. We'll use these to verify
-              your identity and keep your health data secure.
-            </Text>
-            <TextField
-              label="Email Address"
-              placeholder="name@example.com"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextField
-              label="Phone Number"
-              placeholder="(555) 000-0000"
-              value={phone}
-              onChangeText={setPhone}
-            />
-          </View>
-          <PrimaryButton
-            label="Next Step"
-            onPress={() => onNext({ email, phone })}
-          />
-          <Text style={styles.termsText}>
-            By continuing, you agree to our Terms of Service and Privacy Policy.
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-export function LocationStepScreen({ onBack, onComplete }) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [address, setAddress] = useState("");
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <StepHeader
-            stepIndex={3}
-            totalSteps={3}
-            title="Final Step"
-            showSkip={false}
-            onBack={onBack}
-          />
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Where are you located?</Text>
-            <Text style={styles.screenSubtitle}>
-              We use this to find the best health providers near you.
-            </Text>
-            <View style={styles.locationCard}>
-              <View style={styles.locationPlaceholder}>
-                <Text style={styles.locationPin}>📍</Text>
-              </View>
-              <PrimaryButton label="Auto-detect location" onPress={() => {}} />
-            </View>
-            <Text style={styles.orManualText}>OR ENTER MANUALLY</Text>
-            <TextField
-              label="Street Address"
-              placeholder="Search for your address..."
-              value={address}
-              onChangeText={setAddress}
-            />
-            <View style={styles.privacyCard}>
-              <Text style={styles.privacyTitle}>Privacy First</Text>
-              <Text style={styles.privacyText}>
-                Your location is only used to match you with nearby providers.
-                We never share your precise location.
-              </Text>
-            </View>
-          </View>
-          <PrimaryButton
-            label="Complete Registration"
-            onPress={() => onComplete({ location: address })}
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-export function ProfileCustomizeScreen({ onBack, onNext, onSkip }) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [bio, setBio] = useState("");
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.onboardingContent}>
-        <View style={styles.contentMaxWidth}>
-          <StepHeader
-            stepIndex={4}
-            totalSteps={4}
-            title="Step 4"
-            showSkip={false}
-            onBack={onBack}
-          />
-          <View style={styles.onboardingBody}>
-            <Text style={styles.screenTitle}>Customize Your Profile</Text>
-            <Text style={styles.screenSubtitle}>
-              Add a face to your journey. You can always change this later.
-            </Text>
-            <View style={styles.profileAvatarWrapper}>
-              <View style={styles.profileAvatarCircle}>
-                <Text style={styles.profileAvatarPlaceholder}>👤</Text>
-              </View>
-              <View style={styles.profileAvatarPlus}>
-                <Text style={styles.profileAvatarPlusText}>＋</Text>
-              </View>
-            </View>
-            <Text style={styles.fieldLabel}>Bio</Text>
-            <TextInput
-              value={bio}
-              onChangeText={setBio}
-              placeholder="I'm here to improve my cardio and eat better..."
-              placeholderTextColor="#9CA3AF"
-              multiline
-              maxLength={150}
-              style={styles.bioInput}
-            />
-            <Text style={styles.bioCounter}>{bio.length}/150</Text>
-          </View>
-          <PrimaryButton label="Next" onPress={() => onNext({ bio })} />
-          <TouchableOpacity onPress={onSkip}>
-            <Text style={styles.skipForNowText}>Skip for now</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-export function SuccessScreen({ onGetStarted, role }) {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const isDoctor = role === "doctor";
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.successContainer}>
-        <View style={styles.contentMaxWidth}>
-          <View style={{ alignItems: "center", marginBottom: 32 }}>
-            <View style={styles.successIcon}>
-              <Text style={styles.successCheck}>✓</Text>
-            </View>
-            <Text style={styles.successTitle}>
-              {isDoctor ? "Application Received!" : "You're all set!"}
-            </Text>
-            <Text style={styles.successSubtitle}>
-              {isDoctor
-                ? "Your doctor profile is being reviewed by our medical board. We'll notify you once your account is active."
-                : "Your journey to better health starts now."}
-            </Text>
-          </View>
-          <PrimaryButton
-            label={isDoctor ? "Go to Dashboard" : "Get Started"}
-            onPress={onGetStarted}
-          />
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-const createStyles = (theme) =>
-  StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    scrollContent: {
-      paddingHorizontal: 24,
-      paddingTop: 48,
-      paddingBottom: 32,
-      flexGrow: 1,
-      ...Platform.select({
-        web: {
-          justifyContent: "center",
-        },
-      }),
-    },
-    onboardingContent: {
-      paddingHorizontal: 24,
-      paddingTop: 24,
-      paddingBottom: 32,
-      flexGrow: 1,
-      ...Platform.select({
-        web: {
-          justifyContent: "center",
-        },
-      }),
-    },
-    contentMaxWidth: {
-      width: "100%",
-      maxWidth: 480,
-      alignSelf: "center",
-    },
-    appHeaderContainer: {
-      alignItems: "center",
-      marginBottom: 24,
-    },
-    appLogo: {
-      width: 200,
-      height: 100,
-    },
-    appName: {
-      fontSize: 24,
-      fontWeight: "bold",
-      color: theme.text,
-    },
-    loginCard: {
-      marginTop: 24,
-    },
-    screenTitle: {
-      fontSize: 28,
-      fontWeight: "700",
-      color: theme.text,
-      marginBottom: 8,
-    },
-    screenSubtitle: {
-      fontSize: 14,
-      color: theme.textSecondary,
-      marginBottom: 24,
-    },
-    topBar: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 32,
-    },
-    languageButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      borderWidth: 1,
-      borderColor: theme.border,
-      borderRadius: 999,
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      backgroundColor: theme.background,
-    },
-    languageText: {
-      fontSize: 13,
-      color: theme.text,
-      fontWeight: "500",
-    },
-    languageChevron: {
-      fontSize: 12,
-      color: theme.textSecondary,
-      marginLeft: 6,
-    },
-    welcomeTitle: {
-      fontSize: 34,
-      fontWeight: "800",
-      color: theme.text,
-      marginBottom: 6,
-    },
-    welcomeSubtitle: {
-      fontSize: 15,
-      color: theme.textSecondary,
-      marginBottom: 28,
-    },
-    loginMethodTabs: {
-      flexDirection: "row",
-      marginBottom: 24,
-    },
-    loginMethodTab: {
-      flex: 1,
-      borderRadius: 999,
-      marginRight: 12,
-      borderWidth: 1,
-      borderColor: theme.border,
-      paddingVertical: 14,
-      alignItems: "center",
-      backgroundColor: theme.surfaceSubtle,
-    },
-    loginMethodTabActive: {
-      backgroundColor: theme.primary,
-      borderColor: theme.primary,
-    },
-    loginMethodLabel: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: theme.textSecondary,
-    },
-    loginMethodLabelActive: {
-      color: theme.mode === "dark" ? "#000000" : "#FFFFFF",
-    },
-    inputRow: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    textInputWithIcon: {
-      flex: 1,
-      paddingRight: 48,
-    },
-    inputIconButton: {
-      position: "absolute",
-      right: 16,
-      height: 24,
-      justifyContent: "center",
-    },
-    inputIcon: {
-      fontSize: 18,
-      color: theme.textSecondary,
-    },
-
-    fingerprintButton: {
-      width: 72,
-      height: 72,
-      borderRadius: 24,
-      borderWidth: 1,
-      borderColor: theme.border,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.background,
-      alignSelf: "center",
-      marginBottom: 24,
-    },
-    fingerprintIcon: {
-      fontSize: 32,
-      color: theme.text,
-    },
-    createAccountRow: {
-      flexDirection: "row",
-      justifyContent: "center",
-      marginBottom: 12,
-    },
-    fieldContainer: {
-      marginBottom: 16,
-    },
-    fieldLabel: {
-      fontSize: 13,
-      color: theme.textSecondary,
-      marginBottom: 6,
-    },
-    otpHelpText: {
-      fontSize: 12,
-      color: theme.textMuted,
-      marginTop: 8,
-      textAlign: "center",
-    },
-    textInput: {
-      width: "100%",
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: theme.border,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      fontSize: 15,
-      color: theme.text,
-      backgroundColor: theme.surfaceSubtle,
-    },
-    forgotPasswordRow: {
-      alignItems: "flex-end",
-      marginBottom: 16,
-    },
-    forgotPasswordText: {
-      fontSize: 13,
-      color: "#F97316",
-    },
-    primaryButton: {
-      backgroundColor: theme.primary,
-      paddingVertical: 14,
-      borderRadius: 999,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 8,
-      width: "100%",
-    },
-    primaryButtonLabel: {
-      color: theme.mode === "dark" ? "#000000" : "#FFFFFF",
-      fontSize: 16,
-      fontWeight: "600",
-    },
-    buttonDisabled: {
-      backgroundColor: theme.border,
-    },
-    inputError: {
-      borderColor: theme.error,
-    },
-    errorText: {
-      color: theme.error,
-      fontSize: 12,
-      marginTop: 4,
-    },
-    orRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginVertical: 24,
-    },
-    orDivider: {
-      flex: 1,
-      height: 1,
-      backgroundColor: theme.border,
-    },
-    orText: {
-      marginHorizontal: 8,
-      fontSize: 11,
-      color: theme.textMuted,
-      letterSpacing: 1,
-    },
-    socialRow: {
-      flexDirection: "row",
-      justifyContent: "center",
-      gap: 16,
-      marginBottom: 24,
-    },
-    googleButtonContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      backgroundColor: theme.surfaceSubtle,
-      borderWidth: 1.5,
-      borderColor: theme.border,
-      borderRadius: 12,
-      paddingVertical: 12,
-      marginTop: 12,
-      width: "100%",
-    },
-    socialButton: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      borderWidth: 1,
-      borderColor: theme.border,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.background,
-    },
-    socialButtonLabel: {
-      fontSize: 22,
-      color: theme.text,
-    },
-    footerRow: {
-      flexDirection: "row",
-      justifyContent: "center",
-      marginTop: 8,
-    },
-    footerText: {
-      fontSize: 13,
-      color: theme.textSecondary,
-      marginRight: 4,
-    },
-    footerLink: {
-      fontSize: 13,
-      color: theme.text,
-      fontWeight: "600",
-    },
-    stepHeaderContainer: {
-      marginBottom: 24,
-    },
-    stepHeaderTopRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 12,
-    },
-    backArrow: {
-      fontSize: 20,
-      color: theme.text,
-    },
-    stepHeaderStepText: {
-      fontSize: 14,
-      color: theme.textSecondary,
-    },
-    skipText: {
-      fontSize: 14,
-      color: theme.text,
-      fontWeight: "500",
-    },
-    progressTrack: {
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: theme.border,
-      overflow: "hidden",
-    },
-    progressFill: {
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: "#EC4899",
-    },
-    onboardingBody: {
-      marginBottom: 24,
-    },
-    termsText: {
-      marginTop: 12,
-      fontSize: 11,
-      color: theme.textMuted,
-      textAlign: "center",
-    },
-    locationCard: {
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: theme.border,
-      padding: 16,
-      marginBottom: 16,
-    },
-    locationPlaceholder: {
-      height: 160,
-      borderRadius: 12,
-      backgroundColor: theme.surfaceSubtle,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 16,
-    },
-    locationPin: {
-      fontSize: 32,
-    },
-    orManualText: {
-      fontSize: 11,
-      color: theme.textMuted,
-      textAlign: "center",
-      marginVertical: 8,
-      letterSpacing: 1,
-    },
-    privacyCard: {
-      borderRadius: 16,
-      backgroundColor: theme.surfaceSubtle,
-      padding: 16,
-      marginTop: 16,
-    },
-    privacyTitle: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: theme.text,
-      marginBottom: 4,
-    },
-    privacyText: {
-      fontSize: 13,
-      color: theme.textSecondary,
-    },
-    successContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      paddingHorizontal: 24,
-    },
-    successIcon: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      backgroundColor: theme.primary,
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 24,
-    },
-    successCheck: {
-      fontSize: 48,
-      color: theme.mode === "dark" ? "#000000" : "#FFFFFF",
-    },
-    successTitle: {
-      fontSize: 24,
-      fontWeight: "700",
-      color: theme.text,
-      marginBottom: 8,
-      textAlign: "center",
-    },
-    successSubtitle: {
-      fontSize: 14,
-      color: theme.textSecondary,
-      marginBottom: 24,
-      textAlign: "center",
-    },
-    codeRow: {
-      flexDirection: "row",
-      justifyContent: "center",
-      gap: 12,
-      marginVertical: 24,
-    },
-    codeBox: {
-      width: 48,
-      height: 56,
-      borderRadius: 16,
-      borderWidth: 2,
-      borderColor: theme.border,
-      textAlign: "center",
-      fontSize: 24,
-      fontWeight: "600",
-      color: theme.text,
-      backgroundColor: theme.background,
-      ...Platform.select({
-        web: {
-          outlineStyle: "none",
-        },
-      }),
-    },
-    codeBoxFilled: {
-      borderColor: theme.primary,
-    },
-    codeBoxFocused: {
-      borderColor: theme.primary,
-      backgroundColor: theme.surfaceSubtle,
-      borderWidth: 2,
-    },
-    verificationIconWrapper: {
-      alignItems: "center",
-      marginBottom: 16,
-    },
-    verificationIconCircle: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-      backgroundColor: theme.mode === "dark" ? "#1E1B4B" : "#EEF2FF",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    phoneIconCircle: {
-      backgroundColor: theme.mode === "dark" ? "#78350F" : "#FEF3C7",
-    },
-    verificationIconEmoji: {
-      fontSize: 40,
-    },
-    didntReceiveText: {
-      fontSize: 13,
-      color: theme.textSecondary,
-      marginTop: 8,
-    },
-    resendLink: {
-      marginTop: 4,
-      fontSize: 13,
-      color: "#F97316",
-      fontWeight: "500",
-    },
-    linkInfoBox: {
-      backgroundColor: theme.surfaceSubtle,
-      padding: 16,
-      borderRadius: 12,
-      marginVertical: 16,
-      borderLeftWidth: 4,
-      borderLeftColor: theme.primary,
-    },
-    linkInfoText: {
-      fontSize: 14,
-      color: theme.textSecondary,
-      lineHeight: 20,
-    },
-    didntReceiveContainer: {
-      marginTop: 16,
-      alignItems: "center",
-    },
-    resendRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: 12,
-    },
-    didntReceivePrefix: {
-      fontSize: 13,
-      color: theme.textSecondary,
-      marginRight: 4,
-    },
-    resendLinkInline: {
-      fontSize: 13,
-      color: "#EC4899",
-      fontWeight: "500",
-    },
-    resendTimerText: {
-      fontSize: 12,
-      color: theme.textMuted,
-      marginTop: 4,
-    },
-    genderRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 16,
-      marginTop: 8,
-    },
-    genderOption: {
-      flex: 1,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: theme.border,
-      paddingVertical: 12,
-      marginHorizontal: 4,
-      alignItems: "center",
-      backgroundColor: theme.background,
-    },
-    genderOptionSelected: {
-      borderColor: theme.primary,
-      backgroundColor: theme.surfaceSubtle,
-    },
-    genderOptionLabel: {
-      fontSize: 14,
-      color: theme.text,
-      fontWeight: "500",
-    },
-    passwordStrengthRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginTop: 4,
-    },
-    passwordStrengthLabel: {
-      fontSize: 12,
-      color: "#F97316",
-    },
-    passwordStrengthCount: {
-      fontSize: 12,
-      color: theme.textMuted,
-    },
-    passwordStrengthTrack: {
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: theme.border,
-      marginTop: 6,
-    },
-    passwordStrengthFill: {
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: "#F97316",
-    },
-    profileAvatarWrapper: {
-      alignItems: "center",
-      marginBottom: 24,
-      marginTop: 8,
-    },
-    profileAvatarCircle: {
-      width: 112,
-      height: 112,
-      borderRadius: 56,
-      backgroundColor: theme.border,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    profileAvatarPlaceholder: {
-      fontSize: 40,
-    },
-    profileAvatarPlus: {
-      position: "absolute",
-      bottom: 4,
-      right: (112 - 56) / 2,
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: theme.primary,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    profileAvatarPlusText: {
-      fontSize: 24,
-      color: theme.mode === "dark" ? "#000000" : "#FFFFFF",
-      marginTop: -2,
-    },
-    bioInput: {
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: theme.border,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      fontSize: 14,
-      color: theme.text,
-      backgroundColor: theme.surfaceSubtle,
-      minHeight: 96,
-      textAlignVertical: "top",
-    },
-    bioCounter: {
-      alignSelf: "flex-end",
-      fontSize: 11,
-      color: theme.textMuted,
-      marginTop: 4,
-    },
-    skipForNowText: {
-      marginTop: 12,
-      fontSize: 13,
-      color: theme.textSecondary,
-      textAlign: "center",
-    },
-    methodCard: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: theme.background,
-      borderRadius: 16,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    methodIconCircle: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: theme.surfaceSubtle,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 16,
-    },
-    methodIcon: {
-      fontSize: 24,
-    },
-    methodInfo: {
-      flex: 1,
-    },
-    methodTitle: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: theme.text,
-      marginBottom: 2,
-    },
-    methodDescription: {
-      fontSize: 12,
-      color: theme.textSecondary,
-      lineHeight: 16,
-    },
-    methodArrow: {
-      fontSize: 20,
-      color: theme.border,
-      marginLeft: 8,
-    },
-  });

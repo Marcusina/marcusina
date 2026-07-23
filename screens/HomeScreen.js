@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,9 @@ import Svg, {
   Circle,
   Path,
 } from "react-native-svg";
-import { getMedications, getCart, addToCart } from "../api/meds.api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getMedications } from "../api/meds.api";
+import { getCart, addToCart } from "../api/cart.api";
 import { useTheme } from "../context/ThemeContext";
 import { toast } from "../context/ToastContext";
 
@@ -34,19 +36,50 @@ export function HomeScreen({
 }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
+  const firstName = user?.profile?.first_name || user?.username || "User";
 
   // Responsive Breakpoints
   const isTablet = width >= 600 && width < 1024;
   const isDesktop = width >= 1024;
   const isWebOrLarge = (Platform.OS === "web" && width >= 768) || isDesktop;
 
-  const [medications, setMedications] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [cartCount, setCartCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
+  const queryClient = useQueryClient();
   const brandPrimaryColor = theme.primary || "#3B82F6";
+
+  // Use TanStack Query to fetch medications
+  const searchQueryValue = selectedCategory || searchQuery;
+  const { data: medicationsResponse, isLoading: isMedsLoading } = useQuery({
+    queryKey: ["medications", searchQueryValue],
+    queryFn: () => getMedications({ search: searchQueryValue }),
+    enabled: !!token,
+  });
+
+  const medications = medicationsResponse?.data || [];
+
+  // Use TanStack Query to fetch cart
+  const { data: cartData } = useQuery({
+    queryKey: ["cart"],
+    queryFn: getCart,
+    enabled: !!token,
+  });
+
+  const cartCount =
+    cartData?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+
+  // Mutation to add to cart
+  const addToCartMutation = useMutation({
+    mutationFn: (medicationId) => addToCart(medicationId, 1),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      toast.success("Item added to cart");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to add item to cart");
+    },
+  });
 
   // Responsive sizing for user avatars/stories
   const avatarSize = isWebOrLarge || isTablet ? 80 : 64;
@@ -70,66 +103,27 @@ export function HomeScreen({
 
   const { cardWidth, gap: gridGap } = getGridConfig();
 
-  const fetchMedications = useCallback(
-    async (search = "", category = null) => {
-      if (!token) return;
-      try {
-        const query = category || search;
-        const response = await getMedications(token, { search: query });
-        setMedications(response.data || []);
-      } catch (error) {
-        console.error("Failed to fetch medications:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [token],
-  );
-
-  const fetchCartCount = useCallback(async () => {
-    if (!token) return;
-    try {
-      const cart = await getCart(token);
-      const count =
-        cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
-      setCartCount(count);
-    } catch (error) {
-      console.error("Failed to fetch cart:", error);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    fetchMedications();
-    fetchCartCount();
-  }, [fetchMedications, fetchCartCount]);
-
   const handleCategorySelect = (category) => {
     if (selectedCategory === category) {
       setSelectedCategory(null);
-      fetchMedications(searchQuery, null);
     } else {
       setSelectedCategory(category);
-      fetchMedications("", category);
     }
   };
 
-  const handleAddToCart = async (medicationId) => {
+  const handleAddToCart = (medicationId) => {
     if (!token) {
       toast.error("You must be logged in to add items to cart");
       return;
     }
-    try {
-      await addToCart(token, medicationId, 1);
-      fetchCartCount();
-      toast.success("Item added to cart");
-    } catch (error) {
-      toast.error(error.message || "Failed to add item to cart");
-    }
+    addToCartMutation.mutate(medicationId);
   };
 
   const handleUploadPrescription = () => {
     toast.info("Prescription upload will be available in the next update.");
   };
+
+  const isLoading = isMedsLoading;
 
   const activeFeedUsers = [
     {
@@ -217,16 +211,37 @@ export function HomeScreen({
                   position: "relative",
                 }}
               >
-                <Image
-                  source={{
-                    uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-                  }}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: avatarSize / 2,
-                  }}
-                />
+                {user?.profile?.profile_photo_url?.url ? (
+                  <Image
+                    source={{ uri: user.profile.profile_photo_url.url }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: avatarSize / 2,
+                    }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: avatarSize / 2,
+                      backgroundColor: "#E0E0E0", // Give it a nice fallback background color
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: avatarSize * 0.4, // Dynamically scales font size to the container
+                        fontWeight: "bold",
+                        color: "#555",
+                      }}
+                    >
+                      {`${user?.profile?.first_name?.[0] || ""}${user?.profile?.last_name?.[0] || ""}`.toUpperCase()}
+                    </Text>
+                  </View>
+                )}
                 <View
                   style={{
                     backgroundColor: theme.text,
@@ -386,7 +401,7 @@ export function HomeScreen({
                     letterSpacing: -0.2,
                   }}
                 >
-                  Good morning, Amara 👋
+                  Good morning, {firstName} 👋
                 </Text>
               </View>
               <View

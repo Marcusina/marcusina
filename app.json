@@ -28,6 +28,20 @@
       "bundler": "metro",
       "favicon": "./assets/logo.png"
     },
-    "plugins": ["expo-video"]
+    "plugins": [
+      "expo-video",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Medgram uses your location to fill in your profile's geospatial coordinates for location-based search."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "726f42a6-5927-4b9d-9652-027eac165356"
+      }
+    }
   }
 }
