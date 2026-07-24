@@ -21,6 +21,10 @@ function HealthProfileScreenWrapper({ navigation }) {
       onOpenSettings={() => navigation.navigate("Settings")}
       onOpenIdentity={() => navigation.navigate("DigitalHealthId")}
       onOpenWallet={() => navigation.navigate("WalletHome")}
+      onOpenCareCircle={() => navigation.navigate("CareCircleList")}
+      onOpenOrganizations={() => navigation.navigate("OrganizationContextSwitcher")}
+      onOpenIncomingRequests={() => navigation.navigate("IncomingRequestsQueue")}
+      onOpenAvailability={() => navigation.navigate("AvailabilityManager")}
       profile={profile}
       onLogout={handleLogout}
     />

@@ -16,7 +16,19 @@ import Logo from "../components/Logo";
 import { ProfilePhotoPicker } from "../components/ProfilePhotoPicker";
 import { toast } from "../context/ToastContext";
 
-export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings, onOpenIdentity, onOpenWallet, profile, onLogout }) {
+export function HealthProfileScreen({
+  onBackHome,
+  onEditProfile,
+  onOpenSettings,
+  onOpenIdentity,
+  onOpenWallet,
+  onOpenCareCircle,
+  onOpenOrganizations,
+  onOpenIncomingRequests,
+  onOpenAvailability,
+  profile,
+  onLogout,
+}) {
   const { theme, themeMode, setThemeMode } = useTheme();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width >= 768;
@@ -297,6 +309,112 @@ export function HealthProfileScreen({ onBackHome, onEditProfile, onOpenSettings,
                   color={theme.textSecondary}
                 />
               </TouchableOpacity>
+
+              {/* Care Circle Link */}
+              <TouchableOpacity
+                onPress={onOpenCareCircle}
+                className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                style={{ borderBottomColor: theme.border }}
+              >
+                <View className="flex-row items-center gap-3">
+                  <MaterialIcons
+                    name="family-restroom"
+                    size={24}
+                    color={theme.textSecondary}
+                  />
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-[15px] font-medium"
+                  >
+                    Care Circle
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={theme.textSecondary}
+                />
+              </TouchableOpacity>
+
+              {/* Linked Organizations Link */}
+              <TouchableOpacity
+                onPress={onOpenOrganizations}
+                className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                style={{ borderBottomColor: theme.border }}
+              >
+                <View className="flex-row items-center gap-3">
+                  <MaterialIcons
+                    name="domain"
+                    size={24}
+                    color={theme.textSecondary}
+                  />
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-[15px] font-medium"
+                  >
+                    Linked Organizations
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={theme.textSecondary}
+                />
+              </TouchableOpacity>
+
+              {profile.role && profile.role !== "patient" && (
+                <>
+                  <TouchableOpacity
+                    onPress={onOpenIncomingRequests}
+                    className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                    style={{ borderBottomColor: theme.border }}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <MaterialIcons
+                        name="pending-actions"
+                        size={24}
+                        color={theme.textSecondary}
+                      />
+                      <Text
+                        style={{ color: theme.text }}
+                        className="text-[15px] font-medium"
+                      >
+                        Incoming Consultation Requests
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={onOpenAvailability}
+                    className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                    style={{ borderBottomColor: theme.border }}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <MaterialIcons
+                        name="schedule"
+                        size={24}
+                        color={theme.textSecondary}
+                      />
+                      <Text
+                        style={{ color: theme.text }}
+                        className="text-[15px] font-medium"
+                      >
+                        Manage Availability
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </>
+              )}
 
               {/* Account Settings Link */}
               <TouchableOpacity

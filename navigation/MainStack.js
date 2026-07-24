@@ -65,6 +65,36 @@ import {
   AIHandoffScreen,
   AIInsightsScreen,
 } from "../screens/AIScreens";
+import { DocumentVaultScreen, VaultDocumentDetailScreen } from "../screens/DocumentVaultScreens";
+import {
+  FindDoctorScreen,
+  ProfessionalProfileScreen,
+  OrganizationProfileScreen,
+  WaitingRoomScreen,
+  LiveConsultScreen,
+  ChatConsultScreen,
+  ConsultSummaryScreen,
+  ConsultationHistoryScreen,
+  RateReviewScreen,
+  InstantConsultScreen,
+  IncomingRequestsQueueScreen,
+  AvailabilityManagerScreen,
+  ClinicalDocumentationScreen,
+  PatientChartQuickViewScreen,
+} from "../screens/ConsultationScreens";
+import {
+  OrganizationInvitationScreen,
+  OrganizationContextSwitcherScreen,
+} from "../screens/OrganizationBridgeScreens";
+import {
+  CareCircleListScreen,
+  InviteMemberScreen,
+  PermissionEditorScreen,
+  DependentsSwitcherScreen,
+  DelegationRequestScreen,
+  CareCircleAuditLogScreen,
+  FamilyDashboardScreen,
+} from "../screens/CareCircleScreens";
 
 const Stack = createNativeStackNavigator();
 
@@ -142,6 +172,14 @@ function buildNavigateTargets(navigationRef) {
     CarePlansList: () => nav()?.navigate("CarePlansList"),
     EmergencyMode: () => nav()?.navigate("EmergencyMode"),
     AIChatHome: () => nav()?.navigate("AIChatHome"),
+    DocumentVault: () => nav()?.navigate("DocumentVault"),
+    FindDoctor: () => nav()?.navigate("FindDoctor"),
+    ConsultationHistory: () => nav()?.navigate("ConsultationHistory"),
+    InstantConsult: () => nav()?.navigate("InstantConsult"),
+    IncomingRequestsQueue: () => nav()?.navigate("IncomingRequestsQueue"),
+    AvailabilityManager: () => nav()?.navigate("AvailabilityManager"),
+    CareCircleList: () => nav()?.navigate("CareCircleList"),
+    OrganizationContextSwitcher: () => nav()?.navigate("OrganizationContextSwitcher"),
   };
 }
 
@@ -220,6 +258,31 @@ export default function MainStack({ navigationRef, activeTab, setActiveTab }) {
         <Stack.Screen name="AIResponse" component={AIResponseScreen} />
         <Stack.Screen name="AIHandoff" component={AIHandoffScreen} />
         <Stack.Screen name="AIInsights" component={AIInsightsScreen} />
+        <Stack.Screen name="DocumentVault" component={DocumentVaultScreen} />
+        <Stack.Screen name="VaultDocumentDetail" component={VaultDocumentDetailScreen} />
+        <Stack.Screen name="FindDoctor" component={FindDoctorScreen} />
+        <Stack.Screen name="ProfessionalProfile" component={ProfessionalProfileScreen} />
+        <Stack.Screen name="OrganizationProfile" component={OrganizationProfileScreen} />
+        <Stack.Screen name="WaitingRoom" component={WaitingRoomScreen} />
+        <Stack.Screen name="LiveConsult" component={LiveConsultScreen} />
+        <Stack.Screen name="ChatConsult" component={ChatConsultScreen} />
+        <Stack.Screen name="ConsultSummary" component={ConsultSummaryScreen} />
+        <Stack.Screen name="ConsultationHistory" component={ConsultationHistoryScreen} />
+        <Stack.Screen name="RateReview" component={RateReviewScreen} />
+        <Stack.Screen name="InstantConsult" component={InstantConsultScreen} />
+        <Stack.Screen name="IncomingRequestsQueue" component={IncomingRequestsQueueScreen} />
+        <Stack.Screen name="AvailabilityManager" component={AvailabilityManagerScreen} />
+        <Stack.Screen name="ClinicalDocumentation" component={ClinicalDocumentationScreen} />
+        <Stack.Screen name="PatientChartQuickView" component={PatientChartQuickViewScreen} />
+        <Stack.Screen name="OrganizationInvitation" component={OrganizationInvitationScreen} />
+        <Stack.Screen name="OrganizationContextSwitcher" component={OrganizationContextSwitcherScreen} />
+        <Stack.Screen name="CareCircleList" component={CareCircleListScreen} />
+        <Stack.Screen name="InviteMember" component={InviteMemberScreen} />
+        <Stack.Screen name="PermissionEditor" component={PermissionEditorScreen} />
+        <Stack.Screen name="DependentsSwitcher" component={DependentsSwitcherScreen} />
+        <Stack.Screen name="DelegationRequest" component={DelegationRequestScreen} />
+        <Stack.Screen name="CareCircleAuditLog" component={CareCircleAuditLogScreen} />
+        <Stack.Screen name="FamilyDashboard" component={FamilyDashboardScreen} />
       </Stack.Navigator>
     </Layout>
   );

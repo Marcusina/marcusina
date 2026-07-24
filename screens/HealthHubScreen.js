@@ -128,10 +128,24 @@ export function HealthHubScreen({ navigation }) {
           Care
         </Text>
         <NavCard
+          icon="person-search"
+          label="Find a Doctor"
+          description="Search professionals & organizations"
+          onPress={() => navigation.navigate("FindDoctor")}
+          theme={theme}
+        />
+        <NavCard
           icon="event-note"
           label="Appointments"
           description="Upcoming and past appointments"
           onPress={() => navigation.navigate("AppointmentsList")}
+          theme={theme}
+        />
+        <NavCard
+          icon="history"
+          label="Consultation History"
+          description="Past consultations & summaries"
+          onPress={() => navigation.navigate("ConsultationHistory")}
           theme={theme}
         />
         <NavCard
@@ -178,6 +192,13 @@ export function HealthHubScreen({ navigation }) {
           label="Vaccination Record"
           description="Certificates & immunization history"
           onPress={() => navigation.navigate("VaccinationRecord")}
+          theme={theme}
+        />
+        <NavCard
+          icon="inventory-2"
+          label="Document Vault"
+          description="Scanned documents, IDs & insurance cards"
+          onPress={() => navigation.navigate("DocumentVault")}
           theme={theme}
         />
 
