@@ -4,6 +4,7 @@ import { useUser } from "../../context/UserContext";
 import { GroupsScreen } from "../../screens/GroupsScreen";
 import { PostScreen } from "../../screens/PostScreen";
 import { CreatePostScreen } from "../../screens/CreatePostScreen";
+import { CommunityFeedScreen, PostDetailScreen } from "../../screens/CommunityScreens";
 
 const Stack = createNativeStackNavigator();
 
@@ -12,7 +13,7 @@ function GroupsScreenWrapper({ navigation }) {
   return (
     <GroupsScreen
       token={token}
-      onBackHome={() => navigation.navigate("Groups")}
+      onBackHome={() => navigation.navigate("CommunityFeed")}
       onOpenConsult={() => navigation.navigate("ConsultBooking")}
       onOpenProfile={() => navigation.navigate("Me", { screen: "MeHome" })}
     />
@@ -30,7 +31,9 @@ function CreatePostScreenWrapper({ navigation }) {
 export default function CommunityStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Groups" component={GroupsScreenWrapper} />
+      <Stack.Screen name="CommunityFeed" component={CommunityFeedScreen} />
+      <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+      <Stack.Screen name="GroupsDirectory" component={GroupsScreenWrapper} />
       <Stack.Screen
         name="Post"
         component={PostScreenWrapper}

@@ -70,3 +70,47 @@ export const createCommunity = async (token, communityData) => {
     body: communityData,
   });
 };
+
+/**
+ * Fetch the chronological community feed.
+ */
+export const getFeed = async (token, params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.append('page', params.page);
+  if (params.limit) queryParams.append('limit', params.limit);
+
+  const queryString = queryParams.toString();
+  const endpoint = `/posts/feed${queryString ? `?${queryString}` : ''}`;
+
+  return await apiClient(endpoint, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+/**
+ * Publish a new post (post/article/poll/reel, distinguished by payload.type).
+ */
+export const createPost = async (token, payload) => {
+  return await apiClient('/posts/create', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: payload,
+  });
+};
+
+/**
+ * Fetch a single post's full detail, including its comments.
+ */
+export const getPost = async (token, postId) => {
+  return await apiClient(`/posts/${postId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

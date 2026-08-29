@@ -8,11 +8,11 @@ import { InsuranceListScreen } from "../../screens/InsuranceListScreen";
 const Stack = createNativeStackNavigator();
 
 function AppointmentsListScreenWrapper({ navigation }) {
-  return <AppointmentsListScreen onBack={() => navigation.goBack()} />;
+  return <AppointmentsListScreen onBack={() => navigation.goBack()} navigation={navigation} />;
 }
 
 function PrescriptionsListScreenWrapper({ navigation }) {
-  return <PrescriptionsListScreen onBack={() => navigation.goBack()} />;
+  return <PrescriptionsListScreen onBack={() => navigation.goBack()} navigation={navigation} />;
 }
 
 function InsuranceListScreenWrapper({ navigation }) {

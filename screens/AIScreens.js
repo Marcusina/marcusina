@@ -400,12 +400,12 @@ export function AIHandoffScreen({ navigation }) {
               <Text className="text-white text-base font-bold ml-2">Book Consultation</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => toast.info("Lab test ordering is coming soon.")}
+              onPress={() => navigation.navigate("LabOrdersList")}
               style={{ backgroundColor: theme.surface, borderColor: theme.border }}
               className="flex-row items-center justify-center py-4 rounded-xl border"
             >
               <MaterialIcons name="science" size={20} color={theme.text} />
-              <Text style={{ color: theme.text }} className="text-base font-bold ml-2">Order Lab Test</Text>
+              <Text style={{ color: theme.text }} className="text-base font-bold ml-2">View Lab Orders</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate("Tabs", { screen: "Home" })} className="items-center py-2">
               <Text style={{ color: theme.textMuted }} className="text-sm font-semibold">

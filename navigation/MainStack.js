@@ -6,7 +6,6 @@ import MainTabNavigator from "./MainTabNavigator";
 import { NotificationsScreen } from "../screens/NotificationsScreen";
 import { CartScreen } from "../screens/CartScreen";
 import { WishlistScreen } from "../screens/WishlistScreen";
-import { ConsultBookingScreen, ConsultConfirmScreen } from "../screens/ConsultScreens";
 import {
   DigitalHealthIdScreen,
   RequestPhysicalCardScreen,
@@ -15,13 +14,37 @@ import {
   EmergencyAuditLogScreen,
   PublicEmergencyProfileScreen,
   MedGramPassportScreen,
+  IdentityRecoveryCenterScreen,
+  RecoverMedGramIdScreen,
+  ReplaceCardScreen,
+  SuspendIdentityScreen,
+  ReissueIdentityScreen,
+  VerificationChangeHistoryScreen,
+  MergeDuplicateAccountsScreen,
+  DeviceTransferScreen,
+  ScanPatientIdScreen,
 } from "../screens/IdentityScreens";
+import { ForgotPasswordScreen } from "../screens/AuthScreens";
 import {
   ReferralsListScreen,
   ReferralDetailScreen,
   ReferralConsentScreen,
   ReferralFeedbackScreen,
 } from "../screens/ReferralScreens";
+import {
+  PrescriptionDetailScreen,
+  PrescriptionQRScreen,
+  FindPharmacyScreen,
+  MedicationReminderScreen,
+  MedicationHistoryScreen,
+  CreatePrescriptionScreen,
+} from "../screens/PrescriptionScreens";
+import {
+  LabOrdersListScreen,
+  LabOrderStatusScreen,
+  LabResultViewerScreen,
+  CreateLabOrderScreen,
+} from "../screens/LabScreens";
 import {
   HealthRecordHomeScreen,
   RecordEntryDetailScreen,
@@ -56,6 +79,13 @@ import {
   VendorChatThreadScreen,
   CallScreen,
 } from "../screens/MessageScreens";
+import {
+  AppointmentDetailScreen,
+  CheckInScreen,
+  QueueTrackerScreen,
+  BookAppointmentScreen,
+  TodaysAgendaScreen,
+} from "../screens/AppointmentScreens";
 import { CarePlansListScreen, CarePlanDetailScreen } from "../screens/CarePlanScreens";
 import { EmergencyModeScreen } from "../screens/EmergencyModeScreen";
 import {
@@ -70,6 +100,8 @@ import {
   FindDoctorScreen,
   ProfessionalProfileScreen,
   OrganizationProfileScreen,
+  ConsultBookingScreen,
+  ConsultConfirmScreen,
   WaitingRoomScreen,
   LiveConsultScreen,
   ChatConsultScreen,
@@ -95,6 +127,12 @@ import {
   CareCircleAuditLogScreen,
   FamilyDashboardScreen,
 } from "../screens/CareCircleScreens";
+import {
+  MyPatientsScreen,
+  PatientChartScreen,
+  ClinicalNotesLibraryScreen,
+  ProfessionalAnalyticsScreen,
+} from "../screens/ProfessionalScreens";
 
 const Stack = createNativeStackNavigator();
 
@@ -120,23 +158,8 @@ function WishlistScreenWrapper({ navigation }) {
   );
 }
 
-function ConsultBookingScreenWrapper({ navigation }) {
-  return (
-    <ConsultBookingScreen
-      onBack={() => navigation.goBack()}
-      onProceed={() => navigation.navigate("ConsultConfirm")}
-      onGoHome={() => navigation.navigate("Tabs", { screen: "Home" })}
-    />
-  );
-}
-
-function ConsultConfirmScreenWrapper({ navigation }) {
-  return (
-    <ConsultConfirmScreen
-      onBack={() => navigation.navigate("ConsultBooking")}
-      onDone={() => navigation.navigate("Tabs", { screen: "Home" })}
-    />
-  );
+function ForgotPasswordScreenWrapper({ navigation }) {
+  return <ForgotPasswordScreen onBack={() => navigation.goBack()} />;
 }
 
 const TAB_NAMES = ["Home", "Health", "Community", "Marketplace", "Me"];
@@ -165,6 +188,7 @@ function buildNavigateTargets(navigationRef) {
     Cart: () => nav()?.navigate("Cart"),
     ConsultBooking: () => nav()?.navigate("ConsultBooking"),
     DigitalHealthId: () => nav()?.navigate("DigitalHealthId"),
+    IdentityRecoveryCenter: () => nav()?.navigate("IdentityRecoveryCenter"),
     WalletHome: () => nav()?.navigate("WalletHome"),
     ReferralsList: () => nav()?.navigate("ReferralsList"),
     HealthRecordHome: () => nav()?.navigate("HealthRecordHome"),
@@ -179,6 +203,11 @@ function buildNavigateTargets(navigationRef) {
     IncomingRequestsQueue: () => nav()?.navigate("IncomingRequestsQueue"),
     AvailabilityManager: () => nav()?.navigate("AvailabilityManager"),
     CareCircleList: () => nav()?.navigate("CareCircleList"),
+    BookAppointment: () => nav()?.navigate("BookAppointment"),
+    TodaysAgenda: () => nav()?.navigate("TodaysAgenda"),
+    MyPatients: () => nav()?.navigate("MyPatients"),
+    ClinicalNotesLibrary: () => nav()?.navigate("ClinicalNotesLibrary"),
+    ProfessionalAnalytics: () => nav()?.navigate("ProfessionalAnalytics"),
     OrganizationContextSwitcher: () => nav()?.navigate("OrganizationContextSwitcher"),
   };
 }
@@ -209,8 +238,8 @@ export default function MainStack({ navigationRef, activeTab, setActiveTab }) {
         <Stack.Screen name="Notifications" component={NotificationsScreenWrapper} />
         <Stack.Screen name="Cart" component={CartScreenWrapper} />
         <Stack.Screen name="Wishlist" component={WishlistScreenWrapper} />
-        <Stack.Screen name="ConsultBooking" component={ConsultBookingScreenWrapper} />
-        <Stack.Screen name="ConsultConfirm" component={ConsultConfirmScreenWrapper} />
+        <Stack.Screen name="ConsultBooking" component={ConsultBookingScreen} />
+        <Stack.Screen name="ConsultConfirm" component={ConsultConfirmScreen} />
         <Stack.Screen name="DigitalHealthId" component={DigitalHealthIdScreen} />
         <Stack.Screen name="RequestPhysicalCard" component={RequestPhysicalCardScreen} />
         <Stack.Screen name="EmergencyProfile" component={EmergencyProfileScreen} />
@@ -218,10 +247,30 @@ export default function MainStack({ navigationRef, activeTab, setActiveTab }) {
         <Stack.Screen name="EmergencyAuditLog" component={EmergencyAuditLogScreen} />
         <Stack.Screen name="PublicEmergencyProfile" component={PublicEmergencyProfileScreen} />
         <Stack.Screen name="MedGramPassport" component={MedGramPassportScreen} />
+        <Stack.Screen name="IdentityRecoveryCenter" component={IdentityRecoveryCenterScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreenWrapper} />
+        <Stack.Screen name="RecoverMedGramId" component={RecoverMedGramIdScreen} />
+        <Stack.Screen name="ReplaceCard" component={ReplaceCardScreen} />
+        <Stack.Screen name="SuspendIdentity" component={SuspendIdentityScreen} />
+        <Stack.Screen name="ReissueIdentity" component={ReissueIdentityScreen} />
+        <Stack.Screen name="VerificationChangeHistory" component={VerificationChangeHistoryScreen} />
+        <Stack.Screen name="MergeDuplicateAccounts" component={MergeDuplicateAccountsScreen} />
+        <Stack.Screen name="DeviceTransfer" component={DeviceTransferScreen} />
+        <Stack.Screen name="ScanPatientId" component={ScanPatientIdScreen} />
         <Stack.Screen name="ReferralsList" component={ReferralsListScreen} />
         <Stack.Screen name="ReferralDetail" component={ReferralDetailScreen} />
         <Stack.Screen name="ReferralConsent" component={ReferralConsentScreen} />
         <Stack.Screen name="ReferralFeedback" component={ReferralFeedbackScreen} />
+        <Stack.Screen name="PrescriptionDetail" component={PrescriptionDetailScreen} />
+        <Stack.Screen name="PrescriptionQR" component={PrescriptionQRScreen} />
+        <Stack.Screen name="FindPharmacy" component={FindPharmacyScreen} />
+        <Stack.Screen name="MedicationReminder" component={MedicationReminderScreen} />
+        <Stack.Screen name="MedicationHistory" component={MedicationHistoryScreen} />
+        <Stack.Screen name="CreatePrescription" component={CreatePrescriptionScreen} />
+        <Stack.Screen name="LabOrdersList" component={LabOrdersListScreen} />
+        <Stack.Screen name="LabOrderStatus" component={LabOrderStatusScreen} />
+        <Stack.Screen name="LabResultViewer" component={LabResultViewerScreen} />
+        <Stack.Screen name="CreateLabOrder" component={CreateLabOrderScreen} />
         <Stack.Screen name="HealthRecordHome" component={HealthRecordHomeScreen} />
         <Stack.Screen name="RecordEntryDetail" component={RecordEntryDetailScreen} />
         <Stack.Screen name="AddSelfReportedInfo" component={AddSelfReportedInfoScreen} />
@@ -250,6 +299,11 @@ export default function MainStack({ navigationRef, activeTab, setActiveTab }) {
         <Stack.Screen name="BroadcastViewer" component={BroadcastViewerScreen} />
         <Stack.Screen name="VendorChatThread" component={VendorChatThreadScreen} />
         <Stack.Screen name="Call" component={CallScreen} />
+        <Stack.Screen name="AppointmentDetail" component={AppointmentDetailScreen} />
+        <Stack.Screen name="AppointmentCheckIn" component={CheckInScreen} />
+        <Stack.Screen name="AppointmentQueueTracker" component={QueueTrackerScreen} />
+        <Stack.Screen name="BookAppointment" component={BookAppointmentScreen} />
+        <Stack.Screen name="TodaysAgenda" component={TodaysAgendaScreen} />
         <Stack.Screen name="CarePlansList" component={CarePlansListScreen} />
         <Stack.Screen name="CarePlanDetail" component={CarePlanDetailScreen} />
         <Stack.Screen name="EmergencyMode" component={EmergencyModeScreen} />
@@ -283,6 +337,10 @@ export default function MainStack({ navigationRef, activeTab, setActiveTab }) {
         <Stack.Screen name="DelegationRequest" component={DelegationRequestScreen} />
         <Stack.Screen name="CareCircleAuditLog" component={CareCircleAuditLogScreen} />
         <Stack.Screen name="FamilyDashboard" component={FamilyDashboardScreen} />
+        <Stack.Screen name="MyPatients" component={MyPatientsScreen} />
+        <Stack.Screen name="PatientChart" component={PatientChartScreen} />
+        <Stack.Screen name="ClinicalNotesLibrary" component={ClinicalNotesLibraryScreen} />
+        <Stack.Screen name="ProfessionalAnalytics" component={ProfessionalAnalyticsScreen} />
       </Stack.Navigator>
     </Layout>
   );

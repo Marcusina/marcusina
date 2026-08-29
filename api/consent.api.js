@@ -18,3 +18,16 @@ export const revokeConsent = async (consentId) => {
     method: 'PUT',
   });
 };
+
+/**
+ * Grant a new, scoped consent record (e.g. sharing a single lab result with
+ * a named professional). Minimal implementation - see add-laboratory-diagnostics
+ * design.md: reconcile/de-duplicate if a dedicated Consent Center grant flow
+ * (CON-02) is built separately.
+ */
+export const grantConsent = async (payload) => {
+  return await apiClient('/consents/grant', {
+    method: 'POST',
+    body: payload,
+  });
+};

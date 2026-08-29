@@ -16,6 +16,7 @@ import {
   getCommunities,
   getMyCommunities,
   joinCommunity,
+  createCommunity,
 } from "../api/community.api";
 import { useTheme } from "../context/ThemeContext";
 import { useToast } from "../context/ToastContext";
@@ -66,6 +67,8 @@ export function GroupsScreen({
   const brandPrimaryColor = theme.primary || "#3B82F6";
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
 
   // Use TanStack Query to fetch my communities
   const { data: myCommunities = [], isLoading: isMyCommunitiesLoading } = useQuery({
@@ -106,8 +109,22 @@ export function GroupsScreen({
     setSearchQuery(text);
   };
 
+  const createGroupMutation = useMutation({
+    mutationFn: () => createCommunity(token, { community_name: newGroupName.trim() }),
+    onSuccess: () => {
+      showToast("Group created!", "success");
+      queryClient.invalidateQueries({ queryKey: ["myCommunities", token] });
+      queryClient.invalidateQueries({ queryKey: ["allCommunities", token] });
+      setNewGroupName("");
+      setIsCreating(false);
+    },
+    onError: (error) => {
+      showToast(error.message || "Failed to create group", "error");
+    },
+  });
+
   const handleCreateGroup = () => {
-    showToast("Group creation will be available in the next update.", "info");
+    setIsCreating(true);
   };
 
   const isLoading = isMyCommunitiesLoading || isAllCommunitiesLoading;
@@ -556,6 +573,57 @@ export function GroupsScreen({
           color={theme.dark ? "#FFFFFF" : "#111827"}
         />
       </TouchableOpacity>
+
+      {/* ─── CREATE GROUP OVERLAY ─── */}
+      {isCreating && (
+        <View
+          className="absolute inset-0 items-center justify-center px-6"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+        >
+          <View
+            className="w-full rounded-2xl p-5"
+            style={{ backgroundColor: theme.surface, maxWidth: 420 }}
+          >
+            <Text className="text-base font-bold mb-3" style={{ color: theme.text }}>
+              Create a Group
+            </Text>
+            <TextInput
+              className="rounded-xl px-4 py-3 border text-[15px] mb-4"
+              style={{ borderColor: theme.border, color: theme.text }}
+              placeholder="Group name"
+              placeholderTextColor={theme.textMuted}
+              value={newGroupName}
+              onChangeText={setNewGroupName}
+            />
+            <View className="flex-row justify-end gap-3">
+              <TouchableOpacity
+                onPress={() => {
+                  setIsCreating(false);
+                  setNewGroupName("");
+                }}
+                className="px-4 py-2.5 rounded-xl"
+              >
+                <Text style={{ color: theme.textSecondary }} className="text-sm font-bold">
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => createGroupMutation.mutate()}
+                disabled={!newGroupName.trim() || createGroupMutation.isPending}
+                style={{ backgroundColor: newGroupName.trim() ? brandPrimaryColor : theme.surfaceSubtle }}
+                className="px-4 py-2.5 rounded-xl"
+              >
+                <Text
+                  style={{ color: newGroupName.trim() ? "#FFFFFF" : theme.textMuted }}
+                  className="text-sm font-bold"
+                >
+                  {createGroupMutation.isPending ? "Creating..." : "Create"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

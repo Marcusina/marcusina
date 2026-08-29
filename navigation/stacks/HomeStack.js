@@ -11,10 +11,6 @@ function HomeScreenWrapper({ navigation }) {
     <HomeScreen
       user={user}
       token={token}
-      onOpenProfile={() => navigation.navigate("Me", { screen: "MeHome" })}
-      onOpenGroups={() => navigation.navigate("Community", { screen: "Groups" })}
-      onConsult={() => navigation.navigate("ConsultBooking")}
-      onOpenPlace={() => navigation.navigate("Marketplace")}
       onOpenPost={(id) =>
         navigation.navigate("Community", { screen: "Post", params: { postId: id } })
       }

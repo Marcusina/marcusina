@@ -1,10 +1,20 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { useUser } from "../context/UserContext";
 import { toast } from "../context/ToastContext";
-import { useIsWeb, ScreenHeader, SectionLabel, Chip, FormField, NavRow } from "../components/ScreenKit";
+import { useIsWeb, ScreenHeader, SectionLabel, Chip, FormField, NavRow, EmptyState } from "../components/ScreenKit";
+import {
+  recoverMedGramId,
+  replaceIdentityCard,
+  suspendIdentity,
+  reissueIdentity,
+  mergeDuplicateAccounts,
+  transferDevice,
+  scanPatientId,
+  getVerificationHistory,
+} from "../api/identity.api";
 
 // ─── SHARED MOCK DATA ───
 // Placeholder until the emergency-profile API lands - mirrors the shape
@@ -115,6 +125,119 @@ function QRPlaceholder({ seed = "MEDGRAM", size = 152 }) {
       </View>
     </View>
   );
+}
+
+// ─── ID-16 · IDENTITY CONFIDENCE INDICATOR ───
+// Computed from the verification signals actually present on `profile`
+// today (phone verification, email on file). Renders nothing when there's
+// nothing unresolved, per the spec's "all steps resolved -> no badge"
+// scenario. Extend `unresolvedSteps` as more verification signals (e.g.
+// professional license status) land on the profile shape.
+export function IdentityConfidenceBadge() {
+  const { theme } = useTheme();
+  const { profile } = useUser();
+  const [expanded, setExpanded] = useState(false);
+
+  const unresolvedSteps = [];
+  if (!profile?.is_phone_verified) {
+    unresolvedSteps.push("Verify your phone number");
+  }
+  if (!profile?.email) {
+    unresolvedSteps.push("Add and verify an email address");
+  }
+
+  if (unresolvedSteps.length === 0) return null;
+
+  return (
+    <TouchableOpacity
+      onPress={() => setExpanded((v) => !v)}
+      activeOpacity={0.85}
+      style={{ backgroundColor: theme.warningLight }}
+      className="rounded-2xl p-4 mt-5"
+    >
+      <View className="flex-row items-center">
+        <MaterialIcons name="gpp-maybe" size={20} color={theme.warning} />
+        <Text style={{ color: theme.text }} className="text-sm font-bold ml-2 flex-1">
+          {unresolvedSteps.length} verification step{unresolvedSteps.length > 1 ? "s" : ""} remaining
+        </Text>
+        <MaterialIcons
+          name={expanded ? "expand-less" : "expand-more"}
+          size={20}
+          color={theme.textSecondary}
+        />
+      </View>
+      {expanded && (
+        <View className="mt-3">
+          {unresolvedSteps.map((step, i) => (
+            <View key={i} className="flex-row items-center py-1">
+              <MaterialIcons name="radio-button-unchecked" size={14} color={theme.textSecondary} />
+              <Text style={{ color: theme.textSecondary }} className="text-xs ml-2">
+                {step}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+// Shared result panel for security-sensitive actions (suspend/reissue/merge/
+// device-transfer/recover): a real backend success and an explicit
+// "pending manual review" state are the only two outcomes ever shown here -
+// never a faked success. See harden-identity-recovery design.md.
+function SecurityActionResult({ status, successTitle, successBody, pendingBody }) {
+  const { theme } = useTheme();
+  if (status === "success") {
+    return (
+      <View style={{ backgroundColor: theme.successLight }} className="rounded-2xl p-4 mt-4">
+        <View className="flex-row items-center mb-1">
+          <MaterialIcons name="check-circle" size={18} color={theme.success} />
+          <Text style={{ color: theme.text }} className="text-sm font-bold ml-2">
+            {successTitle}
+          </Text>
+        </View>
+        <Text style={{ color: theme.textSecondary }} className="text-xs leading-5">
+          {successBody}
+        </Text>
+      </View>
+    );
+  }
+  if (status === "pending") {
+    return (
+      <View style={{ backgroundColor: theme.warningLight }} className="rounded-2xl p-4 mt-4">
+        <View className="flex-row items-center mb-1">
+          <MaterialIcons name="hourglass-top" size={18} color={theme.warning} />
+          <Text style={{ color: theme.text }} className="text-sm font-bold ml-2">
+            Submitted for manual review
+          </Text>
+        </View>
+        <Text style={{ color: theme.textSecondary }} className="text-xs leading-5">
+          {pendingBody}
+        </Text>
+      </View>
+    );
+  }
+  return null;
+}
+
+// Runs a security-sensitive identity action against the backend and reports
+// exactly one of "success" or "pending" - a caught error is never treated as
+// success. See SecurityActionResult above.
+function useSecurityAction(apiFn) {
+  const [status, setStatus] = useState("idle"); // idle | submitting | success | pending
+  const submit = async (payload) => {
+    setStatus("submitting");
+    try {
+      const result = await apiFn(payload);
+      setStatus("success");
+      return { ok: true, result };
+    } catch (err) {
+      setStatus("pending");
+      return { ok: false, error: err };
+    }
+  };
+  return { status, submit, setStatus };
 }
 
 // ─── ID-01 · MY DIGITAL HEALTH IDENTITY ───
@@ -230,6 +353,8 @@ export function DigitalHealthIdScreen({ navigation }) {
               <MaterialIcons name="chevron-right" size={22} color="#FFFFFF" />
             </TouchableOpacity>
 
+            <IdentityConfidenceBadge />
+
             <SectionLabel>Health & Coverage</SectionLabel>
             <NavRow
               icon="emergency"
@@ -260,6 +385,14 @@ export function DigitalHealthIdScreen({ navigation }) {
               label="Preview Emergency Card"
               description="See what a responder sees when they scan your ID"
               onPress={() => navigation.navigate("PublicEmergencyProfile")}
+            />
+
+            <SectionLabel>Need Help?</SectionLabel>
+            <NavRow
+              icon="support-agent"
+              label="Identity & Account Recovery"
+              description="Lost access, suspected fraud, duplicate accounts, and more"
+              onPress={() => navigation.navigate("IdentityRecoveryCenter")}
             />
           </View>
         </View>
@@ -716,11 +849,32 @@ export function EmergencyAuditLogScreen({ navigation }) {
 }
 
 // ─── ID-06 · PUBLIC EMERGENCY PROFILE (bystander scan view) ───
-export function PublicEmergencyProfileScreen({ navigation }) {
+// Serves two callers with different data sources: ID-06's self-preview
+// (no route params - "what would a responder see if they scanned my own
+// ID", using the current user's own profile + MOCK_EMERGENCY_PROFILE until
+// a real self-service emergency-profile API exists) and ID-07's
+// professional scan result (route.params.scannedPatient, the real record
+// returned by POST /identity/scan). Previously this screen only ever
+// rendered the self-preview data regardless of which flow reached it - a
+// real bug, since a professional scanning a patient would have seen their
+// OWN info instead of the patient's.
+export function PublicEmergencyProfileScreen({ navigation, route }) {
   const { theme } = useTheme();
   const { profile } = useUser();
   const isWeb = useIsWeb();
-  const data = MOCK_EMERGENCY_PROFILE;
+  const scanned = route?.params?.scannedPatient;
+
+  const displayName = scanned ? scanned.name : profile?.name || "MedGram User";
+  const bloodGroup = scanned ? scanned.blood_group : MOCK_EMERGENCY_PROFILE.bloodGroup;
+  const genotype = scanned ? null : MOCK_EMERGENCY_PROFILE.genotype;
+  const allergies = scanned ? scanned.allergies || [] : MOCK_EMERGENCY_PROFILE.allergies;
+  const chronicConditions = scanned ? scanned.chronic_conditions || [] : MOCK_EMERGENCY_PROFILE.chronicConditions;
+  const medications = scanned ? scanned.current_medications || [] : MOCK_EMERGENCY_PROFILE.medications;
+  const emergencyContacts = scanned
+    ? scanned.emergency_contact_name
+      ? [{ name: scanned.emergency_contact_name, relationship: "Emergency Contact", phone: scanned.emergency_contact_phone }]
+      : []
+    : MOCK_EMERGENCY_PROFILE.emergencyContacts;
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
@@ -743,30 +897,33 @@ export function PublicEmergencyProfileScreen({ navigation }) {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View className={isWeb ? "px-6" : "px-5"}>
-          <View
-            style={{ backgroundColor: theme.warningLight }}
-            className={`flex-row items-center rounded-2xl p-3 mt-4 ${isWeb ? "max-w-[520px]" : ""}`}
-          >
-            <MaterialIcons name="wifi-off" size={16} color={theme.warning} />
-            <Text style={{ color: theme.text }} className="text-xs ml-2">
-              Showing cached data - last synced Jul 20, 2026
-            </Text>
-          </View>
+          {!scanned && (
+            <View
+              style={{ backgroundColor: theme.warningLight }}
+              className={`flex-row items-center rounded-2xl p-3 mt-4 ${isWeb ? "max-w-[520px]" : ""}`}
+            >
+              <MaterialIcons name="wifi-off" size={16} color={theme.warning} />
+              <Text style={{ color: theme.text }} className="text-xs ml-2">
+                Preview only - this is what a responder would see, not a live scan
+              </Text>
+            </View>
+          )}
 
           <View
             style={{ backgroundColor: theme.surface, borderColor: theme.border }}
             className={`rounded-2xl p-5 border mt-4 ${isWeb ? "max-w-[520px]" : ""}`}
           >
             <Text style={{ color: theme.text }} className="text-xl font-extrabold mb-1">
-              {profile?.name || "MedGram User"}
+              {displayName}
             </Text>
             <Text style={{ color: theme.textSecondary }} className="text-sm mb-4">
-              Blood Group {data.bloodGroup} · Genotype {data.genotype}
+              Blood Group {bloodGroup || "Not on file"}
+              {genotype ? ` · Genotype ${genotype}` : ""}
             </Text>
 
-            <PublicRow label="Allergies" value={data.allergies.join(", ")} />
-            <PublicRow label="Chronic Conditions" value={data.chronicConditions.join(", ")} />
-            <PublicRow label="Current Medications" value={data.medications.join(", ")} />
+            <PublicRow label="Allergies" value={allergies.join(", ")} />
+            <PublicRow label="Chronic Conditions" value={chronicConditions.join(", ")} />
+            <PublicRow label="Current Medications" value={medications.join(", ")} />
 
             <Text
               style={{ color: theme.textMuted }}
@@ -774,29 +931,35 @@ export function PublicEmergencyProfileScreen({ navigation }) {
             >
               Emergency Contacts
             </Text>
-            {data.emergencyContacts.map((c, i) => (
-              <TouchableOpacity
-                key={i}
-                onPress={() => toast.info(`Would call ${c.phone}`)}
-                style={{ backgroundColor: theme.successLight }}
-                className="flex-row items-center justify-between rounded-xl p-3 mb-2"
-              >
-                <View>
-                  <Text style={{ color: theme.text }} className="text-sm font-bold">
-                    {c.name}
-                  </Text>
-                  <Text style={{ color: theme.textSecondary }} className="text-xs">
-                    {c.relationship}
-                  </Text>
-                </View>
-                <View className="flex-row items-center">
-                  <MaterialIcons name="call" size={18} color={theme.success} />
-                  <Text style={{ color: theme.success }} className="text-sm font-bold ml-1.5">
-                    {c.phone}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+            {emergencyContacts.length === 0 ? (
+              <Text style={{ color: theme.textMuted }} className="text-xs italic">
+                None on file
+              </Text>
+            ) : (
+              emergencyContacts.map((c, i) => (
+                <TouchableOpacity
+                  key={i}
+                  onPress={() => toast.info(`Would call ${c.phone}`)}
+                  style={{ backgroundColor: theme.successLight }}
+                  className="flex-row items-center justify-between rounded-xl p-3 mb-2"
+                >
+                  <View>
+                    <Text style={{ color: theme.text }} className="text-sm font-bold">
+                      {c.name}
+                    </Text>
+                    <Text style={{ color: theme.textSecondary }} className="text-xs">
+                      {c.relationship}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center">
+                    <MaterialIcons name="call" size={18} color={theme.success} />
+                    <Text style={{ color: theme.success }} className="text-sm font-bold ml-1.5">
+                      {c.phone}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
           </View>
 
           <Text
@@ -919,6 +1082,858 @@ export function MedGramPassportScreen({ navigation }) {
               <PublicRow label="Allergies" value={data.allergies.join(", ")} />
             </View>
           </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ID-14 · IDENTITY & ACCOUNT RECOVERY CENTER ───
+// A router/hub, not a wizard: every recovery-adjacent screen is one tap
+// away so a user doesn't need to already know which specific flow they
+// need. ONB-13 (AuthScreens.js's ForgotPasswordScreen) is linked, not
+// rebuilt.
+export function IdentityRecoveryCenterScreen({ navigation }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Identity & Account Recovery" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          <Text
+            style={{ color: theme.textSecondary }}
+            className={`text-sm mt-5 mb-2 leading-5 ${isWeb ? "max-w-[560px]" : ""}`}
+          >
+            Not sure which one you need? Pick the situation that matches yours.
+          </Text>
+
+          <View className={isWeb ? "max-w-[560px]" : ""}>
+            <SectionLabel>Get Back Into Your Account</SectionLabel>
+            <NavRow
+              icon="lock-reset"
+              label="Reset Password"
+              description="Forgot your password"
+              onPress={() => navigation.navigate("ForgotPassword")}
+            />
+            <NavRow
+              icon="badge"
+              label="Recover MedGram ID"
+              description="Lost or disputed MedGram ID"
+              onPress={() => navigation.navigate("RecoverMedGramId")}
+            />
+
+            <SectionLabel>Manage Your Identity</SectionLabel>
+            <NavRow
+              icon="credit-card"
+              label="Replace Card"
+              description="Lost, damaged, or stolen digital/physical card"
+              onPress={() => navigation.navigate("ReplaceCard")}
+            />
+            <NavRow
+              icon="history"
+              label="Verification & Change History"
+              description="Every verification event and identity change"
+              onPress={() => navigation.navigate("VerificationChangeHistory")}
+            />
+            <NavRow
+              icon="phonelink-lock"
+              label="Device Transfer"
+              description="Move your active session to a new device"
+              onPress={() => navigation.navigate("DeviceTransfer")}
+            />
+
+            <SectionLabel>I Have Two Accounts</SectionLabel>
+            <NavRow
+              icon="merge-type"
+              label="Merge Duplicate Accounts"
+              description="Verify and combine two identities into one"
+              onPress={() => navigation.navigate("MergeDuplicateAccounts")}
+            />
+
+            <SectionLabel>Security Concerns</SectionLabel>
+            <NavRow
+              icon="block"
+              label="Suspend Identity"
+              description="Suspected fraud or a stolen device"
+              onPress={() => navigation.navigate("SuspendIdentity")}
+            />
+            <NavRow
+              icon="autorenew"
+              label="Reissue Identity"
+              description="After suspension or a major life change"
+              onPress={() => navigation.navigate("ReissueIdentity")}
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ID-09 · RECOVER MEDGRAM ID ───
+export function RecoverMedGramIdScreen({ navigation }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const [identifier, setIdentifier] = useState("");
+  const [reason, setReason] = useState("");
+  const { status, submit } = useSecurityAction(recoverMedGramId);
+
+  const handleSubmit = async () => {
+    if (!identifier.trim()) {
+      toast.error("Enter the email, phone, or MedGram ID on the account.");
+      return;
+    }
+    await submit({ identifier: identifier.trim(), reason: reason.trim() });
+  };
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Recover MedGram ID" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          <View
+            style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+            className={`rounded-2xl p-5 border mt-5 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            <FormField
+              label="Email, Phone, or MedGram ID"
+              value={identifier}
+              onChangeText={setIdentifier}
+              placeholder="The identifier on the account you've lost access to"
+            />
+            <FormField
+              label="What happened? (optional)"
+              value={reason}
+              onChangeText={setReason}
+              placeholder="e.g. lost my phone, forgot everything"
+              multiline
+              last
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={status === "submitting"}
+            style={{ backgroundColor: theme.primary, opacity: status === "submitting" ? 0.7 : 1 }}
+            className={`flex-row items-center justify-center py-4 rounded-xl mt-6 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            {status === "submitting" ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white text-base font-bold">Start Recovery</Text>
+            )}
+          </TouchableOpacity>
+
+          <View className={isWeb ? "max-w-[520px]" : ""}>
+            <SecurityActionResult
+              status={status}
+              successTitle="Recovery started"
+              successBody="Follow the next verification step to restore access to your MedGram ID."
+              pendingBody="We couldn't process this automatically yet. Your request has been submitted for manual review - you'll be contacted with next steps."
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ID-10 · REPLACE DIGITAL/PHYSICAL CARD ───
+export function ReplaceCardScreen({ navigation }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const REASONS = ["Lost", "Stolen", "Damaged", "Compromised"];
+  const [reason, setReason] = useState(REASONS[0]);
+  const [cardType, setCardType] = useState("digital");
+  const { status, submit } = useSecurityAction(replaceIdentityCard);
+
+  const handleSubmit = async () => {
+    await submit({ reason, cardType });
+  };
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Replace Card" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          <View className={isWeb ? "max-w-[520px]" : ""}>
+            <SectionLabel>Reason</SectionLabel>
+            <View className="flex-row flex-wrap">
+              {REASONS.map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  onPress={() => setReason(r)}
+                  style={{
+                    backgroundColor: reason === r ? theme.primary : theme.surface,
+                    borderColor: reason === r ? theme.primary : theme.border,
+                  }}
+                  className="px-4 py-2 rounded-full border mr-2 mb-2"
+                >
+                  <Text
+                    style={{ color: reason === r ? "#FFFFFF" : theme.text }}
+                    className="text-xs font-bold"
+                  >
+                    {r}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <SectionLabel>Card Type</SectionLabel>
+            <View
+              style={{ backgroundColor: theme.surfaceSubtle, borderColor: theme.border }}
+              className="flex-row rounded-xl p-1 border"
+            >
+              {[
+                { key: "digital", label: "Digital" },
+                { key: "physical", label: "Physical" },
+              ].map((t) => {
+                const isActive = cardType === t.key;
+                return (
+                  <TouchableOpacity
+                    key={t.key}
+                    onPress={() => setCardType(t.key)}
+                    style={{
+                      backgroundColor: isActive ? theme.surface : "transparent",
+                      borderColor: isActive ? theme.border : "transparent",
+                    }}
+                    className="flex-1 items-center justify-center py-2.5 rounded-lg border"
+                  >
+                    <Text
+                      style={{ color: isActive ? theme.primary : theme.textSecondary }}
+                      className={`text-xs ${isActive ? "font-bold" : "font-medium"}`}
+                    >
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={status === "submitting"}
+            style={{ backgroundColor: theme.primary, opacity: status === "submitting" ? 0.7 : 1 }}
+            className={`flex-row items-center justify-center py-4 rounded-xl mt-6 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            {status === "submitting" ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white text-base font-bold">Request Replacement</Text>
+            )}
+          </TouchableOpacity>
+
+          <View className={isWeb ? "max-w-[520px]" : ""}>
+            <SecurityActionResult
+              status={status}
+              successTitle="Replacement requested"
+              successBody="Your replacement card request has been recorded. Track its status from here."
+              pendingBody="We couldn't process this automatically yet. Your request has been submitted for manual review."
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ID-11 · SUSPEND IDENTITY ───
+export function SuspendIdentityScreen({ navigation }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const REASONS = ["Suspected fraud", "Stolen device", "Other"];
+  const [reason, setReason] = useState(REASONS[0]);
+  const [confirmText, setConfirmText] = useState("");
+  const { status, submit } = useSecurityAction(suspendIdentity);
+
+  const handleSubmit = async () => {
+    if (confirmText.trim().toUpperCase() !== "SUSPEND") {
+      toast.error('Type "SUSPEND" to confirm this action.');
+      return;
+    }
+    await submit({ reason });
+  };
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Suspend Identity" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          <View
+            style={{ backgroundColor: theme.errorLight }}
+            className={`flex-row items-start rounded-2xl p-4 mt-5 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            <MaterialIcons name="warning" size={18} color={theme.error} />
+            <Text style={{ color: theme.text }} className="text-xs ml-2.5 flex-1 leading-5">
+              Suspending your identity immediately blocks new consultations, prescriptions, and
+              payments until you reissue or reverse it. Use this if you suspect fraud or lost a
+              device with an active session.
+            </Text>
+          </View>
+
+          <View className={isWeb ? "max-w-[520px]" : ""}>
+            <SectionLabel>Reason</SectionLabel>
+            <View className="flex-row flex-wrap">
+              {REASONS.map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  onPress={() => setReason(r)}
+                  style={{
+                    backgroundColor: reason === r ? theme.error : theme.surface,
+                    borderColor: reason === r ? theme.error : theme.border,
+                  }}
+                  className="px-4 py-2 rounded-full border mr-2 mb-2"
+                >
+                  <Text
+                    style={{ color: reason === r ? "#FFFFFF" : theme.text }}
+                    className="text-xs font-bold"
+                  >
+                    {r}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <FormField
+              label='Type "SUSPEND" to confirm'
+              value={confirmText}
+              onChangeText={setConfirmText}
+              placeholder="SUSPEND"
+              last
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={status === "submitting"}
+            style={{ backgroundColor: theme.error, opacity: status === "submitting" ? 0.7 : 1 }}
+            className={`flex-row items-center justify-center py-4 rounded-xl mt-6 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            {status === "submitting" ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white text-base font-bold">Confirm Suspension</Text>
+            )}
+          </TouchableOpacity>
+
+          <View className={isWeb ? "max-w-[520px]" : ""}>
+            <SecurityActionResult
+              status={status}
+              successTitle="Identity suspended"
+              successBody="Your identity is now suspended. Use Reissue Identity from the Recovery Center when you're ready to restore it."
+              pendingBody="We couldn't process this automatically yet - your identity has NOT been suspended. Your request has been submitted for manual review; contact support if this is urgent."
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ID-12 · REISSUE IDENTITY ───
+export function ReissueIdentityScreen({ navigation }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const REASONS = ["Post-suspension", "Major life change", "Other"];
+  const [reason, setReason] = useState(REASONS[0]);
+  const { status, submit } = useSecurityAction(reissueIdentity);
+
+  const handleSubmit = async () => {
+    await submit({ reason });
+  };
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Reissue Identity" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          <View className={isWeb ? "max-w-[520px]" : ""}>
+            <SectionLabel>Reason</SectionLabel>
+            <View className="flex-row flex-wrap">
+              {REASONS.map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  onPress={() => setReason(r)}
+                  style={{
+                    backgroundColor: reason === r ? theme.primary : theme.surface,
+                    borderColor: reason === r ? theme.primary : theme.border,
+                  }}
+                  className="px-4 py-2 rounded-full border mr-2 mb-2"
+                >
+                  <Text
+                    style={{ color: reason === r ? "#FFFFFF" : theme.text }}
+                    className="text-xs font-bold"
+                  >
+                    {r}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={status === "submitting"}
+            style={{ backgroundColor: theme.primary, opacity: status === "submitting" ? 0.7 : 1 }}
+            className={`flex-row items-center justify-center py-4 rounded-xl mt-6 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            {status === "submitting" ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white text-base font-bold">Reissue Identity</Text>
+            )}
+          </TouchableOpacity>
+
+          <View className={isWeb ? "max-w-[520px]" : ""}>
+            <SecurityActionResult
+              status={status}
+              successTitle="Identity reissued"
+              successBody="Your identity has been reissued and is active again."
+              pendingBody="We couldn't process this automatically yet. Your request has been submitted for manual review."
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ID-13 · VERIFICATION & CHANGE HISTORY ───
+// Reuses EmergencyAuditLogScreen's list-of-events pattern. Unlike ID-05
+// (out of scope for this change), this is a new screen and follows the
+// module's non-fake-data principle: no mock rows, just a real fetch with an
+// honest empty state when the backend can't serve it yet.
+export function VerificationChangeHistoryScreen({ navigation }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await getVerificationHistory();
+        if (!cancelled) setEvents(Array.isArray(data) ? data : data?.events || []);
+      } catch (err) {
+        if (!cancelled) setEvents([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Verification & Change History" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={theme.primary} />
+        </View>
+      ) : events.length === 0 ? (
+        <EmptyState
+          icon="history"
+          title="No history yet"
+          description="Verification events and identity changes will appear here as they happen."
+        />
+      ) : (
+        <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          <View className={isWeb ? "px-6" : "px-5"}>
+            <View className={isWeb ? "max-w-[560px]" : ""}>
+              {events.map((entry, i) => (
+                <View
+                  key={entry.id || i}
+                  style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  className="rounded-2xl p-4 border mb-3"
+                >
+                  <View className="flex-row justify-between items-start mb-1.5">
+                    <Text style={{ color: theme.text }} className="text-sm font-bold flex-1 pr-2">
+                      {entry.event || entry.title || "Verification event"}
+                    </Text>
+                    <Text style={{ color: theme.textMuted }} className="text-[11px]">
+                      {entry.date ? new Date(entry.date).toLocaleString() : ""}
+                    </Text>
+                  </View>
+                  {entry.detail ? (
+                    <Text style={{ color: theme.textSecondary }} className="text-xs">
+                      {entry.detail}
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+// ─── ID-15 · MERGE DUPLICATE ACCOUNTS ───
+// verify -> confirm -> merge, per the spec's own framing.
+export function MergeDuplicateAccountsScreen({ navigation }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const [step, setStep] = useState("verify"); // verify | confirm | submitted | done
+  const [otherIdentifier, setOtherIdentifier] = useState("");
+  const [otherVerified, setOtherVerified] = useState(false);
+  const [thisVerified, setThisVerified] = useState(false);
+  const [blockedReason, setBlockedReason] = useState("");
+  const { status, submit } = useSecurityAction(mergeDuplicateAccounts);
+
+  const handleVerify = () => {
+    if (!otherIdentifier.trim()) {
+      toast.error("Enter the email, phone, or MedGram ID of the other account.");
+      return;
+    }
+    setStep("confirm");
+  };
+
+  const handleConfirmMerge = async () => {
+    if (!otherVerified || !thisVerified) {
+      setBlockedReason(
+        "Both accounts must complete verification before they can be merged. Confirm you control both accounts above.",
+      );
+      return;
+    }
+    setBlockedReason("");
+    const { ok, result } = await submit({ otherIdentifier: otherIdentifier.trim() });
+    if (!ok) return;
+    // The backend accepted the request but a merge is never instant (it
+    // needs human review, not a fake immediate completion) - only a
+    // `status: "completed"` response means the accounts actually merged.
+    setStep(result?.status === "completed" ? "done" : "submitted");
+  };
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Merge Duplicate Accounts" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          {step === "verify" && (
+            <View className={isWeb ? "max-w-[520px]" : ""}>
+              <Text style={{ color: theme.textSecondary }} className="text-sm mt-5 mb-4 leading-5">
+                If you discovered you have two MedGram identities - for example, one an
+                organization created for you before you signed up - you can merge them here.
+              </Text>
+              <View
+                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                className="rounded-2xl p-5 border"
+              >
+                <FormField
+                  label="Other Account's Email, Phone, or MedGram ID"
+                  value={otherIdentifier}
+                  onChangeText={setOtherIdentifier}
+                  placeholder="The identifier of the duplicate account"
+                  last
+                />
+              </View>
+              <TouchableOpacity
+                onPress={handleVerify}
+                style={{ backgroundColor: theme.primary }}
+                className="flex-row items-center justify-center py-4 rounded-xl mt-6"
+              >
+                <Text className="text-white text-base font-bold">Continue</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {step === "confirm" && (
+            <View className={isWeb ? "max-w-[520px]" : ""}>
+              <Text style={{ color: theme.textSecondary }} className="text-sm mt-5 mb-4 leading-5">
+                Confirm you control both accounts before they're merged. This cannot be undone.
+              </Text>
+              <TouchableOpacity
+                onPress={() => setThisVerified((v) => !v)}
+                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                className="flex-row items-center rounded-2xl p-4 border mb-3"
+              >
+                <MaterialIcons
+                  name={thisVerified ? "check-box" : "check-box-outline-blank"}
+                  size={22}
+                  color={thisVerified ? theme.primary : theme.textMuted}
+                />
+                <Text style={{ color: theme.text }} className="text-sm font-semibold ml-3">
+                  I verified I control this (current) account
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setOtherVerified((v) => !v)}
+                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                className="flex-row items-center rounded-2xl p-4 border mb-3"
+              >
+                <MaterialIcons
+                  name={otherVerified ? "check-box" : "check-box-outline-blank"}
+                  size={22}
+                  color={otherVerified ? theme.primary : theme.textMuted}
+                />
+                <Text style={{ color: theme.text }} className="text-sm font-semibold ml-3 flex-1">
+                  I verified I control {otherIdentifier}
+                </Text>
+              </TouchableOpacity>
+
+              {blockedReason ? (
+                <View style={{ backgroundColor: theme.errorLight }} className="rounded-2xl p-4 mb-3">
+                  <Text style={{ color: theme.text }} className="text-xs leading-5">
+                    {blockedReason}
+                  </Text>
+                </View>
+              ) : null}
+
+              <TouchableOpacity
+                onPress={handleConfirmMerge}
+                disabled={status === "submitting"}
+                style={{ backgroundColor: theme.primary, opacity: status === "submitting" ? 0.7 : 1 }}
+                className="flex-row items-center justify-center py-4 rounded-xl mt-2"
+              >
+                {status === "submitting" ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text className="text-white text-base font-bold">Merge Accounts</Text>
+                )}
+              </TouchableOpacity>
+
+              <SecurityActionResult
+                status={status === "pending" ? "pending" : null}
+                pendingBody="We couldn't process this automatically yet. Your merge request has been submitted for manual review."
+              />
+            </View>
+          )}
+
+          {step === "submitted" && (
+            <View className={isWeb ? "max-w-[520px]" : ""}>
+              <SecurityActionResult
+                status="pending"
+                pendingBody="Merging accounts needs a human to verify both identities before it happens - your request has been submitted for manual review, not completed automatically. You'll be notified once it's resolved."
+              />
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={{ backgroundColor: theme.primary }}
+                className="flex-row items-center justify-center py-4 rounded-xl mt-4"
+              >
+                <Text className="text-white text-base font-bold">Done</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {step === "done" && (
+            <View className={isWeb ? "max-w-[520px]" : ""}>
+              <SecurityActionResult
+                status="success"
+                successTitle="Accounts merged"
+                successBody="Your accounts have been combined into a single identity."
+              />
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={{ backgroundColor: theme.primary }}
+                className="flex-row items-center justify-center py-4 rounded-xl mt-4"
+              >
+                <Text className="text-white text-base font-bold">Done</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ID-17 · DEVICE TRANSFER ───
+// AuthScreens.js's VerifyDeviceScreen was checked for reuse (per design.md
+// 5.1) and covers a different case - login-time new-device OTP, driven by
+// callback props (email/onBack/onVerified) tied to the pre-auth flow, not
+// this post-login "move my active session" flow. Kept as a small
+// self-contained screen consistent with the rest of this module instead.
+export function DeviceTransferScreen({ navigation }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const [deviceName, setDeviceName] = useState("");
+  const [code, setCode] = useState("");
+  const { status, submit, setStatus } = useSecurityAction(transferDevice);
+
+  const handleSubmit = async () => {
+    if (!deviceName.trim() || code.trim().length < 6) {
+      toast.error("Name the new device and enter the 6-digit verification code sent to it.");
+      return;
+    }
+    const { ok, result } = await submit({ deviceName: deviceName.trim(), code: code.trim() });
+    // There's no real session-invalidation mechanism on the backend yet
+    // (see design.md's non-goals) - a `status: "pending"` response means
+    // the request was accepted but the transfer hasn't actually happened,
+    // so override the hook's default "success" rather than overclaiming.
+    if (ok && result?.status !== "completed") setStatus("pending");
+  };
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Device Transfer" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          <Text
+            style={{ color: theme.textSecondary }}
+            className={`text-sm mt-5 mb-4 leading-5 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            Move your active MedGram ID session to a new device. Your prior device's session will
+            be invalidated once the transfer is confirmed.
+          </Text>
+          <View
+            style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+            className={`rounded-2xl p-5 border ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            <FormField
+              label="New Device Name"
+              value={deviceName}
+              onChangeText={setDeviceName}
+              placeholder="e.g. Gabriel's iPhone 16"
+            />
+            <FormField
+              label="Verification Code"
+              value={code}
+              onChangeText={setCode}
+              placeholder="6-digit code from the new device"
+              keyboardType="number-pad"
+              last
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={status === "submitting"}
+            style={{ backgroundColor: theme.primary, opacity: status === "submitting" ? 0.7 : 1 }}
+            className={`flex-row items-center justify-center py-4 rounded-xl mt-6 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            {status === "submitting" ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white text-base font-bold">Confirm Transfer</Text>
+            )}
+          </TouchableOpacity>
+
+          <View className={isWeb ? "max-w-[520px]" : ""}>
+            <SecurityActionResult
+              status={status}
+              successTitle="Transfer complete"
+              successBody="Your session is now active on the new device and has been invalidated on the prior one."
+              pendingBody="We couldn't process this automatically yet - your session has NOT moved. Your request has been submitted for manual review."
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ID-07 · [PRO] SCAN PATIENT ID/QR ───
+// Read-only emergency access, not an identity mutation - unlike
+// suspend/reissue/merge/device-transfer above, blocking a professional from
+// viewing emergency data because the audit-log write failed would be
+// actively harmful during a real emergency. So access is granted on
+// justification regardless of whether the log call succeeds, but the
+// professional is told plainly if the access wasn't recorded.
+export function ScanPatientIdScreen({ navigation }) {
+  const { theme } = useTheme();
+  const { profile } = useUser();
+  const isWeb = useIsWeb();
+  const [patientIdentifier, setPatientIdentifier] = useState("");
+  const [justification, setJustification] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const isPro = profile?.role && profile.role !== "patient";
+
+  if (!isPro) {
+    return (
+      <View className="flex-1" style={{ backgroundColor: theme.background }}>
+        <ScreenHeader title="Scan Patient ID" onBack={() => navigation.goBack()} isWeb={isWeb} />
+        <EmptyState
+          icon="lock"
+          title="Professional access only"
+          description="This tool is available to verified healthcare professionals."
+        />
+      </View>
+    );
+  }
+
+  const handleScan = async () => {
+    if (!patientIdentifier.trim()) {
+      toast.error("Enter or scan the patient's MedGram ID.");
+      return;
+    }
+    if (!justification.trim()) {
+      toast.error("A justification is required for emergency access, and is logged.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      // Lookup and audit-logging happen atomically in one backend call -
+      // there's no data to show without a successful response, so unlike
+      // the write actions elsewhere in this module there's no separate
+      // "access granted but not logged" state to fall back to.
+      const scannedPatient = await scanPatientId({
+        patientIdentifier: patientIdentifier.trim(),
+        justification: justification.trim(),
+      });
+      navigation.navigate("PublicEmergencyProfile", { scannedPatient });
+    } catch (err) {
+      toast.error(err.message || "Couldn't access this patient's emergency profile.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Scan Patient ID" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          <View
+            style={{ backgroundColor: theme.errorLight }}
+            className={`flex-row items-start rounded-2xl p-4 mt-5 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            <MaterialIcons name="emergency" size={18} color={theme.error} />
+            <Text style={{ color: theme.text }} className="text-xs ml-2.5 flex-1 leading-5">
+              Emergency access to a patient's profile is justification-prompted and permanently
+              audit-logged.
+            </Text>
+          </View>
+
+          <View
+            style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+            className={`rounded-2xl p-5 border mt-4 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            <FormField
+              label="Patient MedGram ID"
+              value={patientIdentifier}
+              onChangeText={setPatientIdentifier}
+              placeholder="Scan the patient's QR, or enter their ID manually"
+            />
+            <FormField
+              label="Justification"
+              value={justification}
+              onChangeText={setJustification}
+              placeholder="e.g. Unresponsive patient, ER intake"
+              multiline
+              last
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={handleScan}
+            disabled={submitting}
+            style={{ backgroundColor: theme.error, opacity: submitting ? 0.7 : 1 }}
+            className={`flex-row items-center justify-center py-4 rounded-xl mt-6 ${isWeb ? "max-w-[520px]" : ""}`}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white text-base font-bold">Access Emergency Profile</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

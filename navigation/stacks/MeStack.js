@@ -13,20 +13,24 @@ import ConsentScreen from "../../screens/ConsentScreen";
 const Stack = createNativeStackNavigator();
 
 function HealthProfileScreenWrapper({ navigation }) {
-  const { profile, handleLogout } = useUser();
+  const { profile } = useUser();
   return (
     <HealthProfileScreen
-      onBackHome={() => navigation.navigate("Home")}
       onEditProfile={() => navigation.navigate("ProfileEdit")}
       onOpenSettings={() => navigation.navigate("Settings")}
       onOpenIdentity={() => navigation.navigate("DigitalHealthId")}
+      onOpenIdentityRecovery={() => navigation.navigate("IdentityRecoveryCenter")}
       onOpenWallet={() => navigation.navigate("WalletHome")}
       onOpenCareCircle={() => navigation.navigate("CareCircleList")}
       onOpenOrganizations={() => navigation.navigate("OrganizationContextSwitcher")}
       onOpenIncomingRequests={() => navigation.navigate("IncomingRequestsQueue")}
       onOpenAvailability={() => navigation.navigate("AvailabilityManager")}
+      onOpenScanPatientId={() => navigation.navigate("ScanPatientId")}
+      onOpenTodaysAgenda={() => navigation.navigate("TodaysAgenda")}
+      onOpenMyPatients={() => navigation.navigate("MyPatients")}
+      onOpenClinicalNotes={() => navigation.navigate("ClinicalNotesLibrary")}
+      onOpenProfessionalAnalytics={() => navigation.navigate("ProfessionalAnalytics")}
       profile={profile}
-      onLogout={handleLogout}
     />
   );
 }
@@ -35,7 +39,6 @@ function PublicProfileScreenWrapper({ navigation }) {
   const { profile } = useUser();
   return (
     <PublicProfileScreen
-      onBackHome={() => navigation.navigate("MeHome")}
       onEditProfile={() => navigation.navigate("ProfileEdit")}
       profile={profile}
     />

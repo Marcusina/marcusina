@@ -208,3 +208,31 @@ export const removeRoleProfileCreated = async () => {
     console.error("Error removing role profile created status", e);
   }
 };
+
+// --- PER-APPOINTMENT REMINDER STORAGE (LOCAL-ONLY) ---
+// There is no reminder field on the backend Appointment model, so this is a
+// genuine on-device preference (via AsyncStorage, not the secure token
+// store - it isn't sensitive) rather than a fake persisted-to-backend call.
+const APPOINTMENT_REMINDER_PREFIX = "medgram_apt_reminder_";
+
+export const saveAppointmentReminder = async (appointmentId, reminder) => {
+  try {
+    await AsyncStorage.setItem(
+      `${APPOINTMENT_REMINDER_PREFIX}${appointmentId}`,
+      JSON.stringify(reminder),
+    );
+  } catch (e) {
+    console.error("Error saving appointment reminder", e);
+  }
+};
+
+export const getAppointmentReminder = async (appointmentId) => {
+  try {
+    const data = await AsyncStorage.getItem(`${APPOINTMENT_REMINDER_PREFIX}${appointmentId}`);
+    if (!data) return null;
+    return JSON.parse(data);
+  } catch (e) {
+    console.error("Error getting appointment reminder", e);
+    return null;
+  }
+};

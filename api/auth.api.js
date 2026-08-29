@@ -201,25 +201,6 @@ export const updateProfile = async (token, profileData) => {
 };
 
 /**
- * Fetch user's prescriptions
- */
-export const getUserPrescriptions = async (token, userId) => {
-  try {
-    return await apiClient(`/patients/${userId}/prescriptions`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch (error) {
-    if (!error.message.includes("create a profile")) {
-      console.error("[API getUserPrescriptions Error]", error);
-    }
-    return []; // Return empty array if error
-  }
-};
-
-/**
  * Fetch user's communities
  */
 export const getUserCommunities = async (token) => {

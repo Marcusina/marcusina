@@ -17,13 +17,16 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import Svg, { Path, Circle, Rect } from "react-native-svg";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "../context/ThemeContext";
 import { useUser } from "../context/UserContext";
 import { toast } from "../context/ToastContext";
+import { createPost } from "../api/community.api";
 
 export function CreatePostScreen({ navigation }) {
   const { theme } = useTheme();
-  const { user } = useUser();
+  const { user, token } = useUser();
+  const queryClient = useQueryClient();
 
   const userName =
     `${user?.profile?.first_name || ""} ${user?.profile?.last_name || ""}`.trim() ||
@@ -40,7 +43,45 @@ export function CreatePostScreen({ navigation }) {
   const [selectedTopic, setSelectedTopic] = useState("#HeartHealth");
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImageUri, setSelectedImageUri] = useState(null);
+  const [pollOptions, setPollOptions] = useState(["", ""]);
   const fileInputRef = useRef(null);
+
+  const createMutation = useMutation({
+    mutationFn: (payload) => createPost(token, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["communityFeed"] });
+      toast.success("Post published");
+      navigation?.goBack();
+    },
+    onError: (err) => toast.error(err.message || "Failed to publish post"),
+  });
+
+  const updatePollOption = (index, value) => {
+    setPollOptions((prev) => prev.map((opt, i) => (i === index ? value : opt)));
+  };
+
+  const isPollValid = pollOptions.filter((o) => o.trim()).length >= 2;
+  const canSubmit =
+    activeTab === "Reel"
+      ? false
+      : activeTab === "Poll"
+        ? postText.trim().length > 0 && isPollValid
+        : postText.trim().length > 0;
+
+  const handleSubmit = () => {
+    if (activeTab === "Reel") {
+      toast.info("Video reels aren't supported yet — coming soon.");
+      return;
+    }
+    if (!canSubmit) return;
+    createMutation.mutate({
+      type: activeTab.toLowerCase(),
+      content: postText.trim(),
+      topic: selectedTopic,
+      image_url: selectedImageUri || undefined,
+      ...(activeTab === "Poll" ? { poll_options: pollOptions.filter((o) => o.trim()) } : {}),
+    });
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -114,14 +155,24 @@ export function CreatePostScreen({ navigation }) {
 
           <TouchableOpacity
             activeOpacity={0.8}
+            onPress={handleSubmit}
+            disabled={!canSubmit || createMutation.isPending}
             className="h-8 px-4 justify-center items-center rounded-full"
-            style={{ backgroundColor: isDark ? "#FFFFFF" : "#0A0A0A" }}
+            style={{
+              backgroundColor: canSubmit
+                ? isDark
+                  ? "#FFFFFF"
+                  : "#0A0A0A"
+                : surfaceBackgroundColor,
+            }}
           >
             <Text
               className="text-[13px] font-bold"
-              style={{ color: isDark ? "#0A0A0A" : "#FFFFFF" }}
+              style={{
+                color: canSubmit ? (isDark ? "#0A0A0A" : "#FFFFFF") : textMutedColor,
+              }}
             >
-              Post
+              {createMutation.isPending ? "Posting..." : "Post"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -236,6 +287,36 @@ export function CreatePostScreen({ navigation }) {
               textAlignVertical="top"
             />
           </View>
+
+          {activeTab === "Poll" && (
+            <View className="px-[18px] mb-4">
+              <Text
+                className="text-[10px] font-bold tracking-widest mb-2.5"
+                style={{ color: textSecondaryColor }}
+              >
+                POLL OPTIONS
+              </Text>
+              {pollOptions.map((option, i) => (
+                <TextInput
+                  key={i}
+                  value={option}
+                  onChangeText={(text) => updatePollOption(i, text)}
+                  placeholder={`Option ${i + 1}`}
+                  placeholderTextColor={textMutedColor}
+                  style={{ color: textPrimaryColor, borderColor: borderMediumColor }}
+                  className="rounded-xl px-3.5 py-2.5 border text-[13.5px] mb-2"
+                />
+              ))}
+            </View>
+          )}
+
+          {activeTab === "Reel" && (
+            <View className="mx-[18px] mb-4 rounded-xl p-4" style={{ backgroundColor: surfaceBackgroundColor }}>
+              <Text className="text-[12.5px] font-semibold" style={{ color: textSecondaryColor }}>
+                Video reels aren't supported yet — coming soon.
+              </Text>
+            </View>
+          )}
 
           {/* Media Upload Container Preview Asset Box */}
           {Platform.OS === "web" && (

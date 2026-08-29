@@ -4,7 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "../context/ThemeContext";
 import { useUser } from "../context/UserContext";
-import { getUserPrescriptions } from "../api/auth.api";
+import { getUserPrescriptions } from "../api/meds.api";
 
 const STATUS_COLORS = {
   pending: "#F59E0B",
@@ -24,7 +24,7 @@ function formatDate(dateString) {
   });
 }
 
-export function PrescriptionsListScreen({ onBack }) {
+export function PrescriptionsListScreen({ onBack, navigation }) {
   const { theme } = useTheme();
   const { token, user } = useUser();
 
@@ -91,9 +91,14 @@ export function PrescriptionsListScreen({ onBack }) {
         <ScrollView className="flex-1 px-4 py-4">
           {prescriptions.map((item) => {
             const statusColor = STATUS_COLORS[item.status] || theme.textMuted;
+            const isTappable = !!navigation;
+            const Wrapper = isTappable ? TouchableOpacity : View;
             return (
-              <View
+              <Wrapper
                 key={item._id}
+                {...(isTappable
+                  ? { activeOpacity: 0.7, onPress: () => navigation.navigate("PrescriptionDetail", { id: item._id }) }
+                  : {})}
                 className="p-4 rounded-2xl border mb-3"
                 style={{ backgroundColor: theme.surface, borderColor: theme.border }}
               >
@@ -125,7 +130,7 @@ export function PrescriptionsListScreen({ onBack }) {
                     {item.patient_instructions}
                   </Text>
                 ) : null}
-              </View>
+              </Wrapper>
             );
           })}
         </ScrollView>

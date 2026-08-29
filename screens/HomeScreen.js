@@ -26,10 +26,6 @@ import { toast } from "../context/ToastContext";
 export function HomeScreen({
   user,
   token,
-  onOpenProfile,
-  onConsult,
-  onOpenGroups,
-  onOpenPlace,
   onOpenPost,
   onOpenCreatePost,
   onOpenAppointments,
@@ -197,7 +193,7 @@ export function HomeScreen({
             {/* Create Post Action Avatar */}
             <TouchableOpacity
               activeOpacity={0.8}
-              style={{ itemsCenter: "center", width: avatarSize }}
+              style={{ alignItems: "center", width: avatarSize }}
               onPress={onOpenCreatePost}
             >
               <View
@@ -226,7 +222,7 @@ export function HomeScreen({
                       width: "100%",
                       height: "100%",
                       borderRadius: avatarSize / 2,
-                      backgroundColor: "#E0E0E0", // Give it a nice fallback background color
+                      backgroundColor: theme.border,
                       justifyContent: "center",
                       alignItems: "center",
                     }}
@@ -235,7 +231,7 @@ export function HomeScreen({
                       style={{
                         fontSize: avatarSize * 0.4, // Dynamically scales font size to the container
                         fontWeight: "bold",
-                        color: "#555",
+                        color: theme.textSecondary,
                       }}
                     >
                       {`${user?.profile?.first_name?.[0] || ""}${user?.profile?.last_name?.[0] || ""}`.toUpperCase()}
@@ -317,8 +313,8 @@ export function HomeScreen({
                           x2="100%"
                           y2="0%"
                         >
-                          <Stop offset="0%" stopColor="#00C9A7" />
-                          <Stop offset="100%" stopColor="#007AFF" />
+                          <Stop offset="0%" stopColor={theme.primary} />
+                          <Stop offset="100%" stopColor={theme.primaryDark} />
                         </LinearGradient>
                       </Defs>
                       <Circle
@@ -494,7 +490,7 @@ export function HomeScreen({
               >
                 <Text
                   style={{
-                    color: theme.dark ? "#FFB800" : "#D97706",
+                    color: theme.warning,
                     fontSize: 17,
                     fontWeight: "800",
                   }}
@@ -530,7 +526,7 @@ export function HomeScreen({
               >
                 <Text
                   style={{
-                    color: theme.dark ? "#34C759" : "#16A34A",
+                    color: theme.success,
                     fontSize: 18,
                     fontWeight: "800",
                   }}
@@ -682,16 +678,7 @@ export function HomeScreen({
                   >
                     Dr. Amaka Eze
                   </Text>
-                  <Svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-                    <Circle cx="7.5" cy="7.5" r="7.5" fill="#00C9A7" />
-                    <Path
-                      d="M4.5 7.5L6.5 9.5L10.5 5.5"
-                      stroke="white"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </Svg>
+                  <MaterialIcons name="verified" size={14} color={theme.primary} />
                 </View>
                 <Text style={{ color: theme.textSecondary, fontSize: 11 }}>
                   Cardiologist · Lagos · 2h ago
@@ -798,14 +785,7 @@ export function HomeScreen({
                   >
                     WHO Africa
                   </Text>
-                  <Svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-                    <Circle cx="7.5" cy="7.5" r="7.5" fill="#007AFF" />
-                    <Path
-                      d="M4.5 7.5L6.5 9.5L10.5 5.5"
-                      stroke="white"
-                      strokeWidth="1.5"
-                    />
-                  </Svg>
+                  <MaterialIcons name="verified" size={14} color={theme.primary} />
                 </View>
                 <Text style={{ color: theme.textSecondary, fontSize: 11 }}>
                   Official Organisation · 5h ago
@@ -823,16 +803,15 @@ export function HomeScreen({
               How often do you get a routine health checkup?
             </Text>
             {[
-              { label: "Every 6 months", pct: "38%", color: "#0e3054" },
-              { label: "Once a year", pct: "32%", color: "#007AFF" },
-              { label: "Only when sick", pct: "24%", color: "#FF9500" },
-              { label: "Never", pct: "6%", color: "#FF3B30" },
+              { label: "Every 6 months", pct: "38%", color: theme.primary },
+              { label: "Once a year", pct: "32%", color: theme.primaryDark },
+              { label: "Only when sick", pct: "24%", color: theme.warning },
+              { label: "Never", pct: "6%", color: theme.textMuted },
             ].map((item, index) => (
               <View key={index} style={{ marginBottom: 10 }}>
                 <View
                   style={{
                     flexDirection: "row",
-                    justifyBetween: "space-between",
                     marginBottom: 4,
                     justifyContent: "space-between",
                   }}
@@ -915,14 +894,7 @@ export function HomeScreen({
                   >
                     Dr. Chidi Okoye
                   </Text>
-                  <Svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-                    <Circle cx="7.5" cy="7.5" r="7.5" fill="#00C9A7" />
-                    <Path
-                      d="M4.5 7.5L6.5 9.5L10.5 5.5"
-                      stroke="white"
-                      strokeWidth="1.5"
-                    />
-                  </Svg>
+                  <MaterialIcons name="verified" size={14} color={theme.primary} />
                 </View>
                 <Text style={{ color: theme.textSecondary, fontSize: 11 }}>
                   Cardiothoracic Surgeon · Abuja · 1d ago
@@ -1005,21 +977,17 @@ export function HomeScreen({
                 </View>
                 <TouchableOpacity
                   style={{
-                    backgroundColor: theme.dark
-                      ? "#374151"
-                      : "rgba(0,201,167,0.1)",
+                    backgroundColor: theme.primaryLight,
                     paddingHorizontal: 14,
                     paddingVertical: 6,
                     borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: "#000000",
                   }}
                 >
                   <Text
                     style={{
                       fontSize: 12,
                       fontWeight: "600",
-                      color: theme.dark ? "#FFFFFF" : brandPrimaryColor,
+                      color: brandPrimaryColor,
                     }}
                   >
                     Follow
@@ -1090,19 +1058,17 @@ export function HomeScreen({
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={{
-                  backgroundColor: theme.dark ? brandPrimaryColor : "#FFFFFF",
+                  backgroundColor: brandPrimaryColor,
                   paddingHorizontal: 20,
                   paddingVertical: 10,
                   borderRadius: 12,
                   alignSelf: "flex-start",
-                  borderWidth: 1,
-                  borderColor: "#000000",
                 }}
                 onPress={handleUploadPrescription}
               >
                 <Text
                   style={{
-                    color: theme.dark ? "#FFFFFF" : "#111827",
+                    color: "#FFFFFF",
                     fontWeight: "600",
                     fontSize: 14,
                   }}

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "../context/ThemeContext";
 import { getAppointments } from "../api/appointments.api";
 
-const STATUS_COLORS = {
+export const STATUS_COLORS = {
   scheduled: "#3B82F6",
   confirmed: "#10B981",
   in_progress: "#F59E0B",
@@ -14,7 +14,7 @@ const STATUS_COLORS = {
   no_show: "#EF4444",
 };
 
-function formatDate(dateString) {
+export function formatDate(dateString) {
   if (!dateString) return "";
   return new Date(dateString).toLocaleString(undefined, {
     month: "short",
@@ -24,7 +24,9 @@ function formatDate(dateString) {
   });
 }
 
-export function AppointmentsListScreen({ onBack }) {
+export const JOINABLE_STATUSES = ["scheduled", "confirmed", "in_progress"];
+
+export function AppointmentsListScreen({ onBack, navigation }) {
   const { theme } = useTheme();
 
   const { data: appointments = [], isLoading, error } = useQuery({
@@ -47,9 +49,18 @@ export function AppointmentsListScreen({ onBack }) {
         >
           <MaterialIcons name="arrow-back" size={22} color={theme.text} />
         </TouchableOpacity>
-        <Text className="text-xl font-bold" style={{ color: theme.text }}>
+        <Text className="text-xl font-bold flex-1" style={{ color: theme.text }}>
           Appointments
         </Text>
+        {navigation ? (
+          <TouchableOpacity
+            onPress={() => navigation.navigate("BookAppointment")}
+            className="p-1.5 rounded-full"
+            style={{ backgroundColor: theme.surfaceSubtle }}
+          >
+            <MaterialIcons name="add" size={22} color={theme.text} />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {isLoading ? (
@@ -90,10 +101,19 @@ export function AppointmentsListScreen({ onBack }) {
                 item.provider_id.username ||
                 "Provider"
               : "Provider";
+            const isTappable = !!navigation;
+            const Wrapper = isTappable ? TouchableOpacity : View;
 
             return (
-              <View
+              <Wrapper
                 key={item._id}
+                {...(isTappable
+                  ? {
+                      activeOpacity: 0.7,
+                      onPress: () =>
+                        navigation.navigate("AppointmentDetail", { appointmentId: item._id }),
+                    }
+                  : {})}
                 className="p-4 rounded-2xl border mb-3"
                 style={{ backgroundColor: theme.surface, borderColor: theme.border }}
               >
@@ -124,7 +144,7 @@ export function AppointmentsListScreen({ onBack }) {
                     {item.consultation_reason}
                   </Text>
                 ) : null}
-              </View>
+              </Wrapper>
             );
           })}
         </ScrollView>

@@ -17,17 +17,21 @@ import { ProfilePhotoPicker } from "../components/ProfilePhotoPicker";
 import { toast } from "../context/ToastContext";
 
 export function HealthProfileScreen({
-  onBackHome,
   onEditProfile,
   onOpenSettings,
   onOpenIdentity,
+  onOpenIdentityRecovery,
   onOpenWallet,
   onOpenCareCircle,
   onOpenOrganizations,
   onOpenIncomingRequests,
   onOpenAvailability,
+  onOpenScanPatientId,
+  onOpenTodaysAgenda,
+  onOpenMyPatients,
+  onOpenClinicalNotes,
+  onOpenProfessionalAnalytics,
   profile,
-  onLogout,
 }) {
   const { theme, themeMode, setThemeMode } = useTheme();
   const { width } = useWindowDimensions();
@@ -284,6 +288,32 @@ export function HealthProfileScreen({
                 />
               </TouchableOpacity>
 
+              {/* Identity & Account Recovery Link */}
+              <TouchableOpacity
+                onPress={onOpenIdentityRecovery}
+                className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                style={{ borderBottomColor: theme.border }}
+              >
+                <View className="flex-row items-center gap-3">
+                  <MaterialIcons
+                    name="support-agent"
+                    size={24}
+                    color={theme.textSecondary}
+                  />
+                  <Text
+                    style={{ color: theme.text }}
+                    className="text-[15px] font-medium"
+                  >
+                    Identity & Account Recovery
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={theme.textSecondary}
+                />
+              </TouchableOpacity>
+
               {/* Wallet Link */}
               <TouchableOpacity
                 onPress={onOpenWallet}
@@ -365,6 +395,31 @@ export function HealthProfileScreen({
               {profile.role && profile.role !== "patient" && (
                 <>
                   <TouchableOpacity
+                    onPress={onOpenTodaysAgenda}
+                    className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                    style={{ borderBottomColor: theme.border }}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <MaterialIcons
+                        name="today"
+                        size={24}
+                        color={theme.textSecondary}
+                      />
+                      <Text
+                        style={{ color: theme.text }}
+                        className="text-[15px] font-medium"
+                      >
+                        Today's Agenda
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
                     onPress={onOpenIncomingRequests}
                     className="flex-row items-center justify-between pb-3 mb-3 border-b"
                     style={{ borderBottomColor: theme.border }}
@@ -405,6 +460,106 @@ export function HealthProfileScreen({
                         className="text-[15px] font-medium"
                       >
                         Manage Availability
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={onOpenScanPatientId}
+                    className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                    style={{ borderBottomColor: theme.border }}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <MaterialIcons
+                        name="qr-code-scanner"
+                        size={24}
+                        color={theme.textSecondary}
+                      />
+                      <Text
+                        style={{ color: theme.text }}
+                        className="text-[15px] font-medium"
+                      >
+                        Scan Patient ID (Emergency Access)
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={onOpenMyPatients}
+                    className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                    style={{ borderBottomColor: theme.border }}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <MaterialIcons
+                        name="groups"
+                        size={24}
+                        color={theme.textSecondary}
+                      />
+                      <Text
+                        style={{ color: theme.text }}
+                        className="text-[15px] font-medium"
+                      >
+                        My Patients
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={onOpenClinicalNotes}
+                    className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                    style={{ borderBottomColor: theme.border }}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <MaterialIcons
+                        name="description"
+                        size={24}
+                        color={theme.textSecondary}
+                      />
+                      <Text
+                        style={{ color: theme.text }}
+                        className="text-[15px] font-medium"
+                      >
+                        Clinical Notes
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={onOpenProfessionalAnalytics}
+                    className="flex-row items-center justify-between pb-3 mb-3 border-b"
+                    style={{ borderBottomColor: theme.border }}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <MaterialIcons
+                        name="analytics"
+                        size={24}
+                        color={theme.textSecondary}
+                      />
+                      <Text
+                        style={{ color: theme.text }}
+                        className="text-[15px] font-medium"
+                      >
+                        My Analytics
                       </Text>
                     </View>
                     <MaterialIcons
@@ -599,7 +754,7 @@ function RecordCard({ icon, title, subtitle, isWeb }) {
   );
 }
 
-export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
+export function PublicProfileScreen({ onEditProfile, profile }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width >= 768;

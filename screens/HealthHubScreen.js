@@ -201,6 +201,13 @@ export function HealthHubScreen({ navigation }) {
           onPress={() => navigation.navigate("DocumentVault")}
           theme={theme}
         />
+        <NavCard
+          icon="science"
+          label="Laboratory & Diagnostics"
+          description="Lab & imaging orders, results, and trends"
+          onPress={() => navigation.navigate("LabOrdersList")}
+          theme={theme}
+        />
 
         <Text className="text-xs font-bold uppercase mb-2 mt-2" style={{ color: theme.textMuted }}>
           Identity & Coverage

@@ -7,7 +7,6 @@ import {
   getCurrentUser,
   getUserProfile,
   getPatientProfile,
-  getUserPrescriptions,
   getUserCommunities,
   updateProfile as updateProfileApi,
   getRoleSpecificProfile,
@@ -23,6 +22,7 @@ import {
   updateActiveCurrency,
   refreshToken as refreshTokenApi,
 } from "../api/auth.api";
+import { getUserPrescriptions } from "../api/meds.api";
 
 const DEFAULT_PROFILE = {
   name: "",

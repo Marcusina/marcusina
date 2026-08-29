@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Switch } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Switch, ActivityIndicator } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { toast } from "../context/ToastContext";
 import { useIsWeb, ScreenHeader, SectionLabel, StatusBadge, Chip, FormField } from "../components/ScreenKit";
+import { createAppointment } from "../api/appointments.api";
+import { createClinicalNote } from "../api/professional.api";
 
 // ─── MOCK DATA ───
 // Placeholder until the provider-discovery/consultation API lands.
@@ -82,7 +84,39 @@ const MOCK_CONSULT_HISTORY = [
   { id: "ch1", proName: "Dr. Chidi Eze", specialty: "General Physician", date: "Jul 15, 2026", type: "Video", status: "completed" },
   { id: "ch2", proName: "Dr. Amara Nwosu", specialty: "Dermatology", date: "Jun 22, 2026", type: "Chat", status: "completed" },
   { id: "ch3", proName: "Dr. Mark Bello", specialty: "Cardiology", date: "May 3, 2026", type: "Video", status: "cancelled" },
+  { id: "ch4", proName: "Dr. Sarah Coker", specialty: "Orthopedics", date: "Upcoming", type: "Video", status: "scheduled" },
 ];
+
+const MORNING_SLOTS = ["09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "11:30 AM", "12:00 PM"];
+const AFTERNOON_SLOTS = ["02:00 PM", "03:30 PM", "04:00 PM"];
+
+// Next 6 days, used as the booking screen's date picker - real calendar/availability
+// integration is CNS-14/APT-02 territory, out of scope here.
+function getUpcomingDates(count = 6) {
+  const labels = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const dates = [];
+  for (let i = 0; i < count; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    dates.push({ key: d.toISOString().slice(0, 10), label: labels[d.getDay()], day: String(d.getDate()), dateObj: d });
+  }
+  return dates;
+}
+
+// Combines a picked date option with a "09:30 AM" style slot label into an ISO timestamp.
+function buildScheduledStartTime(dateObj, slot) {
+  const match = /^(\d{1,2}):(\d{2})\s?(AM|PM)$/i.exec(slot || "");
+  const result = new Date(dateObj);
+  if (match) {
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const meridian = match[3].toUpperCase();
+    if (meridian === "PM" && hours !== 12) hours += 12;
+    if (meridian === "AM" && hours === 12) hours = 0;
+    result.setHours(hours, minutes, 0, 0);
+  }
+  return result.toISOString();
+}
 
 const MOCK_INCOMING_REQUESTS = [
   { id: "req1", patientName: "Tunde Balogun", reason: "Follow-up on blood pressure medication", requestedType: "Video", time: "In 45 min" },
@@ -287,7 +321,7 @@ export function ProfessionalProfileScreen({ navigation, route }) {
           <Text style={{ color: theme.text }} className="text-base font-extrabold">₦{pro.fee.toLocaleString()}</Text>
         </View>
         <TouchableOpacity
-          onPress={() => navigation.navigate("ConsultBooking")}
+          onPress={() => navigation.navigate("ConsultBooking", { proId: pro.id, consultType })}
           style={{ backgroundColor: theme.primary }}
           className="flex-row items-center justify-center px-8 py-3.5 rounded-xl"
         >
@@ -368,13 +402,241 @@ export function OrganizationProfileScreen({ navigation, route }) {
   );
 }
 
+// ─── CNS-04/05 · CONSULTATION TYPE, SCHEDULE & BOOKING CONFIRMATION ───
+export function ConsultBookingScreen({ navigation, route }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const { proId, consultType: initialConsultType } = route?.params || {};
+  const pro = getProfessional(proId);
+  const upcomingDates = getUpcomingDates();
+
+  const [consultType, setConsultType] = useState(initialConsultType || pro.consultTypes[0]);
+  const [selectedDate, setSelectedDate] = useState(upcomingDates[0]);
+  const [selectedSlot, setSelectedSlot] = useState(MORNING_SLOTS[0]);
+
+  return (
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <ScreenHeader title="Book Consultation" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className={isWeb ? "px-6" : "px-5"}>
+          <View
+            style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+            className={`flex-row items-center rounded-2xl p-4 border mt-5 mb-2 ${isWeb ? "max-w-[560px]" : ""}`}
+          >
+            <View style={{ backgroundColor: theme.primaryLight }} className="w-12 h-12 rounded-full items-center justify-center mr-3">
+              <Text style={{ color: theme.primary }} className="font-bold">{initials(pro.name)}</Text>
+            </View>
+            <View className="flex-1">
+              <Text style={{ color: theme.text }} className="text-sm font-bold">{pro.name}</Text>
+              <Text style={{ color: theme.textSecondary }} className="text-xs mt-0.5">{pro.specialty} · ₦{pro.fee.toLocaleString()}</Text>
+            </View>
+          </View>
+
+          <SectionLabel>Consultation Type</SectionLabel>
+          <View className="flex-row flex-wrap gap-2 mb-2">
+            {pro.consultTypes.map((t) => {
+              const active = consultType === t;
+              return (
+                <TouchableOpacity
+                  key={t}
+                  onPress={() => setConsultType(t)}
+                  style={{ backgroundColor: active ? theme.primary : theme.surfaceSubtle }}
+                  className="px-3.5 py-2 rounded-full"
+                >
+                  <Text style={{ color: active ? "#FFFFFF" : theme.textSecondary }} className="text-xs font-bold">{t}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <SectionLabel>Date</SectionLabel>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8, gap: 10 }} className="mb-2">
+            {upcomingDates.map((d) => {
+              const active = selectedDate.key === d.key;
+              return (
+                <TouchableOpacity
+                  key={d.key}
+                  onPress={() => setSelectedDate(d)}
+                  style={{ backgroundColor: active ? theme.primary : theme.surface, borderColor: active ? theme.primary : theme.border }}
+                  className="w-16 h-20 rounded-2xl items-center justify-center border"
+                >
+                  <Text style={{ color: active ? "#FFFFFF" : theme.textSecondary }} className="text-[11px] font-semibold mb-1">{d.label}</Text>
+                  <Text style={{ color: active ? "#FFFFFF" : theme.text }} className="text-lg font-bold">{d.day}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          <SectionLabel>Morning Slots</SectionLabel>
+          <View className="flex-row flex-wrap gap-2.5 mb-2">
+            {MORNING_SLOTS.map((slot) => {
+              const active = selectedSlot === slot;
+              return (
+                <TouchableOpacity
+                  key={slot}
+                  onPress={() => setSelectedSlot(slot)}
+                  style={{ backgroundColor: active ? theme.primaryLight : theme.background, borderColor: active ? theme.primary : theme.border }}
+                  className="px-4 py-2.5 rounded-xl border"
+                >
+                  <Text style={{ color: active ? theme.primary : theme.textSecondary }} className="text-xs font-semibold">{slot}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <SectionLabel>Afternoon Slots</SectionLabel>
+          <View className="flex-row flex-wrap gap-2.5 mb-4">
+            {AFTERNOON_SLOTS.map((slot) => {
+              const active = selectedSlot === slot;
+              return (
+                <TouchableOpacity
+                  key={slot}
+                  onPress={() => setSelectedSlot(slot)}
+                  style={{ backgroundColor: active ? theme.primaryLight : theme.background, borderColor: active ? theme.primary : theme.border }}
+                  className="px-4 py-2.5 rounded-xl border"
+                >
+                  <Text style={{ color: active ? theme.primary : theme.textSecondary }} className="text-xs font-semibold">{slot}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("ConsultConfirm", {
+                proId: pro.id,
+                consultType,
+                date: selectedDate.key,
+                dateLabel: `${selectedDate.label} ${selectedDate.day}`,
+                slot: selectedSlot,
+              })
+            }
+            style={{ backgroundColor: theme.primary }}
+            className={`flex-row items-center justify-center py-4 rounded-xl ${isWeb ? "max-w-[560px]" : ""}`}
+          >
+            <Text className="text-white text-base font-bold mr-2">Confirm Booking</Text>
+            <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+export function ConsultConfirmScreen({ navigation, route }) {
+  const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const { proId, consultType, date, dateLabel, slot } = route?.params || {};
+  const pro = getProfessional(proId);
+  const [status, setStatus] = useState("booking"); // booking | success | error
+  const [errorMessage, setErrorMessage] = useState("");
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("booking");
+    (async () => {
+      try {
+        await createAppointment({
+          provider_id: pro.id,
+          appointment_type: consultType,
+          scheduled_start_time: buildScheduledStartTime(date ? new Date(date) : new Date(), slot),
+          consultation_reason: `${consultType} consultation with ${pro.name}`,
+        });
+        if (!cancelled) setStatus("success");
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(error.message || "Something went wrong while confirming your booking.");
+          setStatus("error");
+          toast.error(error.message || "Failed to confirm booking");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
+
+  if (status === "booking") {
+    return (
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: theme.background }}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={{ color: theme.textSecondary }} className="text-sm mt-4">Confirming your booking...</Text>
+      </View>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: theme.background }}>
+        <View style={{ backgroundColor: theme.errorLight || theme.surface }} className="w-[100px] h-[100px] rounded-full items-center justify-center mb-8">
+          <MaterialIcons name="error-outline" size={56} color={theme.error} />
+        </View>
+        <Text style={{ color: theme.text }} className="text-2xl font-black text-center mb-3">Booking Failed</Text>
+        <Text style={{ color: theme.textSecondary }} className="text-base text-center leading-6 mb-10">{errorMessage}</Text>
+        <TouchableOpacity
+          onPress={() => setAttempt((a) => a + 1)}
+          style={{ backgroundColor: theme.primary }}
+          className={`px-12 py-4 rounded-xl mb-3 ${isWeb ? "min-w-[240px]" : ""}`}
+        >
+          <Text style={{ color: "#FFFFFF" }} className="text-base font-bold text-center">Try Again</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()} className="px-12 py-3">
+          <Text style={{ color: theme.textSecondary }} className="text-sm font-semibold text-center">Back to Booking</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: theme.background }}>
+      <View style={{ backgroundColor: theme.success }} className="w-[100px] h-[100px] rounded-full items-center justify-center mb-8">
+        <MaterialIcons name="check" size={60} color="#FFFFFF" />
+      </View>
+      <Text style={{ color: theme.text }} className="text-3xl font-black text-center mb-3">Booking Confirmed!</Text>
+      <Text style={{ color: theme.textSecondary }} className="text-base text-center leading-6 mb-10">
+        Your consultation with {pro.name} has been scheduled for {dateLabel}, {slot}.
+      </Text>
+
+      <View style={{ backgroundColor: theme.surface, borderColor: theme.border }} className={`w-full rounded-[24px] p-6 border mb-10 ${isWeb ? "max-w-[500px]" : ""}`}>
+        <View className="flex-row justify-between items-center py-2">
+          <Text style={{ color: theme.textSecondary }} className="text-[15px]">Doctor</Text>
+          <Text style={{ color: theme.text }} className="text-[15px] font-semibold">{pro.name}</Text>
+        </View>
+        <View className="flex-row justify-between items-center py-2">
+          <Text style={{ color: theme.textSecondary }} className="text-[15px]">Service</Text>
+          <Text style={{ color: theme.text }} className="text-[15px] font-semibold">{consultType}</Text>
+        </View>
+        <View className="flex-row justify-between items-center py-2">
+          <Text style={{ color: theme.textSecondary }} className="text-[15px]">Time</Text>
+          <Text style={{ color: theme.text }} className="text-[15px] font-semibold">{dateLabel}, {slot}</Text>
+        </View>
+        <View style={{ backgroundColor: theme.border }} className="h-[1px] my-3" />
+        <View className="flex-row justify-between items-center py-2">
+          <Text style={{ color: theme.textSecondary }} className="text-[15px]">Total Payment</Text>
+          <Text style={{ color: theme.primary }} className="text-xl font-extrabold">₦{pro.fee.toLocaleString()}</Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate("Tabs", { screen: "Home" })}
+        style={{ backgroundColor: theme.primary }}
+        className={`px-12 py-4 rounded-xl ${isWeb ? "min-w-[240px]" : ""}`}
+      >
+        <Text style={{ color: "#FFFFFF" }} className="text-base font-bold text-center">Go to Dashboard</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 // ─── CNS-06 · PRE-CONSULTATION WAITING ROOM ───
 export function WaitingRoomScreen({ navigation, route }) {
   const { theme } = useTheme();
   const isWeb = useIsWeb();
   const { proName = "Dr. Chidi Eze", consultType = "Video" } = route?.params || {};
+  const isChat = String(consultType).toLowerCase() === "chat";
   const [micOn, setMicOn] = useState(true);
-  const [cameraOn, setCameraOn] = useState(consultType !== "Chat");
+  const [cameraOn, setCameraOn] = useState(!isChat);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -383,7 +645,7 @@ export function WaitingRoomScreen({ navigation, route }) {
   }, []);
 
   const handleJoin = () => {
-    if (consultType === "Chat") {
+    if (isChat) {
       navigation.replace("ChatConsult", { proName });
     } else {
       navigation.replace("LiveConsult", { proName, consultType });
@@ -403,7 +665,7 @@ export function WaitingRoomScreen({ navigation, route }) {
             {ready ? "Your provider is ready for you" : "Your provider will join shortly..."}
           </Text>
 
-          {consultType !== "Chat" && (
+          {!isChat && (
             <View className={`w-full gap-3 mb-8 ${isWeb ? "max-w-[420px]" : ""}`}>
               <View style={{ backgroundColor: theme.surface, borderColor: theme.border }} className="flex-row items-center justify-between rounded-2xl p-4 border">
                 <View className="flex-row items-center">
@@ -638,14 +900,21 @@ export function ConsultationHistoryScreen({ navigation }) {
             {MOCK_CONSULT_HISTORY.map((c) => (
               <TouchableOpacity
                 key={c.id}
-                onPress={() => navigation.navigate("ConsultSummary", { proName: c.proName, consultId: c.id })}
+                onPress={() =>
+                  c.status === "scheduled"
+                    ? navigation.navigate("WaitingRoom", { proName: c.proName, consultType: c.type, appointmentId: c.id })
+                    : navigation.navigate("ConsultSummary", { proName: c.proName, consultId: c.id })
+                }
                 activeOpacity={0.7}
                 style={{ backgroundColor: theme.surface, borderColor: theme.border }}
                 className={`rounded-2xl p-4 border mb-3 ${isWeb ? "w-[48.5%]" : "w-full"}`}
               >
                 <View className="flex-row justify-between items-start mb-1.5">
                   <Text style={{ color: theme.text }} className="text-sm font-bold flex-1 pr-2">{c.proName}</Text>
-                  <StatusBadge label={c.status} color={c.status === "completed" ? theme.success : theme.error} />
+                  <StatusBadge
+                    label={c.status}
+                    color={c.status === "completed" ? theme.success : c.status === "scheduled" ? theme.primary : theme.error}
+                  />
                 </View>
                 <Text style={{ color: theme.textSecondary }} className="text-xs">{c.specialty} · {c.type} · {c.date}</Text>
               </TouchableOpacity>
@@ -885,10 +1154,35 @@ export function AvailabilityManagerScreen({ navigation }) {
 export function ClinicalDocumentationScreen({ navigation, route }) {
   const { theme } = useTheme();
   const isWeb = useIsWeb();
-  const { patientName = "Tunde Balogun" } = route?.params || {};
+  const { patientName = "Tunde Balogun", patientId = "demo-patient" } = route?.params || {};
   const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const appendPhrase = (phrase) => setNote((prev) => (prev ? `${prev} ${phrase}` : phrase));
+
+  const handleSave = async () => {
+    if (!note.trim()) {
+      toast.error("Write a note before saving.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await createClinicalNote({ patientId, patientName, content: note.trim() });
+      toast.success("Clinical note saved.");
+      navigation.goBack();
+    } catch (err) {
+      // No fake success: note-saving is a real backend call (see
+      // api/professional.api.js) that requires an authorized appointment
+      // relationship with the patient - this whole live-consult flow is
+      // still built on MOCK_PROFESSIONALS/MOCK_PATIENT_CHART rather than a
+      // real appointment, so a save from here will genuinely fail until
+      // CNS-01..16 read from real appointment data. Keep the note on
+      // screen either way so it isn't silently lost.
+      toast.error(err.message || "Couldn't save this note.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
@@ -925,11 +1219,16 @@ export function ClinicalDocumentationScreen({ navigation, route }) {
             </View>
 
             <TouchableOpacity
-              onPress={() => toast.success("Clinical note saved.")}
-              style={{ backgroundColor: theme.primary }}
+              onPress={handleSave}
+              disabled={saving}
+              style={{ backgroundColor: theme.primary, opacity: saving ? 0.7 : 1 }}
               className="flex-row items-center justify-center py-4 rounded-xl mt-4"
             >
-              <Text className="text-white text-base font-bold">Save Note</Text>
+              {saving ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text className="text-white text-base font-bold">Save Note</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -939,10 +1238,11 @@ export function ClinicalDocumentationScreen({ navigation, route }) {
 }
 
 // ─── CNS-16 · [Pro] QUICK PATIENT CHART VIEW DURING LIVE CONSULT ───
-export function PatientChartQuickViewScreen({ navigation }) {
+export function PatientChartQuickViewScreen({ navigation, route }) {
   const { theme } = useTheme();
   const isWeb = useIsWeb();
   const chart = MOCK_PATIENT_CHART;
+  const { patientId = "demo-patient" } = route?.params || {};
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
@@ -973,11 +1273,29 @@ export function PatientChartQuickViewScreen({ navigation }) {
           </View>
 
           <TouchableOpacity
-            onPress={() => toast.info("Full patient chart is coming soon.")}
+            onPress={() => navigation.navigate("PatientChart", { patientId, patientName: chart.name })}
             style={{ backgroundColor: theme.surface, borderColor: theme.border }}
             className={`flex-row items-center justify-center py-3.5 rounded-xl border mt-4 ${isWeb ? "max-w-[480px]" : ""}`}
           >
             <Text style={{ color: theme.text }} className="text-sm font-bold">View Full Chart</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate("CreatePrescription", { patientId: "demo-patient", patientName: chart.name })}
+            style={{ backgroundColor: theme.primary }}
+            className={`flex-row items-center justify-center py-3.5 rounded-xl mt-3 ${isWeb ? "max-w-[480px]" : ""}`}
+          >
+            <MaterialIcons name="medication" size={18} color="#FFFFFF" />
+            <Text className="text-white text-sm font-bold ml-2">Prescribe Medication</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate("CreateLabOrder", { patientId: "demo-patient", patientName: chart.name })}
+            style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+            className={`flex-row items-center justify-center py-3.5 rounded-xl border mt-3 ${isWeb ? "max-w-[480px]" : ""}`}
+          >
+            <MaterialIcons name="science" size={18} color={theme.text} />
+            <Text style={{ color: theme.text }} className="text-sm font-bold ml-2">Order Lab Test</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
