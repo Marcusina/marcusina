@@ -1093,27 +1093,43 @@ export function ProfileBasicsScreen({
   );
 }
 
-export function EmailVerifyScreen({ email, onBack }) {
+export function EmailVerifyScreen({ email, onBack, onVerified }) {
   const { theme } = useTheme();
   const [resending, setResending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 
   const handleResendCode = async () => {
     setResending(true);
     try {
-      const response = await resendVerificationEmail(email);
-      showAlert(
-        "Link Sent",
-        response.message ||
-          "A new verification link has been sent to your email.",
-      );
+      await resendVerificationEmail(email);
+      showAlert("Code Sent", "A new verification code has been sent to your email.");
     } catch (error) {
       console.error("[EmailVerify][Resend] Error:", error);
       showAlert(
         "Resend Failed",
-        error.message || "Failed to resend verification link",
+        error.message || "Failed to resend verification code",
       );
     } finally {
       setResending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      showAlert("Invalid Code", "Please enter all 6 digits");
+      return;
+    }
+    setVerifying(true);
+    try {
+      await verifyEmailOtpApi(email, otpCode);
+      onVerified?.();
+    } catch (error) {
+      console.error("[EmailVerify][Verify] Error:", error);
+      showAlert("Verification Failed", error.message || "Failed to verify code");
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -1158,28 +1174,38 @@ export function EmailVerifyScreen({ email, onBack }) {
               Verify your email
             </Text>
             <Text
-              className="text-[14px] mb-8 text-center leading-5"
+              className="text-[14px] mb-6 text-center leading-5"
               style={{ color: theme.textSecondary }}
             >
-              A verification link has been sent to{" "}
+              Enter the 6-digit code sent to{" "}
               <Text className="font-semibold" style={{ color: theme.text }}>
                 {email || "your email"}
               </Text>
-              . Please check your inbox and click the link to verify your
-              account and activate your Medgram profile.
+              .
             </Text>
+
+            <CodeInputRow length={6} values={otp} onChange={setOtp} />
 
             <PrimaryButton
               label={
-                resending ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  "Resend Verification Link"
-                )
+                verifying ? <ActivityIndicator color="#FFF" /> : "Verify"
               }
-              onPress={handleResendCode}
-              disabled={resending}
+              onPress={handleVerifyOtp}
+              disabled={verifying}
             />
+
+            <TouchableOpacity
+              onPress={handleResendCode}
+              className="mt-4 items-center"
+              disabled={resending}
+            >
+              <Text
+                className="font-semibold"
+                style={{ color: resending ? theme.textMuted : theme.primary }}
+              >
+                {resending ? "Sending..." : "Resend Code"}
+              </Text>
+            </TouchableOpacity>
 
             <TouchableOpacity onPress={onBack} className="mt-6 items-center">
               <Text className="font-semibold" style={{ color: theme.primary }}>
