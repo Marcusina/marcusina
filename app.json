@@ -22,7 +22,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.medgram"
+      "package": "com.anonymous.medgram",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -40,8 +44,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "726f42a6-5927-4b9d-9652-027eac165356"
+        "projectId": "0488b106-8ce7-4eca-9c4c-4be559136be2"
       }
-    }
+    },
+    "owner": "marcusina"
   }
 }
