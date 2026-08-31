@@ -12,6 +12,19 @@
 -- no other patient's identity or appointment details are ever exposed to
 -- the caller, just a number. Runs after 900_rls.sql specifically because it
 -- needs the medgram_admin role to already exist to reassign ownership to it.
+-- Postgres 16+ no longer auto-grants a CREATEROLE role membership in roles
+-- it creates (unlike local dev, where the migration connects as a real
+-- superuser and bypasses membership checks entirely) - without this, the
+-- ALTER FUNCTION ... OWNER TO below fails with "must be able to SET ROLE
+-- medgram_admin". Harmless to re-run/no-op if membership is already held.
+GRANT medgram_admin TO CURRENT_USER;
+-- Postgres 15+ also stopped granting CREATE on the public schema to new
+-- roles by default (previously implicit via the PUBLIC pseudo-role).
+-- Taking ownership of an object requires the new owner to hold CREATE on
+-- its containing schema, so without this ALTER FUNCTION ... OWNER TO below
+-- fails with "permission denied for schema public".
+GRANT CREATE ON SCHEMA public TO medgram_admin;
+
 CREATE FUNCTION count_checked_in_ahead(p_professional_id UUID, p_before TIMESTAMPTZ)
 RETURNS INTEGER
 LANGUAGE sql

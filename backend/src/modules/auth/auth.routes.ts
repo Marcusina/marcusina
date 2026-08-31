@@ -73,15 +73,25 @@ import {
   resendDeviceVerificationCode,
 } from "./deviceVerification.service";
 import { InvalidResetTokenError, requestPasswordReset, resetPasswordWithToken } from "./passwordReset.service";
+import { buildDeepLink, sendEmail } from "../../lib/mailer";
 
 const router = Router();
 
-// No real email/SMS provider wired up yet - "sending" a code means logging
-// it here and, outside production, echoing it back in the response so the
-// OTP flow is actually testable end to end. debug_otp must never ship to a
-// production build; swap this for a real provider call before it does.
+// SMS still has no real provider wired up (see phoneVerification.service.ts
+// callers below) - only email actually sends now. Outside production, the
+// OTP/token is still echoed back in the response too (debug_otp /
+// debug_*_token) so the flow is testable without reading email; that must
+// never ship to a production build (already gated on NODE_ENV below).
 function deliverVerificationCode(email: string, code: string) {
-  console.log(`[email] verification code for ${email}: ${code}`);
+  void sendEmail(email, "Confirm this device to sign in to Medgram", `Your device verification code is: ${code}\n\nEnter this in the app to continue signing in. It expires in 10 minutes.`);
+}
+
+function deliverEmailVerification(email: string, otp: string, linkToken: string) {
+  void sendEmail(
+    email,
+    "Verify your Medgram email",
+    `Your verification code is: ${otp}\n\nOr tap this link on your device to verify automatically:\n${buildDeepLink("verify-email", linkToken)}\n\nThis expires in 10 minutes.`,
+  );
 }
 
 const registerSchema = z.object({
@@ -96,8 +106,7 @@ router.post("/auth/register", async (req, res, next) => {
   }
   try {
     const { user, verification } = await registerUser(req.db!, parsed.data);
-    deliverVerificationCode(parsed.data.email, verification.otp);
-    console.log(`[email] verification link for ${parsed.data.email}: token=${verification.linkToken}`);
+    deliverEmailVerification(parsed.data.email, verification.otp, verification.linkToken);
     res.status(201).json({
       data: {
         id: user.id,
@@ -127,8 +136,7 @@ router.post("/doctors/register", async (req, res, next) => {
   }
   try {
     const { user, verification } = await registerProfessional(req.db!, parsed.data);
-    deliverVerificationCode(parsed.data.email, verification.otp);
-    console.log(`[email] verification link for ${parsed.data.email}: token=${verification.linkToken}`);
+    deliverEmailVerification(parsed.data.email, verification.otp, verification.linkToken);
     res.status(201).json({
       data: {
         id: user.id,
@@ -273,8 +281,7 @@ router.post("/resend-verification", async (req, res, next) => {
   }
   try {
     const verification = await resendEmailVerificationCode(req.db!, parsed.data.email);
-    deliverVerificationCode(parsed.data.email, verification.otp);
-    console.log(`[email] verification link for ${parsed.data.email}: token=${verification.linkToken}`);
+    deliverEmailVerification(parsed.data.email, verification.otp, verification.linkToken);
     res.json({
       data: {
         sent: true,
@@ -380,7 +387,13 @@ router.post("/auth/forgot-password", async (req, res, next) => {
   }
   try {
     const token = await requestPasswordReset(req.db!, parsed.data.email);
-    if (token) console.log(`[email] password reset link for ${parsed.data.email}: token=${token}`);
+    if (token) {
+      void sendEmail(
+        parsed.data.email,
+        "Reset your Medgram password",
+        `Tap this link on your device to reset your password:\n${buildDeepLink("reset-password", token)}\n\nThis link expires in 60 minutes. If you didn't request this, you can ignore this email.`,
+      );
+    }
     // Same response whether the account exists, the request was rate-limited,
     // or a token was actually issued - see requestPasswordReset's comment on
     // why this endpoint must never let those cases be distinguished.
@@ -455,7 +468,16 @@ router.post("/auth/change-password", requireAuth, async (req, res, next) => {
 router.put("/user/account/deactivate/request", requireAuth, async (req, res, next) => {
   try {
     const token = await requestDeactivation(req.db!, req.user!.id);
-    if (token) console.log(`[email] account deactivation confirmation for user ${req.user!.id}: token=${token}`);
+    if (token) {
+      const user = await findUserById(req.db!, req.user!.id);
+      if (user?.email) {
+        void sendEmail(
+          user.email,
+          "Confirm Medgram account deactivation",
+          `Tap this link on your device to confirm deactivating your account:\n${buildDeepLink("deactivate-account", token)}\n\nThis link expires in 24 hours. If you didn't request this, you can ignore this email.`,
+        );
+      }
+    }
     res.json({
       data: {
         message: token
@@ -484,7 +506,14 @@ router.put("/user/account/deactivate", async (req, res, next) => {
   }
   try {
     const { userId, reactivationToken } = await confirmDeactivation(req.db!, token);
-    console.log(`[email] account reactivation link for user ${userId}: token=${reactivationToken}`);
+    const user = await findUserById(req.db!, userId);
+    if (user?.email) {
+      void sendEmail(
+        user.email,
+        "Your Medgram account has been deactivated",
+        `Your account has been deactivated. If this wasn't you, or you'd like to reactivate within the next 30 days, tap this link on your device:\n${buildDeepLink("reactivate-account", reactivationToken)}`,
+      );
+    }
     res.json({
       data: {
         account_deactivated: true,

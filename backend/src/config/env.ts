@@ -20,6 +20,20 @@ const envSchema = z.object({
     .string()
     .default("http://localhost:8081")
     .transform((v) => v.split(",").map((s) => s.trim()).filter(Boolean)),
+  // Optional: mailer.ts sends real email only when EMAIL_HOST_USERNAME and
+  // EMAIL_HOST_PASSWORD are both set - falls back to console.log-only
+  // (the existing dev behavior) otherwise, so local dev never needs real
+  // SMTP credentials.
+  EMAIL_HOST: z.string().optional(),
+  EMAIL_PORT: z.coerce.number().int().positive().optional(),
+  // z.coerce.boolean() would make this true for the literal string "false"
+  // (any non-empty string is truthy) - compare the raw string instead.
+  EMAIL_HOST_SECURE: z
+    .string()
+    .optional()
+    .transform((v) => v === "true"),
+  EMAIL_HOST_USERNAME: z.string().optional(),
+  EMAIL_HOST_PASSWORD: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

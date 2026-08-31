@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../../middleware/auth";
+import { findUserById } from "../auth/auth.repository";
+import { sendEmail } from "../../lib/mailer";
 import {
   InvalidOtpError,
   NoPendingSudoRequestError,
@@ -23,7 +25,14 @@ router.post("/sudo/request", requireAuth, async (req, res, next) => {
   }
   try {
     const otp = await requestSudo(req.db!, req.user!.id, parsed.data.actionName);
-    console.log(`[email] sudo step-up code for user ${req.user!.id}: ${otp}`);
+    const user = await findUserById(req.db!, req.user!.id);
+    if (user?.email) {
+      void sendEmail(
+        user.email,
+        "Your Medgram security code",
+        `Your security verification code is: ${otp}\n\nEnter this in the app to continue. It expires in 10 minutes.`,
+      );
+    }
     res.json({ data: { sent: true, ...(process.env.NODE_ENV !== "production" ? { debug_otp: otp } : {}) } });
   } catch (err) {
     next(err);

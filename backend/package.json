@@ -18,6 +18,7 @@
     "express": "^4.19.2",
     "google-auth-library": "^9.14.1",
     "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^9.0.6",
     "pg": "^8.13.0",
     "zod": "^3.23.8"
   },
@@ -31,6 +32,7 @@
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.16.5",
+    "@types/nodemailer": "^6.4.24",
     "@types/pg": "^8.11.10",
     "tsx": "^4.19.1",
     "typescript": "^5.6.2"

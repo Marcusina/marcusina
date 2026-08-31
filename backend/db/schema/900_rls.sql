@@ -29,7 +29,24 @@
 -- ROWS it sees once it can. medgram_app needs broad table-level access
 -- (users, profiles, medications, carts, ... none of which have RLS) --
 -- the PHI tables are exactly the ones where RLS then narrows it further.
-CREATE ROLE medgram_admin BYPASSRLS;
+--
+-- Postgres only lets a role grant BYPASSRLS if it has BYPASSRLS itself.
+-- Local dev connects as a real superuser, so this succeeds outright there.
+-- Managed providers (Render included) don't give the default/owner role
+-- BYPASSRLS, so this falls back to a plain role there and warns instead of
+-- failing the whole migration - nothing in src/ uses medgram_admin yet (it's
+-- provisioned for a future background/admin worker per the comment above),
+-- so this is a no-op today. Grant BYPASSRLS manually later
+-- (ALTER ROLE medgram_admin BYPASSRLS;) once that worker exists and you have
+-- a connection with the privilege to grant it (e.g. Render support, or a
+-- migration to a Postgres host where you hold it).
+DO $$
+BEGIN
+  CREATE ROLE medgram_admin BYPASSRLS;
+EXCEPTION WHEN insufficient_privilege THEN
+  CREATE ROLE medgram_admin NOBYPASSRLS;
+  RAISE WARNING 'medgram_admin created WITHOUT BYPASSRLS - connecting role lacks that privilege. See the comment above this DO block.';
+END $$;
 CREATE ROLE medgram_app NOBYPASSRLS;
 GRANT USAGE ON SCHEMA public TO medgram_app, medgram_admin;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO medgram_app, medgram_admin;
