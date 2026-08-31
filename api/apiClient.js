@@ -98,10 +98,14 @@ const apiClient = async (endpoint, options = {}) => {
     }
 
     if (!response.ok) {
+      // Backend errors are shaped { error: { code, message, details } } -
+      // data.error is an object, not a string. Fall back to data.message
+      // (set above when the response body wasn't valid JSON) before the
+      // generic message, so errorMsg is always a string.
       const errorMsg =
+        data.error?.message ||
+        (typeof data.error === "string" ? data.error : null) ||
         data.message ||
-        data.error ||
-        data.details ||
         `Error ${response.status}: ${textResponse}`;
 
       if (!errorMsg.includes("create a profile")) {
