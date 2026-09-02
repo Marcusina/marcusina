@@ -21,3 +21,13 @@ services:
         generateValue: true
       - key: NODE_ENV
         value: production
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "465"
+      - key: EMAIL_HOST_SECURE
+        value: "true"
+      - key: EMAIL_HOST_USERNAME
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
