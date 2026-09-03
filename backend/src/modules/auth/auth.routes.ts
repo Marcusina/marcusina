@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../../middleware/auth";
+import { loginRateLimiter } from "../../middleware/rateLimit";
 import { getDeviceFingerprint } from "../../lib/deviceFingerprint";
 import { GoogleAuthNotConfiguredError, InvalidGoogleTokenError, verifyGoogleIdToken } from "../../lib/googleIdToken";
 import {
@@ -160,7 +161,7 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-router.post("/auth/login", async (req, res, next) => {
+router.post("/auth/login", loginRateLimiter, async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Invalid request body", details: parsed.error.issues } });
@@ -439,7 +440,7 @@ const changePasswordSchema = z.object({
   new_password: z.string().min(8),
 });
 
-router.post("/auth/change-password", requireAuth, async (req, res, next) => {
+router.post("/auth/change-password", loginRateLimiter, requireAuth, async (req, res, next) => {
   const parsed = changePasswordSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Invalid request body", details: parsed.error.issues } });

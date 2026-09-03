@@ -8,6 +8,11 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   req.dbRollbackRequested = true;
   if (res.headersSent) return;
 
-  const message = err instanceof Error ? err.message : "Unexpected error";
+  // Only typed domain errors reach here with a message safe to show a
+  // caller - anything else (e.g. an unhandled pg error) can embed table/
+  // constraint/column names in err.message, so it's shown only outside
+  // production, same as every debug_* field elsewhere in this API.
+  const message =
+    process.env.NODE_ENV !== "production" && err instanceof Error ? err.message : "An unexpected error occurred";
   res.status(500).json({ error: { code: "INTERNAL_ERROR", message } });
 }

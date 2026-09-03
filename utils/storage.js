@@ -7,11 +7,21 @@ const PROFILE_KEY = "medgram_profile";
 const THEME_KEY = "medgram_theme";
 
 // --- TOKEN STORAGE (SECURE) ---
+// expo-secure-store has no native backing on web (its web module is an empty
+// stub - calling setItemAsync/getItemAsync there throws), so web falls back
+// to localStorage, same as saveProfile/saveTheme below. The backend has no
+// cookie-based auth for anything but /auth/refresh (see session.service.ts's
+// REFRESH_COOKIE_PATH), so the Authorization header apiClient.js builds from
+// getToken() is the ONLY thing that authenticates a web request - returning
+// null here unconditionally silently 401'd every authenticated call on web.
 export const saveToken = async (token) => {
   try {
-    if (Platform.OS === "web") return;
     if (token === null || token === undefined || token === "undefined" || token === "null" || token === "") {
       await removeToken();
+      return;
+    }
+    if (Platform.OS === "web") {
+      localStorage.setItem(STORAGE_KEY, token);
       return;
     }
     // Hardware-encrypted storage on iOS/Android
@@ -23,10 +33,11 @@ export const saveToken = async (token) => {
 
 export const getToken = async () => {
   try {
-    if (Platform.OS === "web") return null;
-    // Hardware-encrypted storage on iOS/Android
-    const token = await SecureStore.getItemAsync(STORAGE_KEY);
-    if (token === "undefined" || token === "null" || token === "") {
+    const token = Platform.OS === "web"
+      ? localStorage.getItem(STORAGE_KEY)
+      // Hardware-encrypted storage on iOS/Android
+      : await SecureStore.getItemAsync(STORAGE_KEY);
+    if (!token || token === "undefined" || token === "null") {
       return null;
     }
     return token;
@@ -38,7 +49,10 @@ export const getToken = async () => {
 
 export const removeToken = async () => {
   try {
-    if (Platform.OS === "web") return;
+    if (Platform.OS === "web") {
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
     // Hardware-encrypted storage on iOS/Android
     await SecureStore.deleteItemAsync(STORAGE_KEY);
   } catch (e) {

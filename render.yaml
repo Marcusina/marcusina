@@ -21,6 +21,14 @@ services:
         generateValue: true
       - key: NODE_ENV
         value: production
+      - key: CORS_ORIGINS
+        # Comma-separated origins for any browser (Expo web) client hitting
+        # this backend. Unset here on purpose - env.ts's default of
+        # http://localhost:8081 would otherwise silently apply in
+        # production. Set to the deployed web frontend's actual origin(s)
+        # in the Render dashboard once one exists; native app traffic isn't
+        # subject to CORS and doesn't need this at all.
+        sync: false
       - key: EMAIL_HOST
         value: smtp.gmail.com
       - key: EMAIL_PORT

@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { Platform } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { getToken, saveToken, removeToken, saveProfile, getProfile, removeProfile, savePhoneSkipped, getPhoneSkipped, removePhoneSkipped, saveRoleProfileCreated, getRoleProfileCreated, removeRoleProfileCreated } from "../utils/storage";
 import {
@@ -180,12 +179,11 @@ export const UserProvider = ({ children }) => {
         if (savedToken) {
           setTokenState(savedToken);
         }
-        // On native, auth depends entirely on the Bearer token in SecureStore.
-        // With no token the user is logged out, so skip the authed bootstrap
-        // (it would only 401 and trigger a spurious logout call). On web, auth
-        // rides on httpOnly cookies — getToken() is always null there — so we
-        // must still attempt the bootstrap to pick up an existing session.
-        if (savedToken || Platform.OS === "web") {
+        // Auth depends entirely on the Bearer token in storage (SecureStore
+        // on native, localStorage on web - see utils/storage.js). With no
+        // token the user is logged out, so skip the authed bootstrap - it
+        // would only 401 and trigger a spurious logout call.
+        if (savedToken) {
           await fetchUserAndCheckOnboarding();
         } else {
           setOnboardingStep("splash");
@@ -352,11 +350,10 @@ export const UserProvider = ({ children }) => {
   };
 
   const handleLogout = async () => {
-    // On native there's nothing to revoke server-side without a token, so skip
-    // the call (it would only 401). On web the session lives in an httpOnly
-    // cookie, so always hit the endpoint to clear it.
+    // There's nothing to revoke server-side without a token, so skip the
+    // call in that case (it would only 401).
     const savedToken = await getToken();
-    if (savedToken || Platform.OS === "web") {
+    if (savedToken) {
       try {
         await logoutApi();
       } catch (e) {
