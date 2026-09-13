@@ -731,7 +731,7 @@ function LayoutBody({
   const desktopNavItems = [
     { id: "Home", label: "Home", icon: "home" },
     { id: "Health", label: "Health", icon: "medical-services" },
-    { id: "Community", label: "Spaces", icon: "group" },
+    { id: "Community", label: "Community", icon: "group" },
     { id: "Marketplace", label: "Market", icon: "store" },
     { id: "Me", label: "Profile", icon: "person" },
   ];
@@ -740,7 +740,7 @@ function LayoutBody({
     { id: "Home", label: "Home", icon: "home" },
     { id: "Health", label: "Health", icon: "medical-services" },
     { id: "CreatePost", label: "Create", icon: "add", isFab: true },
-    { id: "Community", label: "Spaces", icon: "group" },
+    { id: "Community", label: "Community", icon: "group" },
     { id: "Marketplace", label: "Market", icon: "store" },
   ];
 

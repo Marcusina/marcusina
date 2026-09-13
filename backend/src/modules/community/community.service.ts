@@ -6,6 +6,7 @@ import {
   getCommentsForPost,
   getFeedPosts,
   getMyCommunities as getMyCommunitiesRepo,
+  getPostsByAuthor,
   insertCommunity,
   insertCommunityMember,
   insertPost,
@@ -71,6 +72,10 @@ export async function createCommunity(
 
 export function getFeed(db: PoolClient, args: { page: number; limit: number }) {
   return getFeedPosts(db, args);
+}
+
+export function getMyPosts(db: PoolClient, userId: string, args: { page: number; limit: number }) {
+  return getPostsByAuthor(db, userId, args);
 }
 
 export async function createPost(

@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useUser } from "../../context/UserContext";
 import { GroupsScreen } from "../../screens/GroupsScreen";
 import { PostScreen } from "../../screens/PostScreen";
-import { CommunityFeedScreen, PostDetailScreen } from "../../screens/CommunityScreens";
+import { CommunityFeedScreen, MyPostsScreen, PostDetailScreen } from "../../screens/CommunityScreens";
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +27,7 @@ export default function CommunityStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="CommunityFeed" component={CommunityFeedScreen} />
+      <Stack.Screen name="MyPosts" component={MyPostsScreen} />
       <Stack.Screen name="PostDetail" component={PostDetailScreen} />
       <Stack.Screen name="GroupsDirectory" component={GroupsScreenWrapper} />
       <Stack.Screen

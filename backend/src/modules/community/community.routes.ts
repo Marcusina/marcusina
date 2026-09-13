@@ -10,6 +10,7 @@ import {
   getCommunities,
   getFeed,
   getMyCommunities,
+  getMyPosts,
   getPost,
   joinCommunity,
   leaveCommunity,
@@ -99,6 +100,20 @@ router.get("/posts/feed", requireAuth, async (req, res, next) => {
   }
   try {
     res.json(await getFeed(req.db!, parsed.data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Registered ahead of GET /posts/:postId - Express matches routes in
+// registration order, so "mine" would otherwise be captured as :postId.
+router.get("/posts/mine", requireAuth, async (req, res, next) => {
+  const parsed = paginationSchema.safeParse(req.query);
+  if (!parsed.success) {
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Invalid query parameters", details: parsed.error.issues } });
+  }
+  try {
+    res.json(await getMyPosts(req.db!, req.user!.id, parsed.data));
   } catch (err) {
     next(err);
   }

@@ -11,10 +11,9 @@ function HomeScreenWrapper({ navigation }) {
     <HomeScreen
       user={user}
       token={token}
-      onOpenPost={(id) =>
-        navigation.navigate("Community", { screen: "Post", params: { postId: id } })
+      onOpenAppointments={() =>
+        navigation.navigate("Health", { screen: "AppointmentsList" })
       }
-      onOpenCreatePost={() => navigation.navigate("CreatePost")}
     />
   );
 }

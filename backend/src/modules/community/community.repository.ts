@@ -111,6 +111,18 @@ export function getFeedPosts(db: PoolClient, args: { page: number; limit: number
     .then((r) => r.rows);
 }
 
+// Backs GET /posts/mine (getMyPosts) - idx_posts_author in
+// 060_posts_author_index.sql.
+export function getPostsByAuthor(db: PoolClient, authorId: string, args: { page: number; limit: number }) {
+  return db
+    .query<PostRow>("SELECT * FROM posts WHERE author_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3", [
+      authorId,
+      args.limit,
+      (args.page - 1) * args.limit,
+    ])
+    .then((r) => r.rows);
+}
+
 export function insertPost(
   db: PoolClient,
   args: { communityId: string | null; authorId: string; postType: string; content: unknown },

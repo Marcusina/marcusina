@@ -91,6 +91,25 @@ export const getFeed = async (token, params = {}) => {
 };
 
 /**
+ * Fetch the current user's own posts, most recent first.
+ */
+export const getMyPosts = async (token, params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.append('page', params.page);
+  if (params.limit) queryParams.append('limit', params.limit);
+
+  const queryString = queryParams.toString();
+  const endpoint = `/posts/mine${queryString ? `?${queryString}` : ''}`;
+
+  return await apiClient(endpoint, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+/**
  * Publish a new post (post/article/poll/reel, distinguished by payload.type).
  */
 export const createPost = async (token, payload) => {
