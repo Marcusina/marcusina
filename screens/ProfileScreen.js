@@ -9,12 +9,14 @@ import {
   Platform,
   useWindowDimensions,
   Switch,
+  Animated,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "../components/Logo";
 import { ProfilePhotoPicker } from "../components/ProfilePhotoPicker";
 import { toast } from "../context/ToastContext";
+import { useCollapsibleHeader, SCREEN_HEADER_HEIGHT } from "../components/ScreenKit";
 
 export function HealthProfileScreen({
   onEditProfile,
@@ -754,10 +756,11 @@ function RecordCard({ icon, title, subtitle, isWeb }) {
   );
 }
 
-export function PublicProfileScreen({ onEditProfile, profile }) {
+export function PublicProfileScreen({ onBackHome, onEditProfile, profile }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width >= 768;
+  const { headerStyle, scrollProps, headerHeight } = useCollapsibleHeader(SCREEN_HEADER_HEIGHT);
   const avatarInitial = profile.name
     ? profile.name.charAt(0).toUpperCase()
     : "?";
@@ -765,23 +768,38 @@ export function PublicProfileScreen({ onEditProfile, profile }) {
   return (
     <View className="flex-1 bg-transparent">
       {!isWeb && (
-        <View className="flex-row justify-between items-center px-4 py-3">
-          <Logo width={36} height={36} />
-          <TouchableOpacity
-            style={{ backgroundColor: theme.surfaceSubtle }}
-            className="ml-4 p-2 rounded-xl"
-          >
-            <MaterialIcons name="more-vert" size={24} color="#4B5563" />
-          </TouchableOpacity>
-        </View>
+        <Animated.View
+          style={[
+            { position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: theme.background },
+            headerStyle,
+          ]}
+        >
+          <View className="flex-row justify-between items-center px-4 py-3">
+            <TouchableOpacity
+              onPress={onBackHome}
+              className="p-1.5 rounded-full"
+              style={{ backgroundColor: theme.surfaceSubtle }}
+            >
+              <MaterialIcons name="arrow-back" size={22} color={theme.text} />
+            </TouchableOpacity>
+            <Logo width={36} height={36} />
+            <TouchableOpacity
+              style={{ backgroundColor: theme.surfaceSubtle }}
+              className="p-2 rounded-xl"
+            >
+              <MaterialIcons name="more-vert" size={24} color="#4B5563" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       )}
 
-      <ScrollView
+      <Animated.ScrollView
         contentContainerStyle={{
           paddingBottom: 40,
-          paddingTop: isWeb ? 20 : 0,
+          paddingTop: isWeb ? 20 : headerHeight,
         }}
         showsVerticalScrollIndicator={false}
+        {...scrollProps}
       >
         <View className={isWeb ? "px-0" : "px-5"}>
           {/* Profile Header Block */}
@@ -976,7 +994,7 @@ export function PublicProfileScreen({ onEditProfile, profile }) {
             </TouchableOpacity>
           </ScrollView>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

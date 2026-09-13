@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useUser } from "../../context/UserContext";
 import { GroupsScreen } from "../../screens/GroupsScreen";
 import { PostScreen } from "../../screens/PostScreen";
-import { CreatePostScreen } from "../../screens/CreatePostScreen";
 import { CommunityFeedScreen, PostDetailScreen } from "../../screens/CommunityScreens";
 
 const Stack = createNativeStackNavigator();
@@ -24,10 +23,6 @@ function PostScreenWrapper({ route }) {
   return <PostScreen initialPostId={route.params?.postId ?? "short-2"} />;
 }
 
-function CreatePostScreenWrapper({ navigation }) {
-  return <CreatePostScreen navigation={navigation} />;
-}
-
 export default function CommunityStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -44,7 +39,11 @@ export default function CommunityStack() {
           headerTintColor: "#FFFFFF",
         }}
       />
-      <Stack.Screen name="CreatePost" component={CreatePostScreenWrapper} />
+      {/* CreatePost lives as a top-level screen in MainStack instead of here -
+          nesting it under Community made cross-tab navigation to it (e.g.
+          from Home's FAB) unreliable once Community was already mounted
+          elsewhere in the stack: navigate() would just refocus the existing
+          Community entry without drilling into CreatePost. */}
     </Stack.Navigator>
   );
 }

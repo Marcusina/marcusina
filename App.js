@@ -31,6 +31,14 @@ function AppContent() {
   const { isLoading: userLoading, loginWithToken } = useUser();
   const navigationRef = useNavigationContainerRef();
   const verificationStarted = useRef(false);
+  // Tracks the deepest focused route name across the whole navigation tree so
+  // RootNavigator/Layout can tell whether the Home screen (the only screen
+  // that shows the app's top bar/nav chrome) is currently on top - this stays
+  // in sync with back gestures/hardware back, not just forward navigation.
+  const [currentRouteName, setCurrentRouteName] = useState("HomeIndex");
+  const updateCurrentRouteName = () => {
+    setCurrentRouteName(navigationRef.current?.getCurrentRoute()?.name);
+  };
   // Deep-link/redirect handling can be detected immediately, but the actual
   // navigate() call must wait until AuthNavigator has its real screens
   // mounted (it shows a lightweight Loading screen while userLoading is
@@ -212,8 +220,12 @@ function AppContent() {
   }, []);
 
   return (
-    <NavigationContainer ref={navigationRef}>
-      <RootNavigator navigationRef={navigationRef} />
+    <NavigationContainer
+      ref={navigationRef}
+      onReady={updateCurrentRouteName}
+      onStateChange={updateCurrentRouteName}
+    >
+      <RootNavigator navigationRef={navigationRef} currentRouteName={currentRouteName} />
     </NavigationContainer>
   );
 }

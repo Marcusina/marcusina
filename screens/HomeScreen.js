@@ -4,6 +4,7 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  Animated,
   Image,
   Platform,
   useWindowDimensions,
@@ -22,6 +23,7 @@ import { getMedications } from "../api/meds.api";
 import { getCart, addToCart } from "../api/cart.api";
 import { useTheme } from "../context/ThemeContext";
 import { toast } from "../context/ToastContext";
+import { useHeaderScroll } from "../context/HeaderScrollContext";
 
 export function HomeScreen({
   user,
@@ -32,6 +34,7 @@ export function HomeScreen({
 }) {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
+  const { scrollProps, headerHeight } = useHeaderScroll();
   const firstName = user?.profile?.first_name || user?.username || "User";
 
   // Responsive Breakpoints
@@ -170,9 +173,13 @@ export function HomeScreen({
 
   return (
     <View style={{ backgroundColor: theme.background, flex: 1 }}>
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: isWebOrLarge ? 40 : 24 }}
+      <Animated.ScrollView
+        contentContainerStyle={{
+          paddingTop: headerHeight,
+          paddingBottom: isWebOrLarge ? 40 : 24,
+        }}
         showsVerticalScrollIndicator={false}
+        {...scrollProps}
       >
         <View
           style={{ paddingTop: 16, paddingHorizontal: isWebOrLarge ? 0 : 20 }}
@@ -357,6 +364,19 @@ export function HomeScreen({
               </TouchableOpacity>
             ))}
           </ScrollView>
+
+          {/* Today's Snapshot Section */}
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: "700",
+              letterSpacing: 1,
+              color: theme.textMuted,
+              marginBottom: 12,
+            }}
+          >
+            TODAY'S SNAPSHOT
+          </Text>
 
           {/* Health Pulse Widget */}
           <View
@@ -639,6 +659,28 @@ export function HomeScreen({
               </Text>
             </View>
           </TouchableOpacity>
+
+          {/* Community Feed Section */}
+          <View
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: theme.border,
+              paddingTop: 20,
+              marginTop: 4,
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                letterSpacing: 1,
+                color: theme.textMuted,
+              }}
+            >
+              COMMUNITY FEED
+            </Text>
+          </View>
 
           {/* Post 1 - Enhanced Responsive Image Aspect Ratio */}
           <View
@@ -995,6 +1037,28 @@ export function HomeScreen({
                 </TouchableOpacity>
               </View>
             ))}
+          </View>
+
+          {/* Pharmacy & Shop Section */}
+          <View
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: theme.border,
+              paddingTop: 20,
+              marginTop: 4,
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                letterSpacing: 1,
+                color: theme.textMuted,
+              }}
+            >
+              PHARMACY &amp; SHOP
+            </Text>
           </View>
 
           {/* Hero Promo Banner (Flex Row Container on Large Wide Displays) */}
@@ -1382,7 +1446,7 @@ export function HomeScreen({
             </View>
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

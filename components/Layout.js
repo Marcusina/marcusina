@@ -9,9 +9,10 @@ import {
   ScrollView,
   Image,
   Modal,
+  Animated,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialIcons, Ionicons } from "@expo/vector-icons";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "./Logo";
@@ -19,6 +20,10 @@ import { SessionExpiryBanner } from "./SessionExpiryBanner";
 import { getCart } from "../api/cart.api";
 import { getNotifications } from "../api/notifications.api";
 import { useUser } from "../context/UserContext";
+import { HeaderScrollProvider, useHeaderScroll } from "../context/HeaderScrollContext";
+
+const DESKTOP_HEADER_HEIGHT = 76;
+const MOBILE_HEADER_CONTENT_HEIGHT = 64;
 
 const SIDEBAR_WIDTH = 230;
 const MOBILE_BREAKPOINT = 768;
@@ -139,9 +144,14 @@ function createStyles(theme) {
       color: theme.textMuted,
     },
     safeHeader: {
-      backgroundColor: theme.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
+      backgroundColor: theme.background,
+    },
+    headerFloating: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 50,
     },
     mobileHeader: {
       flexDirection: "row",
@@ -167,15 +177,13 @@ function createStyles(theme) {
     mainContent: {
       flex: 1,
       height: "100%",
+      position: "relative",
     },
     webHeader: {
-      height: 72,
-      backgroundColor: theme.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
+      height: DESKTOP_HEADER_HEIGHT,
+      backgroundColor: theme.background,
       justifyContent: "center",
       paddingHorizontal: 32,
-      zIndex: 10,
     },
     webHeaderContent: {
       flexDirection: "row",
@@ -184,25 +192,26 @@ function createStyles(theme) {
       width: "100%",
       maxWidth: 1400,
       alignSelf: "center",
+      gap: 24,
     },
     webHeaderLeft: {
-      flex: 1,
+      minWidth: 120,
     },
     webPageTitle: {
-      fontSize: 22,
+      fontSize: 19,
       fontWeight: "700",
       color: theme.text,
+      letterSpacing: -0.2,
     },
     webHeaderSearch: {
-      flex: 2,
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.surfaceSubtle,
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderRadius: 12,
-      marginHorizontal: 32,
-      maxWidth: 500,
+      maxWidth: 420,
     },
     searchIcon: {
       marginRight: 8,
@@ -212,19 +221,19 @@ function createStyles(theme) {
       fontSize: 14,
     },
     webHeaderActions: {
-      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "flex-end",
+    },
+    headerActionGroup: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
     },
     iconButton: {
       position: "relative",
       padding: 10,
       borderRadius: 10,
-      backgroundColor: theme.surface,
-      marginLeft: 8,
-      borderWidth: 1,
-      borderColor: theme.border,
     },
     mobileHeaderActions: {
       flexDirection: "row",
@@ -233,9 +242,8 @@ function createStyles(theme) {
     },
     mobileIconButton: {
       position: "relative",
-      padding: 6,
+      padding: 8,
       borderRadius: 8,
-      marginLeft: 4,
     },
     logoutButton: {
       padding: 10,
@@ -666,17 +674,36 @@ function createStyles(theme) {
   });
 }
 
-export function Layout({
+export function Layout(props) {
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isDesktop = Platform.OS === "web" && width >= MOBILE_BREAKPOINT;
+  const headerHeight = isDesktop
+    ? DESKTOP_HEADER_HEIGHT
+    : insets.top + MOBILE_HEADER_CONTENT_HEIGHT;
+
+  return (
+    <HeaderScrollProvider headerHeight={headerHeight}>
+      <LayoutBody {...props} />
+    </HeaderScrollProvider>
+  );
+}
+
+function LayoutBody({
   children,
   currentScreen,
   onNavigate,
   userProfile,
   onLogout,
+  showChrome = true,
+  showTopBar = true,
 }) {
   const { theme, themeMode, setThemeMode } = useTheme();
   const styles = createStyles(theme);
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isDesktop = Platform.OS === "web" && width >= MOBILE_BREAKPOINT;
+  const { translateY } = useHeaderScroll();
   const [fabOpen, setFabOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -685,14 +712,14 @@ export function Layout({
   const { data: cart } = useQuery({
     queryKey: ["cart"],
     queryFn: getCart,
-    enabled: !!token,
+    enabled: !!token && showTopBar,
     refetchInterval: 15000,
   });
 
   const { data: notifications } = useQuery({
     queryKey: ["notifications"],
     queryFn: getNotifications,
-    enabled: !!token,
+    enabled: !!token && showTopBar,
     refetchInterval: 15000,
   });
 
@@ -716,6 +743,20 @@ export function Layout({
     { id: "Community", label: "Spaces", icon: "group" },
     { id: "Marketplace", label: "Market", icon: "store" },
   ];
+
+  // Only the Home screen gets the app's chrome (top bar / bottom nav /
+  // sidebar). Every other screen is reached by pushing from Home and is
+  // rendered edge-to-edge with its own in-content back button instead.
+  if (!showChrome) {
+    return (
+      <SafeAreaView
+        edges={["top"]}
+        style={{ flex: 1, backgroundColor: theme.background }}
+      >
+        {children}
+      </SafeAreaView>
+    );
+  }
 
   const renderSidebar = () => (
     <View style={styles.sidebar}>
@@ -844,22 +885,21 @@ export function Layout({
     <View style={styles.container}>
       {isDesktop && renderSidebar()}
       <View style={styles.mainContent}>
-        {!isDesktop && (
-          <SafeAreaView edges={["top"]} style={styles.safeHeader}>
+        {!isDesktop && showTopBar && (
+          <Animated.View
+            style={[
+              styles.safeHeader,
+              styles.headerFloating,
+              { paddingTop: insets.top, transform: [{ translateY }] },
+            ]}
+          >
             <View style={styles.mobileHeader}>
               <View style={styles.mobileHeaderContent}>
                 <Logo width={30} height={30} style={{ marginRight: 6 }} />
                 <Text style={styles.mobileLogoText}>MEDGRAM</Text>
               </View>
-              {/* Actions row: notifications, wishlist, cart, and drawer toggle */}
+              {/* Actions row: messages, notifications, and drawer toggle. Cart/Wishlist live in the profile drawer. */}
               <View style={styles.mobileHeaderActions}>
-                <TouchableOpacity style={styles.mobileIconButton}>
-                  <MaterialIcons
-                    name="search"
-                    size={20}
-                    color={theme.textSecondary}
-                  />
-                </TouchableOpacity>
                 <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("UnifiedInbox")}>
                   <MaterialIcons
                     name="chat-bubble-outline"
@@ -875,21 +915,7 @@ export function Layout({
                   />
                   {unreadNotificationsCount > 0 && <View style={styles.mobileNotificationBadge} />}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("Wishlist")}>
-                  <Ionicons
-                    name="heart"
-                    size={20}
-                    color={theme.textSecondary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.mobileIconButton} onPress={() => onNavigate("Cart")}>
-                  <MaterialIcons
-                    name="shopping-cart"
-                    size={20}
-                    color={theme.textSecondary}
-                  />
-                  {cartCount > 0 && <View style={styles.mobileNotificationBadge} />}
-                </TouchableOpacity>
+                <View style={[styles.headerDivider, { height: 20, marginHorizontal: 8 }]} />
                 <TouchableOpacity
                   style={styles.headerProfileButton}
                   onPress={() => setDrawerOpen(true)}
@@ -920,55 +946,51 @@ export function Layout({
                 </TouchableOpacity>
               </View>
             </View>
-          </SafeAreaView>
+          </Animated.View>
         )}
-        {isDesktop && (
-          <View style={styles.webHeader}>
+        {isDesktop && showTopBar && (
+          <Animated.View
+            style={[
+              styles.webHeader,
+              styles.headerFloating,
+              { transform: [{ translateY }] },
+            ]}
+          >
             <View style={styles.webHeaderContent}>
               <View style={styles.webHeaderLeft}>
-                <Text style={styles.webPageTitle}>
+                <Text style={styles.webPageTitle} numberOfLines={1}>
                   {desktopNavItems.find((i) => i.id === currentScreen)?.label ||
                     "Dashboard"}
                 </Text>
               </View>
+              <View style={styles.webHeaderSearch}>
+                <MaterialIcons
+                  name="search"
+                  size={18}
+                  color={theme.textMuted}
+                  style={styles.searchIcon}
+                />
+                <Text style={styles.searchPlaceholder}>Search Medgram</Text>
+              </View>
               <View style={styles.webHeaderActions}>
-                <TouchableOpacity style={styles.iconButton}>
-                  <MaterialIcons
-                    name="search"
-                    size={22}
-                    color={theme.textSecondary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("UnifiedInbox")}>
-                  <MaterialIcons
-                    name="chat-bubble-outline"
-                    size={22}
-                    color={theme.textSecondary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("Notifications")}>
-                  <MaterialIcons
-                    name="notifications-none"
-                    size={22}
-                    color={theme.textSecondary}
-                  />
-                  {unreadNotificationsCount > 0 && <View style={styles.notificationBadge} />}
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("Wishlist")}>
-                  <Ionicons
-                    name="heart"
-                    size={22}
-                    color={theme.textSecondary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("Cart")}>
-                  <MaterialIcons
-                    name="shopping-cart"
-                    size={22}
-                    color={theme.textSecondary}
-                  />
-                  {cartCount > 0 && <View style={styles.notificationBadge} />}
-                </TouchableOpacity>
+                <View style={styles.headerActionGroup}>
+                  <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("UnifiedInbox")}>
+                    <MaterialIcons
+                      name="chat-bubble-outline"
+                      size={22}
+                      color={theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.iconButton} onPress={() => onNavigate("Notifications")}>
+                    <MaterialIcons
+                      name="notifications-none"
+                      size={22}
+                      color={theme.textSecondary}
+                    />
+                    {unreadNotificationsCount > 0 && <View style={styles.notificationBadge} />}
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.headerDivider} />
                 <TouchableOpacity
                   style={styles.headerProfileButton}
                   onPress={() => setDrawerOpen(true)}
@@ -999,7 +1021,7 @@ export function Layout({
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </Animated.View>
         )}
         <SessionExpiryBanner />
         <View style={[styles.mainArea, isDesktop && styles.webMainArea]}>
@@ -1400,6 +1422,112 @@ export function Layout({
                     style={[styles.drawerItemDesc, { color: theme.textMuted }]}
                   >
                     Password, 2FA, login activity
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
+
+              <Text
+                style={[styles.drawerSectionTitle, { color: theme.textMuted }]}
+              >
+                SHOPPING
+              </Text>
+
+              <TouchableOpacity
+                style={styles.drawerItem}
+                onPress={() => {
+                  setDrawerOpen(false);
+                  onNavigate("Cart");
+                }}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#E8F5E9" },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="shopping-cart"
+                    size={20}
+                    color="#0A0A0A"
+                  />
+                </View>
+                <View style={styles.drawerItemLabel}>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Cart
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Review items before checkout
+                  </Text>
+                </View>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
+                  {cartCount > 0 && (
+                    <View
+                      style={[
+                        styles.drawerBadge,
+                        { backgroundColor: theme.primaryLight },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.drawerBadgeText, { color: theme.primary }]}
+                      >
+                        {cartCount}
+                      </Text>
+                    </View>
+                  )}
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={20}
+                    color={theme.textMuted}
+                  />
+                </View>
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.drawerDivider,
+                  { backgroundColor: theme.border },
+                ]}
+              />
+
+              <TouchableOpacity
+                style={styles.drawerItem}
+                onPress={() => {
+                  setDrawerOpen(false);
+                  onNavigate("Wishlist");
+                }}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.drawerItemIconWrap,
+                    { backgroundColor: "#FCE4EC" },
+                  ]}
+                >
+                  <MaterialIcons name="favorite-border" size={20} color="#0A0A0A" />
+                </View>
+                <View style={styles.drawerItemLabel}>
+                  <Text style={[styles.drawerItemTitle, { color: theme.text }]}>
+                    Wishlist
+                  </Text>
+                  <Text
+                    style={[styles.drawerItemDesc, { color: theme.textMuted }]}
+                  >
+                    Saved products &amp; medications
                   </Text>
                 </View>
                 <MaterialIcons

@@ -1,28 +1,27 @@
 import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import HomeStack from "./stacks/HomeStack";
 import HealthStack from "./stacks/HealthStack";
 import CommunityStack from "./stacks/CommunityStack";
 import MarketplaceStack from "./stacks/MarketplaceStack";
 import MeStack from "./stacks/MeStack";
 
-const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-// Layout.js (the app's existing chrome) renders the real bottom nav UI as a
-// wrapping shell around this navigator, so the built-in tab bar is hidden -
-// createBottomTabNavigator is used purely for its per-tab state preservation
-// (each tab keeps its own nested stack position when switching away and back).
+// Home is the app's hub screen - it's the only one Layout.js draws its chrome
+// (top bar / bottom nav / sidebar) around. Health, Community, Marketplace and
+// Me are entered by pushing from Home and left with the native back
+// gesture/back button, so this is a plain stack (not tabs): that gives every
+// section-to-section transition a real animated push/pop instead of an
+// instant tab switch.
 export default function MainTabNavigator() {
   return (
-    <Tab.Navigator
-      screenOptions={{ headerShown: false }}
-      tabBar={() => null}
-    >
-      <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Health" component={HealthStack} />
-      <Tab.Screen name="Community" component={CommunityStack} />
-      <Tab.Screen name="Marketplace" component={MarketplaceStack} />
-      <Tab.Screen name="Me" component={MeStack} />
-    </Tab.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
+      <Stack.Screen name="Home" component={HomeStack} />
+      <Stack.Screen name="Health" component={HealthStack} />
+      <Stack.Screen name="Community" component={CommunityStack} />
+      <Stack.Screen name="Marketplace" component={MarketplaceStack} />
+      <Stack.Screen name="Me" component={MeStack} />
+    </Stack.Navigator>
   );
 }

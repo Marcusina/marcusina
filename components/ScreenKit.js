@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, TouchableOpacity, TextInput, Platform, useWindowDimensions } from "react-native";
+import React, { useRef } from "react";
+import { View, Text, TouchableOpacity, TextInput, Platform, useWindowDimensions, Animated } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 
@@ -11,6 +11,40 @@ import { useTheme } from "../context/ThemeContext";
 export function useIsWeb() {
   const { width } = useWindowDimensions();
   return Platform.OS === "web" && width >= 768;
+}
+
+// Matches ScreenHeader's rendered height closely enough for the collapsible
+// header math below - it doesn't need to be pixel-exact, just big enough
+// that content isn't initially hidden behind the header.
+export const SCREEN_HEADER_HEIGHT = 64;
+
+// Drop-in "hide on scroll down, reveal on scroll up" behavior for a screen
+// with its own ScreenHeader: call once per screen, apply `headerStyle` to an
+// Animated.View wrapping ScreenHeader, spread `scrollProps` onto the screen's
+// main Animated.ScrollView, and add `paddingTop: headerHeight` to that
+// ScrollView's own contentContainerStyle (not a separate wrapper - it must
+// scroll away with the rest of the content, or hiding the header leaves a
+// permanent blank gap where it used to be).
+export function useCollapsibleHeader(headerHeight) {
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const clampedScrollY = Animated.diffClamp(scrollY, 0, headerHeight);
+  const translateY = clampedScrollY.interpolate({
+    inputRange: [0, headerHeight],
+    outputRange: [0, -headerHeight],
+    extrapolate: "clamp",
+  });
+
+  // Native driver isn't supported on react-native-web.
+  const onScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: Platform.OS !== "web" },
+  );
+
+  return {
+    headerStyle: { transform: [{ translateY }] },
+    scrollProps: { onScroll, scrollEventThrottle: 16 },
+    headerHeight,
+  };
 }
 
 export function ScreenHeader({ title, onBack, isWeb, right }) {
@@ -33,8 +67,7 @@ export function ScreenHeader({ title, onBack, isWeb, right }) {
   }
   return (
     <View
-      style={{ backgroundColor: theme.surface, borderBottomColor: theme.border }}
-      className="flex-row items-center justify-between px-4 py-4 border-b gap-3"
+      className="flex-row items-center justify-between px-4 py-4 gap-3"
     >
       <TouchableOpacity
         onPress={onBack}

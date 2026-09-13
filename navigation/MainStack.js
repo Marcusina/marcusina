@@ -6,6 +6,7 @@ import MainTabNavigator from "./MainTabNavigator";
 import { NotificationsScreen } from "../screens/NotificationsScreen";
 import { CartScreen } from "../screens/CartScreen";
 import { WishlistScreen } from "../screens/WishlistScreen";
+import { CreatePostScreen } from "../screens/CreatePostScreen";
 import {
   DigitalHealthIdScreen,
   RequestPhysicalCardScreen,
@@ -162,8 +163,6 @@ function ForgotPasswordScreenWrapper({ navigation }) {
   return <ForgotPasswordScreen onBack={() => navigation.goBack()} />;
 }
 
-const TAB_NAMES = ["Home", "Health", "Community", "Marketplace", "Me"];
-
 // Explicit, fully-qualified resolution for every id Layout.js's chrome can
 // pass to onNavigate. Nested/cross-tab targets are spelled out rather than
 // relying on bare `navigate(name)` bubble-up, since that isn't guaranteed to
@@ -179,8 +178,7 @@ function buildNavigateTargets(navigationRef) {
     MeHome: () => nav()?.navigate("Tabs", { screen: "Me", params: { screen: "MeHome" } }),
     ProfileEdit: () => nav()?.navigate("Tabs", { screen: "Me", params: { screen: "ProfileEdit" } }),
     Settings: () => nav()?.navigate("Tabs", { screen: "Me", params: { screen: "Settings" } }),
-    CreatePost: () =>
-      nav()?.navigate("Tabs", { screen: "Community", params: { screen: "CreatePost" } }),
+    CreatePost: () => nav()?.navigate("CreatePost"),
     AppointmentsList: () =>
       nav()?.navigate("Tabs", { screen: "Health", params: { screen: "AppointmentsList" } }),
     Notifications: () => nav()?.navigate("Notifications"),
@@ -212,17 +210,16 @@ function buildNavigateTargets(navigationRef) {
   };
 }
 
-export default function MainStack({ navigationRef, activeTab, setActiveTab }) {
+export default function MainStack({ navigationRef, showChrome, showTopBar, activeSection }) {
   const { profile, handleLogout } = useUser();
   const navigateTargets = buildNavigateTargets(navigationRef);
 
   return (
     <Layout
-      currentScreen={activeTab}
+      showChrome={showChrome}
+      showTopBar={showTopBar}
+      currentScreen={activeSection}
       onNavigate={(target) => {
-        if (TAB_NAMES.includes(target)) {
-          setActiveTab(target);
-        }
         const resolve = navigateTargets[target];
         if (resolve) {
           resolve();
@@ -238,6 +235,7 @@ export default function MainStack({ navigationRef, activeTab, setActiveTab }) {
         <Stack.Screen name="Notifications" component={NotificationsScreenWrapper} />
         <Stack.Screen name="Cart" component={CartScreenWrapper} />
         <Stack.Screen name="Wishlist" component={WishlistScreenWrapper} />
+        <Stack.Screen name="CreatePost" component={CreatePostScreen} />
         <Stack.Screen name="ConsultBooking" component={ConsultBookingScreen} />
         <Stack.Screen name="ConsultConfirm" component={ConsultConfirmScreen} />
         <Stack.Screen name="DigitalHealthId" component={DigitalHealthIdScreen} />

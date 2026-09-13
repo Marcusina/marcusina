@@ -8,9 +8,11 @@ import {
   TextInput,
   Platform,
   useWindowDimensions,
+  Animated,
 } from "react-native";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import { useCollapsibleHeader, SCREEN_HEADER_HEIGHT } from "../components/ScreenKit";
 
 // Mock Data Arrays
 const CATEGORIES = [
@@ -81,6 +83,7 @@ export function PlaceScreen({ navigation, onPharmacyShop }) {
   const { theme } = useTheme();
   const [activeCategory, setActiveCategory] = useState("All");
   const { width } = useWindowDimensions();
+  const { headerStyle, scrollProps, headerHeight } = useCollapsibleHeader(SCREEN_HEADER_HEIGHT);
   const brandPrimaryColor = theme.primary || "#3B82F6";
 
   // Responsive column logic
@@ -89,25 +92,29 @@ export function PlaceScreen({ navigation, onPharmacyShop }) {
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
-      {/* ─── TOP BAR ─── */}
-      <View
-        className="flex-row justify-between items-center px-5 py-4 border-b"
-        style={{ borderColor: theme.border }}
+      <Animated.View
+        style={[
+          { position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: theme.background },
+          headerStyle,
+        ]}
       >
-        <Text className="text-xl font-extrabold" style={{ color: theme.text }}>
-          Health Market
-        </Text>
-        <TouchableOpacity
-          onPress={() => navigation?.navigate("Cart")}
-          hitSlop={12}
-        >
-          <MaterialIcons name="shopping-cart" size={24} color={theme.text} />
-        </TouchableOpacity>
-      </View>
+        <View className="flex-row justify-between items-center px-5 py-4">
+          <Text className="text-xl font-extrabold" style={{ color: theme.text }}>
+            Health Market
+          </Text>
+          <TouchableOpacity
+            onPress={() => navigation?.navigate("Cart")}
+            hitSlop={12}
+          >
+            <MaterialIcons name="shopping-cart" size={24} color={theme.text} />
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
 
-      <ScrollView
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 32 }}
+        {...scrollProps}
       >
         {/* ─── SEARCH CONTAINER ─── */}
         <View className="px-5 mt-4">
@@ -360,7 +367,7 @@ export function PlaceScreen({ navigation, onPharmacyShop }) {
             ))}
           </View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

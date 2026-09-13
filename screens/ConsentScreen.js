@@ -1,11 +1,12 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Animated } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "../context/ThemeContext";
 import { useUser } from "../context/UserContext";
 import { toast } from "../context/ToastContext";
 import { getMyConsents, revokeConsent } from "../api/consent.api";
+import { useCollapsibleHeader, SCREEN_HEADER_HEIGHT } from "../components/ScreenKit";
 
 function formatDate(dateString) {
   if (!dateString) return "";
@@ -20,6 +21,7 @@ export default function ConsentScreen({ navigation }) {
   const { theme } = useTheme();
   const { user } = useUser();
   const queryClient = useQueryClient();
+  const { headerStyle, scrollProps, headerHeight } = useCollapsibleHeader(SCREEN_HEADER_HEIGHT);
 
   const {
     data: consents = [],
@@ -46,34 +48,40 @@ export default function ConsentScreen({ navigation }) {
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
-      <View
-        className="flex-row items-center px-4 py-4 border-b gap-3"
-        style={{ borderColor: theme.border }}
+      <Animated.View
+        style={[
+          { position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: theme.background },
+          headerStyle,
+        ]}
       >
-        <TouchableOpacity
-          onPress={() => navigation?.goBack()}
-          className="p-1.5 rounded-full"
-          style={{ backgroundColor: theme.surfaceSubtle }}
-        >
-          <MaterialIcons name="arrow-back" size={22} color={theme.text} />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold" style={{ color: theme.text }}>
-          Consent &amp; Privacy
-        </Text>
-      </View>
+        <View className="flex-row items-center px-4 py-4 gap-3">
+          <TouchableOpacity
+            onPress={() => navigation?.goBack()}
+            className="p-1.5 rounded-full"
+            style={{ backgroundColor: theme.surfaceSubtle }}
+          >
+            <MaterialIcons name="arrow-back" size={22} color={theme.text} />
+          </TouchableOpacity>
+          <Text className="text-xl font-bold" style={{ color: theme.text }}>
+            Consent &amp; Privacy
+          </Text>
+        </View>
+      </Animated.View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center" style={{ paddingTop: headerHeight }}>
           <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : !hasConsents || error ? (
-        <ScrollView
+        <Animated.ScrollView
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "center",
             alignItems: "center",
             padding: 24,
+            paddingTop: headerHeight + 24,
           }}
+          {...scrollProps}
         >
           <View className="w-20 h-20 rounded-full items-center justify-center mb-6 bg-teal-500/10">
             <MaterialIcons name="verified-user" size={40} color={theme.primary} />
@@ -91,9 +99,12 @@ export default function ConsentScreen({ navigation }) {
             Data-sharing permissions you've granted will show up here so you
             can review or revoke them at any time.
           </Text>
-        </ScrollView>
+        </Animated.ScrollView>
       ) : (
-        <ScrollView className="flex-1 px-4 py-4">
+        <Animated.ScrollView
+          contentContainerStyle={{ paddingTop: headerHeight, paddingHorizontal: 16, paddingVertical: 16 }}
+          {...scrollProps}
+        >
           {consents.map((item) => (
             <View
               key={item._id}
@@ -141,7 +152,7 @@ export default function ConsentScreen({ navigation }) {
               ) : null}
             </View>
           ))}
-        </ScrollView>
+        </Animated.ScrollView>
       )}
     </View>
   );

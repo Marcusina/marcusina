@@ -1,10 +1,10 @@
 import React from "react";
-import { View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator, Animated } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "../context/ThemeContext";
 import { useUser } from "../context/UserContext";
-import { useIsWeb, ScreenHeader, SectionLabel, EmptyState } from "../components/ScreenKit";
+import { useIsWeb, ScreenHeader, SectionLabel, EmptyState, useCollapsibleHeader, SCREEN_HEADER_HEIGHT } from "../components/ScreenKit";
 import { getFeed, getPost } from "../api/community.api";
 
 const TYPE_ICONS = {
@@ -26,6 +26,7 @@ function formatDate(dateString) {
 export function CommunityFeedScreen({ navigation }) {
   const { theme } = useTheme();
   const isWeb = useIsWeb();
+  const { headerStyle, scrollProps, headerHeight } = useCollapsibleHeader(SCREEN_HEADER_HEIGHT);
   const { token, user } = useUser();
 
   const { data: feedResponse, isLoading, error } = useQuery({
@@ -36,32 +37,57 @@ export function CommunityFeedScreen({ navigation }) {
 
   const posts = Array.isArray(feedResponse) ? feedResponse : feedResponse?.data || [];
 
+  const titleBar = (
+    <Animated.View
+      style={[
+        { position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: theme.background },
+        headerStyle,
+      ]}
+    >
+      <View className="flex-row items-center justify-between px-4 py-4">
+        <Text className="text-2xl font-extrabold" style={{ color: theme.text }}>Community</Text>
+        <View className="flex-row items-center gap-2">
+          <TouchableOpacity
+            onPress={() => navigation.navigate("GroupsDirectory")}
+            className="flex-row items-center px-3 py-2 rounded-full"
+            style={{ backgroundColor: theme.surfaceSubtle }}
+          >
+            <MaterialIcons name="group" size={18} color={theme.text} />
+            <Text style={{ color: theme.text }} className="text-xs font-bold ml-1.5">Groups</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("CreatePost")}
+            className="w-9 h-9 rounded-full items-center justify-center"
+            style={{ backgroundColor: theme.primary }}
+          >
+            <MaterialIcons name="add" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Animated.View>
+  );
+
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
-      <View className="flex-row items-center justify-between px-4 pt-4 pb-2">
-        <Text className="text-2xl font-extrabold" style={{ color: theme.text }}>Community</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("GroupsDirectory")}
-          className="flex-row items-center px-3 py-2 rounded-full"
-          style={{ backgroundColor: theme.surfaceSubtle }}
-        >
-          <MaterialIcons name="group" size={18} color={theme.text} />
-          <Text style={{ color: theme.text }} className="text-xs font-bold ml-1.5">Groups</Text>
-        </TouchableOpacity>
-      </View>
-
+      {titleBar}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center" style={{ paddingTop: headerHeight }}>
           <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : error || posts.length === 0 ? (
-        <EmptyState
-          icon="forum"
-          title="No posts yet"
-          description={error?.message || "Posts from the community will show up here."}
-        />
+        <View style={{ flex: 1, paddingTop: headerHeight }}>
+          <EmptyState
+            icon="forum"
+            title="No posts yet"
+            description={error?.message || "Posts from the community will show up here."}
+          />
+        </View>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <Animated.ScrollView
+          contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+          {...scrollProps}
+        >
           <View className={isWeb ? "px-6" : "px-4"}>
             <View className={isWeb ? "max-w-[640px]" : ""}>
               {posts.map((post) => {
@@ -101,7 +127,7 @@ export function CommunityFeedScreen({ navigation }) {
               })}
             </View>
           </View>
-        </ScrollView>
+        </Animated.ScrollView>
       )}
     </View>
   );
@@ -113,6 +139,7 @@ export function PostDetailScreen({ navigation, route }) {
   const isWeb = useIsWeb();
   const { token } = useUser();
   const { id } = route?.params || {};
+  const { headerStyle, scrollProps, headerHeight } = useCollapsibleHeader(SCREEN_HEADER_HEIGHT);
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ["post", id],
@@ -142,8 +169,19 @@ export function PostDetailScreen({ navigation, route }) {
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
-      <ScreenHeader title="Post" onBack={() => navigation.goBack()} isWeb={isWeb} />
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <Animated.View
+        style={[
+          { position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: theme.background },
+          headerStyle,
+        ]}
+      >
+        <ScreenHeader title="Post" onBack={() => navigation.goBack()} isWeb={isWeb} />
+      </Animated.View>
+      <Animated.ScrollView
+        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        {...scrollProps}
+      >
         <View className={isWeb ? "px-6" : "px-5"}>
           <View className={`mt-5 flex-row items-center mb-3 ${isWeb ? "max-w-[560px]" : ""}`}>
             {post.author_avatar ? (
@@ -201,7 +239,7 @@ export function PostDetailScreen({ navigation, route }) {
             </View>
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

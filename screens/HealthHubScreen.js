@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, Animated } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "../context/ThemeContext";
 import { useUser } from "../context/UserContext";
 import { getPatientProfile } from "../api/auth.api";
+import { useIsWeb, useCollapsibleHeader, SCREEN_HEADER_HEIGHT } from "../components/ScreenKit";
 
 function HealthBasicRow({ label, value, theme }) {
   return (
@@ -48,6 +49,8 @@ function NavCard({ icon, label, description, onPress, theme }) {
 
 export function HealthHubScreen({ navigation }) {
   const { theme } = useTheme();
+  const isWeb = useIsWeb();
+  const { headerStyle, scrollProps, headerHeight } = useCollapsibleHeader(SCREEN_HEADER_HEIGHT);
   const { token, user } = useUser();
 
   const { data: patientProfile, isLoading } = useQuery({
@@ -62,13 +65,32 @@ export function HealthHubScreen({ navigation }) {
     : [];
 
   return (
-    <ScrollView className="flex-1" style={{ backgroundColor: theme.background }}>
-      <View className="px-4 pt-4 pb-2">
-        <Text className="text-2xl font-extrabold" style={{ color: theme.text }}>
-          Health
-        </Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <Animated.View
+        style={[
+          { position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: theme.background },
+          headerStyle,
+        ]}
+      >
+        <View className={`flex-row items-center justify-between ${isWeb ? "px-6" : "px-4"} py-4`}>
+          <Text className="text-2xl font-extrabold" style={{ color: theme.text }}>
+            Health
+          </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("EmergencyMode")}
+            className="flex-row items-center px-3 py-2 rounded-full"
+            style={{ backgroundColor: theme.errorLight }}
+          >
+            <MaterialIcons name="health-and-safety" size={18} color={theme.error} />
+            <Text style={{ color: theme.error }} className="text-xs font-bold ml-1.5">Emergency</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
 
+      <Animated.ScrollView
+        contentContainerStyle={{ paddingTop: headerHeight }}
+        {...scrollProps}
+      >
       <View className="px-4 pb-2">
         <Text className="text-xs font-bold uppercase mb-2" style={{ color: theme.textMuted }}>
           Health Basics
@@ -245,6 +267,7 @@ export function HealthHubScreen({ navigation }) {
           theme={theme}
         />
       </View>
-    </ScrollView>
+      </Animated.ScrollView>
+    </View>
   );
 }

@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   ActivityIndicator,
   TextInput,
+  Animated,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +21,7 @@ import {
 } from "../api/community.api";
 import { useTheme } from "../context/ThemeContext";
 import { useToast } from "../context/ToastContext";
+import { useCollapsibleHeader, SCREEN_HEADER_HEIGHT } from "../components/ScreenKit";
 
 const SUGGESTED_COMMUNITIES = [
   {
@@ -63,6 +65,7 @@ export function GroupsScreen({
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width >= 768;
   const queryClient = useQueryClient();
+  const { headerStyle, scrollProps, headerHeight } = useCollapsibleHeader(SCREEN_HEADER_HEIGHT);
 
   const brandPrimaryColor = theme.primary || "#3B82F6";
 
@@ -134,19 +137,37 @@ export function GroupsScreen({
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
       {/* ─── TOP BAR ─── */}
       {!isWeb && (
-        <View className="flex-row justify-between items-center px-4 pt-4 pb-3">
-          <Text
-            className="text-2xl font-extrabold"
-            style={{ color: theme.text }}
-          >
-            Groups
-          </Text>
-        </View>
+        <Animated.View
+          style={[
+            { position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: theme.background },
+            headerStyle,
+          ]}
+        >
+          <View className="flex-row items-center px-4 pt-4 pb-3 gap-3">
+            <TouchableOpacity
+              onPress={onBackHome}
+              className="p-1.5 rounded-full"
+              style={{ backgroundColor: theme.surfaceSubtle }}
+            >
+              <MaterialIcons name="arrow-back" size={22} color={theme.text} />
+            </TouchableOpacity>
+            <Text
+              className="text-2xl font-extrabold"
+              style={{ color: theme.text }}
+            >
+              Groups
+            </Text>
+          </View>
+        </Animated.View>
       )}
 
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: isWeb ? 40 : 24 }}
+      <Animated.ScrollView
+        contentContainerStyle={{
+          paddingTop: isWeb ? 0 : headerHeight,
+          paddingBottom: isWeb ? 40 : 24,
+        }}
         showsVerticalScrollIndicator={false}
+        {...scrollProps}
       >
         <View className={`px-5 ${isWeb ? "max-w-7xl mx-auto w-full" : ""}`}>
           {/* ─── SEARCH CONTAINER ─── */}
@@ -470,7 +491,7 @@ export function GroupsScreen({
             </View>
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <View className="px-4">
         {/* Section Header Label */}

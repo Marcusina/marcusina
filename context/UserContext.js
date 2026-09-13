@@ -24,6 +24,30 @@ import {
 } from "../api/auth.api";
 import { getUserPrescriptions } from "../api/meds.api";
 
+// TEMPORARY DEV-ONLY BYPASS: skips login/onboarding so the app UI can be
+// previewed without a running backend. Never active in production builds
+// (__DEV__ is always false there). Disable by removing EXPO_PUBLIC_DEV_SKIP_AUTH
+// from .env, or delete this block (and its use in the loadToken effect below)
+// once the real auth flow is being tested again.
+const DEV_SKIP_AUTH =
+  __DEV__ && process.env.EXPO_PUBLIC_DEV_SKIP_AUTH === "true";
+
+const DEV_MOCK_USER = {
+  _id: "dev-preview-user",
+  username: "devpreview",
+  email: "dev@preview.local",
+  phone_number: "",
+  is_phone_verified: true,
+  role: { role_type: "patient" },
+  profile: {
+    first_name: "Dev",
+    last_name: "Preview",
+    bio: "",
+    location_address: "",
+    profile_photo_url: null,
+  },
+};
+
 const DEFAULT_PROFILE = {
   name: "",
   email: "",
@@ -175,6 +199,19 @@ export const UserProvider = ({ children }) => {
   // Load token on mount
   useEffect(() => {
     const loadToken = async () => {
+      if (DEV_SKIP_AUTH) {
+        setUser(DEV_MOCK_USER);
+        setProfile((prev) => ({
+          ...prev,
+          name: "Dev Preview",
+          email: DEV_MOCK_USER.email,
+          role: "patient",
+          handle: "@devpreview",
+        }));
+        setOnboardingStep("completed");
+        setIsLoading(false);
+        return;
+      }
       try {
         const savedToken = await getToken();
         if (savedToken) {

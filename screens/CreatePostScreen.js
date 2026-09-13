@@ -6,7 +6,6 @@ import {
   Image,
   TextInput,
   ScrollView,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -118,7 +117,7 @@ export function CreatePostScreen({ navigation }) {
   const borderMediumColor = isDark ? "#404040" : "#D4D4D4";
 
   return (
-    <SafeAreaView
+    <View
       className="flex-1"
       style={{
         backgroundColor: theme.background || (isDark ? "#0A0A0A" : "#FFFFFF"),
@@ -673,6 +672,6 @@ export function CreatePostScreen({ navigation }) {
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

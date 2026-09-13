@@ -39,6 +39,7 @@ function PublicProfileScreenWrapper({ navigation }) {
   const { profile } = useUser();
   return (
     <PublicProfileScreen
+      onBackHome={() => navigation.navigate("MeHome")}
       onEditProfile={() => navigation.navigate("ProfileEdit")}
       profile={profile}
     />

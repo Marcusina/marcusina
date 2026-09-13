@@ -14,9 +14,7 @@ function HomeScreenWrapper({ navigation }) {
       onOpenPost={(id) =>
         navigation.navigate("Community", { screen: "Post", params: { postId: id } })
       }
-      onOpenCreatePost={() =>
-        navigation.navigate("Community", { screen: "CreatePost" })
-      }
+      onOpenCreatePost={() => navigation.navigate("CreatePost")}
     />
   );
 }

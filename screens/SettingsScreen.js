@@ -9,12 +9,13 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  Animated,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { useToast } from "../context/ToastContext";
 import { useUser } from "../context/UserContext";
+import { useCollapsibleHeader, SCREEN_HEADER_HEIGHT } from "../components/ScreenKit";
 import {
   changePassword,
   accountDeactivationRequest,
@@ -122,6 +123,7 @@ export function SettingsScreen({ onBack }) {
   const { theme } = useTheme();
   const { showToast } = useToast();
   const { handleLogout } = useUser();
+  const { headerStyle, scrollProps, headerHeight } = useCollapsibleHeader(SCREEN_HEADER_HEIGHT);
 
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -268,15 +270,25 @@ export function SettingsScreen({ onBack }) {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }}>
-      <View className="flex-row items-center px-4 py-3 border-b-[0.5px] border-black/10">
-        <TouchableOpacity onPress={onBack} className="p-1 mr-4">
-          <MaterialIcons name="arrow-back" size={24} color={theme.text} />
-        </TouchableOpacity>
-        <Text className="text-[18px] font-bold" style={{ color: theme.text }}>Account Settings</Text>
-      </View>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <Animated.View
+        style={[
+          { position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: theme.background },
+          headerStyle,
+        ]}
+      >
+        <View className="flex-row items-center px-4 py-3">
+          <TouchableOpacity onPress={onBack} className="p-1 mr-4">
+            <MaterialIcons name="arrow-back" size={24} color={theme.text} />
+          </TouchableOpacity>
+          <Text className="text-[18px] font-bold" style={{ color: theme.text }}>Account Settings</Text>
+        </View>
+      </Animated.View>
 
-      <ScrollView contentContainerClassName="p-4 gap-6">
+      <Animated.ScrollView
+        contentContainerStyle={{ paddingTop: headerHeight, padding: 16, gap: 24 }}
+        {...scrollProps}
+      >
         {/* Section 1: Change Password */}
         <View className="rounded-[16px] border p-4" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
           <Text className="text-[16px] font-bold mb-1" style={{ color: theme.text }}>Change Password</Text>
@@ -419,7 +431,7 @@ export function SettingsScreen({ onBack }) {
             {deactLoading ? <ActivityIndicator color="#FFF" /> : <Text className="text-white text-[14px] font-bold">Deactivate Account</Text>}
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Sudo Modal Verification */}
       <SudoVerificationModal
@@ -508,7 +520,7 @@ export function SettingsScreen({ onBack }) {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
