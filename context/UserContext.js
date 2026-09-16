@@ -22,6 +22,7 @@ import {
   refreshToken as refreshTokenApi,
 } from "../api/auth.api";
 import { getUserPrescriptions } from "../api/meds.api";
+import { DEMO_MODE } from "../utils/demoMode";
 
 const DEFAULT_PROFILE = {
   name: "",
@@ -174,6 +175,14 @@ export const UserProvider = ({ children }) => {
   // Load token on mount
   useEffect(() => {
     const loadToken = async () => {
+      // TEMP DEMO MODE: skip real token/session loading and boot straight
+      // into a fake authenticated session backed by utils/demoData.js via
+      // apiClient's demo interceptor. See utils/demoMode.js for the switch.
+      if (DEMO_MODE) {
+        setTokenState("demo-mode-token");
+        await fetchUserAndCheckOnboarding();
+        return;
+      }
       try {
         const savedToken = await getToken();
         if (savedToken) {

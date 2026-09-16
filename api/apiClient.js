@@ -2,12 +2,23 @@ import { Platform } from "react-native";
 import { QueryClient } from "@tanstack/react-query";
 import config from "../utils/config"; // Adjust paths accordingly to your file hierarchy
 import { getToken } from "../utils/storage";
+import { DEMO_MODE } from "../utils/demoMode";
+import { getDemoResponse } from "../utils/demoData";
 
 const API_BASE_URL = config.API_BASE_URL;
 if (__DEV__) console.log("---- url ----", API_BASE_URL);
 
 const apiClient = async (endpoint, options = {}) => {
   const { method = "GET", body, headers = {}, ...rest } = options;
+
+  // TEMP DEMO MODE: short-circuit before any network call and answer from
+  // utils/demoData.js. See utils/demoMode.js for the switch.
+  if (DEMO_MODE) {
+    const demoResponse = getDemoResponse(endpoint, method, body);
+    if (demoResponse !== undefined) return demoResponse;
+    return method.toUpperCase() === "GET" ? [] : { success: true };
+  }
+
 
   const clientHeaders = {
     ...headers,
