@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { View, Text, TouchableOpacity, TextInput, Platform, useWindowDimensions, Animated } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
 
 // Small set of shared building blocks for the simple UI-only "list/detail"
@@ -26,11 +27,15 @@ export const SCREEN_HEADER_HEIGHT = 64;
 // scroll away with the rest of the content, or hiding the header leaves a
 // permanent blank gap where it used to be).
 export function useCollapsibleHeader(headerHeight) {
+  const insets = useSafeAreaInsets();
+  const effectiveHeaderHeight =
+    Platform.OS === "web" ? headerHeight : headerHeight + insets.top;
+
   const scrollY = useRef(new Animated.Value(0)).current;
-  const clampedScrollY = Animated.diffClamp(scrollY, 0, headerHeight);
+  const clampedScrollY = Animated.diffClamp(scrollY, 0, effectiveHeaderHeight);
   const translateY = clampedScrollY.interpolate({
-    inputRange: [0, headerHeight],
-    outputRange: [0, -headerHeight],
+    inputRange: [0, effectiveHeaderHeight],
+    outputRange: [0, -effectiveHeaderHeight],
     extrapolate: "clamp",
   });
 
@@ -43,12 +48,14 @@ export function useCollapsibleHeader(headerHeight) {
   return {
     headerStyle: { transform: [{ translateY }] },
     scrollProps: { onScroll, scrollEventThrottle: 16 },
-    headerHeight,
+    headerHeight: effectiveHeaderHeight,
   };
 }
 
 export function ScreenHeader({ title, onBack, isWeb, right }) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
+
   if (isWeb) {
     return (
       <View className="flex-row items-center justify-between mt-5 mb-6">
@@ -67,7 +74,8 @@ export function ScreenHeader({ title, onBack, isWeb, right }) {
   }
   return (
     <View
-      className="flex-row items-center justify-between px-4 py-4 gap-3"
+      className="flex-row items-center justify-between px-4 gap-3"
+      style={{ paddingTop: insets.top + 12, paddingBottom: 16 }}
     >
       <TouchableOpacity
         onPress={onBack}
